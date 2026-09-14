@@ -41,10 +41,10 @@ class DebugStore:
             records.append({
                 "captured_at": datetime.now(timezone.utc).isoformat(),
                 "execution": execution or {},
-                "phase": "repair" if request.get("validation_feedback") else "continue" if request.get("continue_job") else "generate",
+                "phase": "planning" if request.get("execution_stage") == "planning" else "repair" if request.get("validation_feedback") else "continue" if request.get("continue_job") else "generate",
                 "command": command,
-                "prompt": command[-1] if command and command[0] == "codex" else None,
-                "model": request.get("model"),
+                "prompt": command[-1] if command and command[0] == "codex" else "\n\n".join(command[-2:]) if request.get("execution_stage") == "planning" else None,
+                "model": request.get("planner_model") if request.get("execution_stage") == "planning" else request.get("model"),
                 "skills": request.get("skills", []),
                 "validation_feedback": request.get("validation_feedback"),
             })
@@ -101,6 +101,7 @@ def capture(container, store, removed=False):
     snapshot = {
         "id": container.id,
         "role": role,
+        "stage": container.labels.get("openatlas.stage", "building"),
         "image": cfg.get("Image"),
         "status": "removed" if removed else state.get("Status"),
         "started_at": state.get("StartedAt"),

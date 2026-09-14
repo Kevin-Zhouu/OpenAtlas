@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 type Job = {
   id: string;
   status: string;
+  stage?: string;
   can_continue?: boolean;
   progress: string;
   error?: string;
@@ -76,7 +77,7 @@ export function JobsDropdown({
             <li key={j.id}>
               <strong>{j.request.prompt}</strong>
               <p>
-                <span className="tag">{j.status}</span> · {j.request.provider} ·{" "}
+                <span className="tag">{j.stage || j.status}</span> · {j.request.provider} ·{" "}
                 {new Date(j.created_at).toLocaleString()}
               </p>
               <p className={j.error ? "jobs-error" : ""}>

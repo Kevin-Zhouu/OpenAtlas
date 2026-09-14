@@ -94,7 +94,7 @@ export function GenerationDetails({ data }: { data: GenerationMetadata }) {
       ) : (
         <p className="hint">No skills were selected.</p>
       )}
-      <h3>Prompt passed to Codex</h3>
+      <h3>Instructions supplied to each agent</h3>
       {data.invocations.length > 0 ? (
         <>
           <label>

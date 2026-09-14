@@ -1,3 +1,4 @@
+import { PromptWorkspace } from "./PromptWorkspace";
 import { GenerationDetails, type GenerationMetadata } from "./GenerationDetails";
 import { useEffect, useState } from "react";
 import { AgentActivity, ActivitySpinner } from "./AgentActivity";
@@ -5,6 +6,7 @@ import { AgentActivity, ActivitySpinner } from "./AgentActivity";
 type Container = {
   id: string;
   role: string;
+  stage?: string;
   image: string;
   status: string;
   started_at: string;
@@ -21,6 +23,7 @@ type Snapshot = {
   updated_at: string | null;
   containers: Container[];
   job: {
+    stage?: string;
     status: string;
     progress: string;
     error?: string;
@@ -112,8 +115,10 @@ export function DebugInspector({
             {paused ? "Resume live updates" : "Pause live updates"}
           </button>
         </div>
-        <nav className="settings-tabs" aria-label="Inspector views"><button aria-pressed={tab === "activity"} onClick={()=>setTab("activity")}>Activity & logs</button><button aria-pressed={tab === "details"} onClick={()=>setTab("details")}>Generation details</button></nav>
+        {data && !terminal && <button className="quiet" onClick={async () => { try { const response = await fetch(`/api/jobs/${jobId}/cancel`, {method: 'POST'}); if (!response.ok) throw new Error('Cancellation failed'); } catch (error) { setError(String(error)); } }}>Cancel generation</button>}
+        <nav className="settings-tabs" aria-label="Inspector views"><button aria-pressed={tab === "activity"} onClick={()=>setTab("activity")}>Activity & logs</button><button aria-pressed={tab === "details"} onClick={()=>setTab("details")}>Generation details</button><button aria-pressed={tab === "prompts"} onClick={()=>setTab("prompts")}>Prompts</button></nav>
         {tab === "details" && data?.generation && <GenerationDetails key={jobId} data={data.generation}/>}
+        {tab === "prompts" && <PromptWorkspace jobId={jobId}/>}
         {error && <p role="alert">{error}</p>}
         {!data && !error && <p>Loading diagnostics…</p>}
         {data && tab === "activity" && (
@@ -123,7 +128,7 @@ export function DebugInspector({
                 {data.job.status === "running" && !paused && (
                   <ActivitySpinner label="Job running" />
                 )}
-                {data.job.status}
+                {data.job.stage || data.job.status}
               </span>
               <span>
                 {data.job.request.provider} · {data.job.request.model}
@@ -169,7 +174,7 @@ export function DebugInspector({
                 {data.containers.map((c) => (
                   <section className="debug-container" key={c.id}>
                     <h3>
-                      {c.role === "agent" ? "Codex agent" : "Credential relay"}{" "}
+                      <span className="tag">{c.stage === "planning" ? "Planner" : "Builder"}</span>{" "}{c.role === "agent" ? (c.stage === "planning" ? "Agents SDK" : "Codex agent") : "Credential relay"}{" "}
                       <span className="tag">{c.status}</span>
                     </h3>
                     <dl>

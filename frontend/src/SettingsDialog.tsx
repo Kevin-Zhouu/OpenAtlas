@@ -6,6 +6,8 @@ export type Settings = {
   provider: string;
   concurrency: number;
   model: string;
+  planner_model?: string;
+  planner_instructions?: string;
   teaching_prompt?: string | null;
 };
 type CredentialStatus = { configured: boolean; source: string };
@@ -135,7 +137,7 @@ export function SettingsDialog({
           </button>
         </div>
         <nav className="settings-tabs" aria-label="Settings sections">
-          {["general", "prompt", "skills"].map((item) => (
+          {["general", "planner", "prompt", "skills"].map((item) => (
             <button
               key={item}
               type="button"
@@ -147,7 +149,7 @@ export function SettingsDialog({
             >
               {item === "general"
                 ? "General"
-                : item === "prompt"
+                : item === "planner" ? "Planner" : item === "prompt"
                   ? "Generation prompt"
                   : "Skills"}
             </button>
@@ -184,6 +186,12 @@ export function SettingsDialog({
           onSubmit={save}
           style={{ display: tab === "skills" ? "none" : undefined }}
         >
+          {tab === "planner" && <>
+            <label>Planner model<input value={draft.planner_model || "gpt-6-astra"} onChange={e => setDraft({...draft, planner_model: e.target.value})} required /></label>
+            <label>Planner instructions<textarea className="code-editor debug-prompt" value={draft.planner_instructions || ""} onChange={e => setDraft({...draft, planner_instructions: e.target.value})}/></label>
+            <button className="quiet" type="button" onClick={async () => { try { const defaults = await request<{planner_default: string}>("prompt"); setDraft({...draft, planner_instructions: defaults.planner_default}); } catch { setError("Could not load planner defaults"); } }}>Restore default planner instructions</button>
+            <p>Saved settings apply to new planning attempts. The legacy generation prompt is used only by historical jobs without a creative brief.</p>
+          </>}
           {tab === "prompt" && (
             <PromptEditor
               value={draft.teaching_prompt}

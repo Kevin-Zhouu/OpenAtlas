@@ -67,6 +67,8 @@ it("keeps skills secondary and submits explicit selection and instructions", asy
           skills: ["builtin:visual-explainer"],
           skills_enabled: true,
           instructions: "Add a diagram",
+            prompt_only: false,
+            learner_background: "",
           provider: "demo",
           reading_minutes: 50,
         }),

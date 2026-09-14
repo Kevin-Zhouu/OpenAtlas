@@ -64,7 +64,10 @@ class SkillCatalog:
                         raise ValueError(
                             "Use a lowercase, hyphenated skill folder name"
                         )
-                    if prefix == "builtin" and (self.directory / ".builtin-overrides").is_symlink():
+                    if (
+                        prefix == "builtin"
+                        and (self.directory / ".builtin-overrides").is_symlink()
+                    ):
                         raise ValueError("Symbolic links are not supported")
                     digest = inspect_tree(folder)
                     raw = (folder / "SKILL.md").read_text()
@@ -124,3 +127,29 @@ class SkillCatalog:
             shutil.copytree(current["path"], target)
             if inspect_tree(target) != s["sha256"]:
                 raise ValueError("Skill changed while copying")
+
+    def snapshot(self, selected, cache):
+        """Retain immutable inputs privately for later prompt builds, never publish them."""
+        import tempfile
+
+        cache = Path(cache)
+        cache.mkdir(parents=True, exist_ok=True, mode=0o700)
+        for skill in selected:
+            target = cache / skill["sha256"]
+            if target.exists() and inspect_tree(target) == skill["sha256"]:
+                continue
+            with tempfile.TemporaryDirectory(dir=cache) as tmp:
+                self.stage([skill], Path(tmp))
+                folder = Path(tmp) / skill["id"].replace(":", "--")
+                try:
+                    folder.rename(target)
+                except OSError:
+                    if inspect_tree(target) != skill["sha256"]:
+                        raise ValueError("Invalid skill snapshot")
+
+    def stage_snapshots(self, selected, cache, destination):
+        for skill in selected:
+            source = Path(cache) / skill["sha256"]
+            if not source.is_dir() or inspect_tree(source) != skill["sha256"]:
+                raise ValueError("Saved skill snapshot unavailable: " + skill["id"])
+            shutil.copytree(source, destination / skill["id"].replace(":", "--"))

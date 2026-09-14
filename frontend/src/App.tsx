@@ -166,6 +166,8 @@ export function App() {
     ? reader?.versions?.find((v) => v.id === reader?.latest_version)
         ?.provider || settings.provider
     : settings.provider;
+  const [promptOnly, setPromptOnly] = useState(false);
+  const [background, setBackground] = useState("");
   async function generate(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -178,6 +180,8 @@ export function App() {
           skills: skillsEnabled ? selected : [],
           skills_enabled: skillsEnabled,
           instructions,
+          prompt_only: promptOnly && generationProvider === "codex",
+          learner_background: background,
           provider: generationProvider,
           reading_minutes: readingMinutes,
         },
@@ -275,6 +279,8 @@ export function App() {
                 {id} · removed; uncheck to continue
               </label>
             ))}
+        <label>Learner background <span>Optional</span><textarea value={background} onChange={e => setBackground(e.target.value)} rows={2}/></label>
+        {generationProvider === "codex" && <label><input type="checkbox" checked={promptOnly} onChange={e => setPromptOnly(e.target.checked)}/>Generate prompt only · inspect and edit before building</label>}
         <label className="instructions">
           Additional generation instructions <span>Optional</span>
           <textarea
@@ -317,7 +323,7 @@ export function App() {
             ? "Adding to your queue…"
             : revising
               ? "Create revision"
-              : "Generate Notebook"}{" "}
+              : promptOnly && generationProvider === "codex" ? "Generate prompt only" : "Generate Notebook"}{" "}
           <Arrow />
         </button>
       </div>

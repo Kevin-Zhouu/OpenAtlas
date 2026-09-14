@@ -22,9 +22,12 @@ from .repository import Repository
 from .skills import SkillCatalog
 from .agents import CodexAdapter, DEFAULT_TEACHING_PROMPT
 from .skill_editor import SkillEditor
+from .planning import DEFAULT_PLANNER_INSTRUCTIONS
 
 
 class Generation(BaseModel):
+    prompt_only: bool = False
+    learner_background: str = Field(default="", max_length=8000)
     prompt: str = Field(min_length=3, max_length=12000)
     skills: Optional[list[str]] = None
     skills_enabled: Optional[bool] = None
@@ -34,6 +37,8 @@ class Generation(BaseModel):
 
 
 class Settings(BaseModel):
+    planner_model: str = Field(default=DEFAULT_MODEL, min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9._-]+$")
+    planner_instructions: str = Field(default=DEFAULT_PLANNER_INSTRUCTIONS, min_length=1, max_length=40000)
     teaching_prompt: Optional[str] = Field(default=None, max_length=40000)
     provider: str = "demo"
     concurrency: int = Field(default=2, ge=1, le=8)
@@ -228,12 +233,17 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     def update_settings(body: Settings):
         if body.provider not in ("demo", "codex"):
             raise HTTPException(422, "Unknown provider")
-        repo.save_settings(body.model_dump())
+        saved = body.model_dump()
+        previous = repo.settings()
+        for field in ('planner_model', 'planner_instructions'):
+            if field not in body.model_fields_set:
+                saved[field] = previous[field]
+        repo.save_settings(saved)
         return repo.settings()
 
     @app.get("/api/prompt")
     def prompt_defaults():
-        return {"default": DEFAULT_TEACHING_PROMPT}
+        return {"default": DEFAULT_TEACHING_PROMPT, "planner_default": DEFAULT_PLANNER_INSTRUCTIONS}
 
     @app.post("/api/prompt/preview")
     def prompt_preview(body: PromptEdit):
@@ -318,6 +328,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         if provider not in ("demo", "codex"):
             raise HTTPException(422, "Unknown generation provider")
         base_version = None
+        existing_context = None
         reading_minutes = body.reading_minutes
         ids = body.skills
         skills_enabled = body.skills_enabled
@@ -327,6 +338,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 raise HTTPException(404, "Published Notebook not found")
             base_version = existing["latest_version"]
             version = next(v for v in existing["versions"] if v["id"] == base_version)
+            existing_context = {'title': existing['title'], 'description': version['manifest'].get('description', '')}
             if skills_enabled is None:
                 skills_enabled = bool(version["provenance"])
             if reading_minutes is None:
@@ -339,9 +351,22 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             selected = catalog.resolve(ids or []) if skills_enabled is not False else []
         except ValueError as e:
             raise HTTPException(422, str(e))
+        if body.prompt_only and provider != 'codex':
+            raise HTTPException(422, 'Prompt planning requires the Codex provider and an OpenAI key')
+        try:
+            catalog.snapshot(selected, repo.data / 'skill-inputs')
+        except (ValueError, OSError) as error:
+            raise HTTPException(422, str(error))
         return repo.enqueue(
             {
                 "prompt": body.prompt.strip(),
+                "learner_background": body.learner_background,
+                "existing_notebook": existing_context,
+                "prompt_only": body.prompt_only,
+                "planning_enabled": provider == 'codex',
+                "skill_snapshots": True,
+                "planner_model": settings['planner_model'],
+                "planner_instructions": settings['planner_instructions'],
                 "instructions": body.instructions,
                 "skills": selected,
                 "skills_enabled": skills_enabled is not False,
@@ -402,6 +427,57 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             dict(original["request"], revalidate_job=job_id), original["notebook_id"]
         )
 
+    @app.post("/api/jobs/{job_id}/cancel")
+    def cancel_job(job_id: str):
+        if not repo.job(job_id):
+            raise HTTPException(404, 'Generation not found')
+        repo.cancel(job_id)
+        return repo.job(job_id)
+
+    @app.get("/api/jobs/{job_id}/plans")
+    def plans(job_id: str):
+        job = repo.job(job_id)
+        if not job:
+            raise HTTPException(404, 'Generation not found')
+        return repo.plan_records(job['notebook_id'])
+
+    @app.post("/api/prompts/{revision_id}/edit", status_code=201)
+    def edit_plan(revision_id: str, body: PromptEdit):
+        revision = repo.prompt_revision(revision_id)
+        if not revision:
+            raise HTTPException(404, 'Prompt not found')
+        try:
+            return repo.save_prompt(revision['attempt_id'], body.content, revision_id)
+        except ValueError as error:
+            raise HTTPException(422, str(error))
+
+    @app.post("/api/prompts/{revision_id}/build", status_code=202)
+    def build_plan(revision_id: str):
+        revision = repo.prompt_revision(revision_id)
+        if not revision:
+            raise HTTPException(404, 'Prompt not found')
+        attempt = repo.rows('SELECT job_id FROM planning_attempts WHERE id=:id', id=revision['attempt_id'])[0]
+        original = repo.job(attempt['job_id'])
+        request = dict(original['request'], build_prompt=revision['content'], prompt_only=False,
+                       planning_attempt_id=revision['attempt_id'], prompt_revision_id=revision_id)
+        for key in ('continue_job', 'revalidate_job', 'retry_of', 'validation_feedback', 'job_id'):
+            request.pop(key, None)
+        return repo.enqueue(request, original['notebook_id'])
+
+    @app.post("/api/jobs/{job_id}/replan", status_code=202)
+    def replan(job_id: str):
+        original = repo.job(job_id)
+        if not original:
+            raise HTTPException(404, 'Generation not found')
+        if original['status'] in ('queued', 'running'):
+            raise HTTPException(409, 'Wait for this attempt to finish')
+        request = dict(original['request'], prompt_only=True, planning_enabled=True, provider='codex')
+        for key in ('build_prompt', 'planning_attempt_id', 'prompt_revision_id', 'continue_job', 'retry_of', 'revalidate_job', 'job_id'):
+            request.pop(key, None)
+        settings = repo.settings()
+        request.update(planner_model=settings['planner_model'], planner_instructions=settings['planner_instructions'])
+        return repo.enqueue(request, original['notebook_id'])
+
     @app.get("/api/jobs/{job_id}/debug")
     def job_debug(job_id: str):
         job = repo.job(job_id)
@@ -420,7 +496,11 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             "prompt_source": "captured" if invocations else "reconstructed" if agent_used else "not_applicable",
             "skills": [{**s, "sandbox_path": "/workspace/skills/" + s["id"].replace(":", "--") + "/SKILL.md"} for s in request.get("skills", [])],
         }
-        return {"job": job, **debug.read(job_id), "generation": json.loads(redact(json.dumps(metadata)))}
+        try:
+            known_key = credentials.openai_key()
+        except ValueError:
+            known_key = ''
+        return json.loads(redact(json.dumps({"job": job, **debug.read(job_id), "generation": metadata}), (known_key,)))
 
     @app.get("/api/jobs/{job_id}")
     def job(job_id: str):

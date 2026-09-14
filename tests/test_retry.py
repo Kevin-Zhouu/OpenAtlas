@@ -37,6 +37,8 @@ def test_continue_seeds_checkpoint_and_publishes_after_validation(tmp_path):
     (workspace/'source'/'unfinished.txt').write_text('existing work')
     assert store.checkpoint(original['id'], workspace)
     repo.claim(2)
+    attempt = repo.start_plan(original['id'], original['request'])
+    repo.finish_plan(original['id'], attempt, 'Build a caching lesson showing cache hits and misses with an explorable request stream.')
     repo.fail(original['id'], 'No credits')
     assert c.get('/api/jobs').json()[0]['can_continue']
     continued = c.post('/api/jobs/'+original['id']+'/retry', json={'mode':'continue'}).json()

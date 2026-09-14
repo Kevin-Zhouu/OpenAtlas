@@ -1727,3 +1727,5 @@ a {
 .generation-details pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:400px; overflow:auto; font-size:12px; line-height:1.6; }
 .generation-details>details { margin-top:16px; }
 @media(max-width:500px) { .generation-facts { grid-template-columns:1fr; } }
+
+.prompt-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }

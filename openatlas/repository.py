@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import create_engine, event, text
+from sqlalchemy.exc import OperationalError
 
 from . import config
 
@@ -33,7 +34,16 @@ class Repository:
             connection.execute("PRAGMA foreign_keys=ON")
 
         with self.engine.connect() as c:
-            c.exec_driver_sql("PRAGMA journal_mode=WAL")
+            # SQLite's journal-mode transition can return SQLITE_BUSY immediately
+            # while another process initializes the same new library.
+            for attempt in range(100):
+                try:
+                    c.exec_driver_sql("PRAGMA journal_mode=WAL")
+                    break
+                except OperationalError as error:
+                    if "locked" not in str(error).lower() or attempt == 99:
+                        raise
+                    time.sleep(0.05)
             c.exec_driver_sql("BEGIN IMMEDIATE")
             c.exec_driver_sql(
                 "CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY)"
@@ -74,9 +84,16 @@ class Repository:
         )
 
     def settings(self):
-        return json.loads(
-            self.rows("SELECT value FROM settings WHERE id=1")[0]["value"]
-        )
+        from .models import DEFAULT_MODEL
+        from .planning import DEFAULT_PLANNER_INSTRUCTIONS
+
+        return {
+            "planner_model": DEFAULT_MODEL,
+            "planner_instructions": DEFAULT_PLANNER_INSTRUCTIONS,
+            **json.loads(
+                self.rows("SELECT value FROM settings WHERE id=1")[0]["value"]
+            ),
+        }
 
     def save_settings(self, settings):
         with self.engine.begin() as c:
@@ -91,9 +108,16 @@ class Repository:
         with self.engine.begin() as c:
             if retry_of:
                 c.exec_driver_sql("BEGIN IMMEDIATE")
-                existing = c.execute(text("SELECT id FROM jobs WHERE status IN ('queued','running') AND json_extract(request, '$.retry_of')=:id"), {"id": retry_of}).first()
+                existing = c.execute(
+                    text(
+                        "SELECT id FROM jobs WHERE status IN ('queued','running') AND json_extract(request, '$.retry_of')=:id"
+                    ),
+                    {"id": retry_of},
+                ).first()
                 if existing:
-                    raise ValueError("An attempt for this failed job is already queued or running")
+                    raise ValueError(
+                        "An attempt for this failed job is already queued or running"
+                    )
             c.execute(
                 text(
                     "INSERT OR IGNORE INTO notebooks(id,title,created_at) VALUES (:id,:title,:stamp)"
@@ -121,9 +145,15 @@ class Repository:
             c.exec_driver_sql("BEGIN IMMEDIATE")
             c.execute(
                 text(
-                    "UPDATE jobs SET status='failed',progress='Runner interrupted',error='Generation lease expired; submit a revision or try again.',updated_at=:t WHERE status='running' AND lease_until<:s"
+                    "UPDATE jobs SET status='failed',stage='failed',progress='Runner interrupted',error='Generation lease expired; submit a revision or try again.',updated_at=:t WHERE status='running' AND lease_until<:s"
                 ),
                 {"t": now(), "s": time.time()},
+            )
+            c.execute(
+                text(
+                    "UPDATE planning_attempts SET status='failed',error='Runner interrupted; retry planning',finished_at=:t WHERE status='running' AND job_id IN (SELECT id FROM jobs WHERE status='failed')"
+                ),
+                {"t": now()},
             )
             count = c.execute(
                 text("SELECT count(*) FROM jobs WHERE status='running'")
@@ -160,7 +190,14 @@ class Repository:
         with self.engine.begin() as c:
             c.execute(
                 text(
-                    "UPDATE jobs SET status='failed',progress='Generation failed',error=:e,updated_at=:t WHERE id=:id AND status='running'"
+                    "UPDATE jobs SET status='failed',stage='failed',progress='Generation failed',error=:e,updated_at=:t WHERE id=:id AND status='running'"
+                ),
+                {"e": error[:2000], "t": now(), "id": job_id},
+            )
+
+            c.execute(
+                text(
+                    "UPDATE planning_attempts SET status='failed',error=:e,finished_at=:t WHERE job_id=:id AND status='running'"
                 ),
                 {"e": error[:2000], "t": now(), "id": job_id},
             )
@@ -194,7 +231,7 @@ class Repository:
             )
             c.execute(
                 text(
-                    "UPDATE jobs SET status='succeeded',progress='Ready to explore',version_id=:v,updated_at=:t WHERE id=:id"
+                    "UPDATE jobs SET status='succeeded',stage='completed',progress='Ready to explore',version_id=:v,updated_at=:t WHERE id=:id"
                 ),
                 {"v": version, "t": now(), "id": job["id"]},
             )
@@ -217,3 +254,109 @@ class Repository:
             v["manifest"] = json.loads(v["manifest"])
             v["provenance"] = json.loads(v["provenance"])
         return n
+
+    def stage(self, job_id, stage):
+        with self.engine.begin() as c:
+            c.execute(
+                text("UPDATE jobs SET stage=:s WHERE id=:id AND status='running'"),
+                {"s": stage, "id": job_id},
+            )
+
+    def start_plan(self, job_id, request):
+        attempt = uid()
+        with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "INSERT INTO planning_attempts(id,job_id,inputs,status,created_at) VALUES (:id,:j,:i,'running',:t)"
+                ),
+                {"id": attempt, "j": job_id, "i": json.dumps(request), "t": now()},
+            )
+        return attempt
+
+    def plan_records(self, notebook_id):
+        attempts = self.rows(
+            "SELECT p.* FROM planning_attempts p JOIN jobs j ON j.id=p.job_id WHERE j.notebook_id=:n ORDER BY p.created_at",
+            n=notebook_id,
+        )
+        for a in attempts:
+            a["inputs"] = json.loads(a["inputs"])
+            a["revisions"] = self.rows(
+                "SELECT * FROM prompt_revisions WHERE attempt_id=:id ORDER BY created_at",
+                id=a["id"],
+            )
+        return attempts
+
+    def prompt_revision(self, revision_id):
+        rows = self.rows("SELECT * FROM prompt_revisions WHERE id=:id", id=revision_id)
+        return rows[0] if rows else None
+
+    def save_prompt(self, attempt, content, parent=None):
+        from .planning import validate_prompt
+
+        content = validate_prompt(content)
+        revision = uid()
+        with self.engine.begin() as c:
+            c.execute(
+                text("INSERT INTO prompt_revisions VALUES (:id,:a,:p,:c,:t)"),
+                {"id": revision, "a": attempt, "p": parent, "c": content, "t": now()},
+            )
+        return self.prompt_revision(revision)
+
+    def finish_plan(self, job_id, attempt, content):
+        from .planning import validate_prompt
+
+        content = validate_prompt(content)
+        revision = uid()
+        with self.engine.begin() as c:
+            c.exec_driver_sql("BEGIN IMMEDIATE")
+            row = c.execute(
+                text("SELECT request FROM jobs WHERE id=:id AND status='running'"),
+                {"id": job_id},
+            ).first()
+            if not row:
+                raise ValueError("Planning job no longer owns its lease")
+            request = json.loads(row[0])
+            request.update(
+                build_prompt=content,
+                planning_attempt_id=attempt,
+                prompt_revision_id=revision,
+            )
+            c.execute(
+                text("INSERT INTO prompt_revisions VALUES (:id,:a,NULL,:c,:t)"),
+                {"id": revision, "a": attempt, "c": content, "t": now()},
+            )
+            c.execute(
+                text(
+                    "UPDATE planning_attempts SET status='succeeded',output=:o,finished_at=:t WHERE id=:id"
+                ),
+                {"o": content, "t": now(), "id": attempt},
+            )
+            c.execute(
+                text("UPDATE jobs SET request=:r WHERE id=:id"),
+                {"r": json.dumps(request), "id": job_id},
+            )
+        return request
+
+    def complete_prompt(self, job_id):
+        with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "UPDATE jobs SET status='succeeded',stage='completed',progress='Prompt ready to inspect and build',updated_at=:t WHERE id=:id AND status='running'"
+                ),
+                {"t": now(), "id": job_id},
+            )
+
+    def cancel(self, job_id):
+        with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "UPDATE jobs SET status='failed',stage='failed',progress='Cancelled',error='Cancelled by user; saved prompts can be reused',updated_at=:t WHERE id=:id AND status IN ('queued','running')"
+                ),
+                {"t": now(), "id": job_id},
+            )
+            c.execute(
+                text(
+                    "UPDATE planning_attempts SET status='failed',error='Cancelled by user',finished_at=:t WHERE job_id=:id AND status='running'"
+                ),
+                {"t": now(), "id": job_id},
+            )

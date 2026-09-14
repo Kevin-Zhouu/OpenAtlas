@@ -5,6 +5,7 @@ export type ActivitySource = {
   id: string;
   agent_log: string;
   status: string;
+  stage?: string;
   started_at?: string;
 };
 type Task = { text: string; completed: boolean };
@@ -29,7 +30,12 @@ export function parseActivity(log: string, scope: string): ActivityItem[] {
     try {
       const event = JSON.parse(line);
       if (!event || typeof event !== "object") continue;
-      const item = event.item;
+      const item = event.item || (String(event.type).startsWith("planner.") ? {
+        type: "planner_activity", status: "completed",
+        text: event.type === "planner.resource_read" ? `Read ${event.path} · offset ${event.offset} · ${event.characters} characters`
+          : event.type === "planner.resources" ? `Available resources: ${(event.paths || []).join(", ")}`
+          : event.type === "planner.started" ? `Planner started · ${event.model}` : `Planner tool event · ${event.name || event.type}`,
+      } : undefined);
       if (
         !item &&
         !["error", "turn.failed", "turn.completed"].includes(event.type)
@@ -112,6 +118,8 @@ function Item({
     command_execution: "Command",
     file_change: "File changes",
     agent_message: "Codex",
+    planner_message: "Planner",
+    planner_activity: "Planner activity",
     reasoning: "Agent update",
     todo_list: "Plan",
     web_search: "Searching the web",
@@ -250,7 +258,7 @@ export function AgentActivity({
         .sort((a, b) => (a.started_at || "").localeCompare(b.started_at || ""))
         .map((source) => ({
           source,
-          items: parseActivity(source.agent_log, source.id),
+          items: parseActivity(source.agent_log, source.id).map(item => source.stage === "planning" && item.kind === "agent_message" ? {...item, kind: "planner_message"} : item),
         })),
     [sources],
   );

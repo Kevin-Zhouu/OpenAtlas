@@ -59,3 +59,52 @@ def test_disposable_docker_roundtrip(tmp_path):
     assert len(snapshots) == 2
     assert {s["role"] for s in snapshots} == {"agent", "relay"}
     assert all(s["status"] == "removed" for s in snapshots)
+
+@pytest.mark.skipif(os.getenv('OPENATLAS_DOCKER_TEST') != '1', reason='Requires built planner image')
+def test_real_agents_sdk_planner_stream_and_isolation(tmp_path):
+    from pathlib import Path
+    from openatlas.planning import PlannerAdapter
+    class Credential:
+        def openai_key(self): return 'test-not-a-real-key'
+    class FixtureAdapter(PlannerAdapter):
+        def command(self, request):
+            return ['/opt/planner/bin/python', '/workspace/sdk_test.py']
+    (tmp_path/'sdk_test.py').write_text((Path(__file__).parent/'fixtures/planner_provider.py').read_text())
+    skill = tmp_path/'skills/local--fixture'
+    skill.mkdir(parents=True)
+    (skill/'SKILL.md').write_text('Read notes.md to plan token explanations.')
+    (skill/'notes.md').write_text('fixture supporting notes')
+    request = {'job_id': str(uuid4()), 'execution_stage': 'planning', 'planner_model': 'fixture-model', 'skills': []}
+    debug = DebugStore(tmp_path/'debug')
+    result = DockerExecutor(Credential(), adapter=FixtureAdapter(), debug=debug).run(tmp_path, request, lambda _: None)
+    assert 'token boundaries' in result
+    snapshots = debug.read(request['job_id'])['containers']
+    assert len(snapshots) == 2 and all(c['status'] == 'removed' for c in snapshots)
+    agent = next(c for c in snapshots if c['role'] == 'agent')
+    assert agent['stage'] == 'planning'
+    assert 'planner.resource_read' in agent['agent_log'] and 'notes.md' in agent['agent_log']
+    assert 'test-not-a-real-key' not in str(snapshots)
+
+@pytest.mark.skipif(os.getenv('OPENATLAS_DOCKER_TEST') != '1', reason='Requires built planner image')
+@pytest.mark.parametrize('cancel', [False, True])
+def test_planner_failure_and_cancellation_remove_containers(tmp_path, cancel):
+    import docker
+    class Credential:
+        def openai_key(self): return 'test-not-a-real-key'
+    class Adapter:
+        def command(self, request):
+            return ['python3', '-c', 'import time; time.sleep(30)' if cancel else 'raise SystemExit(1)']
+    debug = DebugStore(tmp_path/'debug')
+    request = {'job_id': str(uuid4()), 'execution_stage': 'planning', 'skills': []}
+    calls = []
+    def cancelled(request):
+        calls.append(True)
+        return cancel and len(calls) > 2
+    with pytest.raises(ValueError, match='cancelled|Planner exited'):
+        DockerExecutor(Credential(), adapter=Adapter(), debug=debug, cancelled=cancelled).run(tmp_path, request, lambda _: None)
+    client = docker.from_env()
+    try:
+        assert not client.containers.list(all=True, filters={'label': 'openatlas.job='+request['job_id']})
+    finally:
+        client.close()
+    assert all(c['status'] == 'removed' for c in debug.read(request['job_id'])['containers'])

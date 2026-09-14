@@ -22,7 +22,10 @@ def system(tmp_path):
     catalog = SkillCatalog(tmp_path / "skills")
     store = ArtifactStore(repo.data)
     client = TestClient(create_app(repo, catalog, store), base_url="http://localhost")
-    runner = Runner(repo, store, catalog)
+    class Planner:
+        def run(self, *args):
+            return "Build an explorable lesson about the requested topic with meaningful visual explanations and controls."
+    runner = Runner(repo, store, catalog, planner=Planner())
     return repo, catalog, store, client, runner
 
 
@@ -262,6 +265,10 @@ def test_codex_publication_failure_gets_one_repair(system):
     ).json()
     runner.process(repo.claim(1))
     assert agent.calls == 2
+    saved_request = repo.job(job['id'])['request']
+    published = repo.notebook(job['notebook_id'])['versions'][0]['manifest']
+    assert published['planning_attempt_id'] == saved_request['planning_attempt_id']
+    assert published['prompt_revision_id'] == saved_request['prompt_revision_id']
     revision = client.post(
         "/api/notebooks/" + job["notebook_id"] + "/revisions",
         json={"prompt": "Improve the lesson"},
@@ -276,7 +283,7 @@ def test_parallel_initial_migrations(tmp_path):
     with ThreadPoolExecutor(max_workers=2) as pool:
         repos = list(pool.map(lambda _: Repository(tmp_path / "new"), range(2)))
     assert all(r.settings()["concurrency"] == 2 for r in repos)
-    assert len(repos[0].rows("SELECT * FROM schema_migrations")) == 2
+    assert len(repos[0].rows("SELECT * FROM schema_migrations")) == 3
 
 
 def test_shared_access_token(system, monkeypatch):

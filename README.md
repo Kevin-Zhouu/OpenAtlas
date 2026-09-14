@@ -266,3 +266,60 @@ Use `select` for a native dropdown and provide the option's `value`, not its lab
 For compatibility with older generated manifests, `fill` on a `<select>` also
 selects its option. Both paths use browser selection events and retain the same
 visible-feedback assertions; missing options or broken interactions still fail.
+
+### Topic-specific planning
+
+New Codex generations run **Plan → Build → Validate → Publish** in the persisted
+background runner. Planning uses the OpenAI Agents SDK in its own disposable
+container, followed by a separate Codex container. Both use the existing
+job-scoped credential relay and share the configured generation concurrency limit.
+Demo generation remains an explicitly selected, inference-free provider.
+
+Rebuild the generation image after upgrading:
+
+```sh
+docker build -f generation/Dockerfile -t openatlas-generation:local .
+```
+
+In **Settings → Planner**, choose the planner model and edit or restore its default
+instructions. Builder model selection stays in General. The legacy generation
+prompt is retained for historical jobs; new builds use the selected creative brief
+plus OpenAtlas's fixed artifact, sandbox and validation requirements.
+
+For experimentation, select **Generate prompt only** in the generation options.
+Open **Jobs → Inspect job → Prompts** to select, edit, copy, compare or regenerate
+candidates. Save edits as a new revision, then choose **Build from this prompt**.
+This queues only the builder. Re-run and Continue also reuse a saved prompt when
+one exists. Regeneration intentionally runs planning again with current planner
+settings, retaining earlier candidates and the original inputs and skill snapshots.
+
+Planning attempts, immutable Markdown prompt revisions, configuration, errors and
+current stages are stored in SQLite. Published version manifests include
+`planning_attempt_id` and `prompt_revision_id`. Private, hash-verified selected skill
+snapshots live in the application's `skill-inputs` directory; they are copied only
+to disposable workspaces and excluded from published source and artifacts.
+The inspector retains per-stage container details, exact invocation instructions,
+observable agent messages, tool/resource reads and bounded live logs. No hidden
+reasoning or SDK cloud traces are requested. The planner has read-only skill tools;
+external research is explicitly assigned to Codex.
+
+Cancel an active job from its inspector. Cancelled and lease-expired jobs enter a
+recoverable failed state. Planning errors never trigger a demo or legacy-prompt
+fallback. A builder failure leaves its selected prompt available for another build.
+
+Planner API additions: `GET /api/jobs/{id}/plans`,
+`POST /api/jobs/{id}/replan`, `POST /api/prompts/{id}/edit`,
+`POST /api/prompts/{id}/build`, and `POST /api/jobs/{id}/cancel`.
+
+The ordinary tests use planner doubles and make no paid inference calls. To test
+actual Agents SDK streaming, tool dispatch, resource confinement and container
+cleanup against a deterministic local HTTP provider:
+
+```sh
+OPENATLAS_DOCKER_TEST=1 .venv/bin/python -m pytest tests/test_docker.py -q
+```
+
+This verifies the real SDK execution path without claiming to evaluate live model
+creativity. Evaluate topic quality separately with your configured API account;
+compare requests such as LLM inference, human anatomy and Chernobyl, checking that
+controls teach different mechanisms and explicit requirements survive planning.

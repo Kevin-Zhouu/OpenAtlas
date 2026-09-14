@@ -13,6 +13,7 @@ from .credentials import Credentials
 from .debug import DebugStore, observe
 from .demo import generate
 from .execution import DockerExecutor
+from .planning import PlannerAdapter
 from .repository import Repository, uid
 from .skills import SkillCatalog
 
@@ -20,14 +21,29 @@ log = logging.getLogger("openatlas.runner")
 
 
 class Runner:
-    def __init__(self, repo=None, store=None, catalog=None, executor=None):
+    def __init__(
+        self, repo=None, store=None, catalog=None, executor=None, planner=None
+    ):
         self.repo = repo or Repository()
         self.store = store or ArtifactStore(self.repo.data)
         self.catalog = catalog or SkillCatalog()
         self.executor = executor or DockerExecutor(
-            Credentials(self.repo.data), debug=DebugStore(self.repo.data), checkpoint_store=self.store
+            Credentials(self.repo.data),
+            debug=DebugStore(self.repo.data),
+            checkpoint_store=self.store,
+        )
+        self.planner = planner or DockerExecutor(
+            Credentials(self.repo.data),
+            adapter=PlannerAdapter(),
+            debug=DebugStore(self.repo.data),
         )
         self.stop = threading.Event()
+        for execution in (self.executor, self.planner):
+            if isinstance(execution, DockerExecutor):
+                execution.cancelled = lambda request: (
+                    self.stop.is_set()
+                    or self.repo.job(request["job_id"])["status"] != "running"
+                )
 
     def process(self, job):
         done = threading.Event()
@@ -46,7 +62,33 @@ class Runner:
                 request = dict(job["request"], job_id=job["id"])
                 recovery = request.get("revalidate_job")
                 if not recovery:
-                    self.catalog.stage(request["skills"], workspace / "skills")
+                    if request.get("skill_snapshots"):
+                        self.catalog.stage_snapshots(
+                            request["skills"],
+                            self.repo.data / "skill-inputs",
+                            workspace / "skills",
+                        )
+                    else:
+                        self.catalog.stage(request["skills"], workspace / "skills")
+                if (
+                    request.get("planning_enabled")
+                    and not recovery
+                    and not request.get("build_prompt")
+                ):
+                    self.repo.stage(job["id"], "planning")
+                    attempt = self.repo.start_plan(job["id"], request)
+                    content = self.planner.run(
+                        workspace,
+                        dict(request, execution_stage="planning"),
+                        lambda message: self.repo.progress(job["id"], message),
+                    )
+                    saved = self.repo.finish_plan(job["id"], attempt, content)
+                    job["request"] = saved
+                    request = dict(saved, job_id=job["id"])
+                if request.get("prompt_only") and not recovery:
+                    self.repo.complete_prompt(job["id"])
+                    return
+                self.repo.stage(job["id"], "building")
                 if request.get("base_version"):
                     self.store.seed(
                         job["notebook_id"], request["base_version"], workspace
@@ -68,6 +110,7 @@ class Runner:
                 else:
                     self.executor.run(workspace, request, progress)
                 for attempt in range(2):
+                    self.repo.stage(job["id"], "validating")
                     progress("Checking the Notebook in a sandboxed browser")
                     try:
                         manifest = validate(workspace)
@@ -82,10 +125,14 @@ class Runner:
                         progress(
                             "Repairing issues found by the Notebook browser checks"
                         )
+                        self.repo.stage(job["id"], "building")
                         self.executor.run(workspace, request, progress)
                 manifest["demo"] = request["provider"] == "demo"
                 manifest["target_reading_minutes"] = request.get("reading_minutes", 20)
+                manifest["planning_attempt_id"] = request.get("planning_attempt_id")
+                manifest["prompt_revision_id"] = request.get("prompt_revision_id")
                 version = uid()
+                self.repo.stage(job["id"], "publishing")
                 progress("Saving the Notebook to your local library")
                 self.store.save(
                     job["notebook_id"], version, workspace, manifest, request["skills"]
@@ -99,6 +146,8 @@ class Runner:
                 else type(e).__name__
                 + ": generation or browser validation failed; inspect local prerequisites."
             )
+            if self.repo.job(job["id"])["stage"] == "planning":
+                message = "Planning failed: " + message
             self.repo.fail(job["id"], message)
             log.warning("Job %s failed (%s)", job["id"], type(e).__name__)
         finally:

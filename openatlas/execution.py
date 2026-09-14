@@ -71,7 +71,16 @@ def extract_output(chunks, destination):
 
 
 class DockerExecutor:
-    def __init__(self, credentials=None, client=None, adapter=None, debug=None, checkpoint_store=None):
+    def __init__(
+        self,
+        credentials=None,
+        client=None,
+        adapter=None,
+        debug=None,
+        checkpoint_store=None,
+        cancelled=None,
+    ):
+        self.cancelled = cancelled or (lambda request: False)
         self.credentials = credentials or Credentials()
         self.client = client
         self.adapter = adapter or CodexAdapter()
@@ -79,10 +88,13 @@ class DockerExecutor:
         self.checkpoint_store = checkpoint_store
 
     def run(self, workspace, request, progress):
+        if self.cancelled(request):
+            raise ValueError("Generation cancelled before dispatch")
         client = self.client or docker.from_env()
         key = self.credentials.openai_key()
         token = secrets.token_urlsafe(32)
         broker = container = None
+        planning = request.get("execution_stage") == "planning"
         deadline = time.monotonic() + config.TIMEOUT
         try:
             common = dict(
@@ -96,6 +108,7 @@ class DockerExecutor:
                 nano_cpus=2_000_000_000,
                 labels={
                     "openatlas.job": request["job_id"],
+                    "openatlas.stage": "planning" if planning else "building",
                     "openatlas.expires": str(time.time() + config.TIMEOUT + 120),
                 },
                 log_config=docker.types.LogConfig(
@@ -142,10 +155,26 @@ class DockerExecutor:
             finally:
                 connection.close()
             container.exec_run(["mkdir", "-p", "/tmp/home/.codex"], user="1000:1000")
-            progress("Codex is writing, building, and testing your Notebook")
+            progress(
+                "Planner is designing your Notebook"
+                if planning
+                else "Codex is writing, building, and testing your Notebook"
+            )
             agent_command = self.adapter.command(request)
             if self.debug:
-                self.debug.record_invocation(request["job_id"], agent_command, request, (key, token), execution={"container_id": container.id, "image": config.GENERATION_IMAGE, "timeout_seconds": config.TIMEOUT, "workdir": "/workspace", "user": "1000:1000"})
+                self.debug.record_invocation(
+                    request["job_id"],
+                    agent_command,
+                    request,
+                    (key, token),
+                    execution={
+                        "container_id": container.id,
+                        "image": config.GENERATION_IMAGE,
+                        "timeout_seconds": config.TIMEOUT,
+                        "workdir": "/workspace",
+                        "user": "1000:1000",
+                    },
+                )
             command = [
                 "sh",
                 "-c",
@@ -155,11 +184,18 @@ class DockerExecutor:
             execution = client.api.exec_create(
                 container.id, command, workdir="/workspace", user="1000:1000"
             )
+            if self.cancelled(request):
+                raise ValueError("Generation cancelled before agent invocation")
             client.api.exec_start(execution["Id"], detach=True)
             while client.api.exec_inspect(execution["Id"])["Running"]:
+                if self.cancelled(request):
+                    raise ValueError(
+                        "Generation cancelled or runner stopping; retry from saved output"
+                    )
                 if time.monotonic() > deadline:
                     raise ValueError(
-                        "Codex generation exceeded the configured time limit"
+                        ("Planning" if planning else "Codex generation")
+                        + " exceeded the configured time limit"
                     )
                 time.sleep(2)
             if client.api.exec_inspect(execution["Id"])["ExitCode"] != 0:
@@ -183,8 +219,22 @@ class DockerExecutor:
                     .replace(token, "[redacted]")
                 )
                 raise ValueError(
-                    "Codex exited unsuccessfully. No demo fallback was used. "
+                    ("Planner" if planning else "Codex")
+                    + " exited unsuccessfully. No demo fallback was used. "
                     + diagnostic[-1500:]
+                )
+            if planning:
+                from .planning import validate_prompt
+
+                result = container.exec_run(
+                    ["head", "-c", "160001", "/workspace/plan.md"], user="1000:1000"
+                )
+                if result.exit_code != 0:
+                    raise ValueError("Planning failed: missing build prompt")
+                return validate_prompt(
+                    result.output.decode("utf-8")
+                    .replace(key, "[redacted]")
+                    .replace(token, "[redacted]")
                 )
             progress("Collecting generated source and static files")
             # Remove generation-only inputs and dependencies before archive collection.
@@ -227,17 +277,40 @@ class DockerExecutor:
         except Exception:
             # Collect only deliverable files, never agent home/auth/history or
             # skills. A failed generation can be partial and lack a manifest.
-            if container is not None and self.checkpoint_store is not None:
+            if (
+                not planning
+                and container is not None
+                and self.checkpoint_store is not None
+            ):
                 try:
                     import tempfile
-                    result = container.exec_run([
-                        "tar", "cf", "-", "--exclude=node_modules", "--exclude=.git",
-                        "--exclude=.env*", "--ignore-failed-read", "-C", "/workspace",
-                        "source", "dist", "manifest.json",
-                    ], stream=True, demux=True, user="1000:1000")
-                    with tempfile.TemporaryDirectory(prefix="openatlas-checkpoint-") as tmp:
+
+                    result = container.exec_run(
+                        [
+                            "tar",
+                            "cf",
+                            "-",
+                            "--exclude=node_modules",
+                            "--exclude=.git",
+                            "--exclude=.env*",
+                            "--ignore-failed-read",
+                            "-C",
+                            "/workspace",
+                            "source",
+                            "dist",
+                            "manifest.json",
+                        ],
+                        stream=True,
+                        demux=True,
+                        user="1000:1000",
+                    )
+                    with tempfile.TemporaryDirectory(
+                        prefix="openatlas-checkpoint-"
+                    ) as tmp:
                         saved = Path(tmp)
-                        extract_output((out for out, err in result.output if out), saved)
+                        extract_output(
+                            (out for out, err in result.output if out), saved
+                        )
                         if self.checkpoint_store.checkpoint(request["job_id"], saved):
                             progress("Saved partial work; this job can be continued")
                 except Exception:

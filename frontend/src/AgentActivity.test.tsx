@@ -119,3 +119,9 @@ it("formats agent prose without enabling HTML, links, or remote images", () => {
   expect(screen.getByText("npm test").tagName).toBe("CODE");
   expect(document.querySelector("script, iframe, img, a")).toBeNull();
 });
+
+it('shows actual planner resource reads as observable activity', () => {
+  const rows = parseActivity(JSON.stringify({type: 'planner.resource_read', path: 'local--anatomy/notes.md', offset: 0, characters: 120}), 'planner');
+  expect(rows[0].text).toContain('Read local--anatomy/notes.md');
+  expect(rows[0].status).toBe('completed');
+});
