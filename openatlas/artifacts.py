@@ -11,6 +11,13 @@ from playwright.sync_api import expect, sync_playwright
 
 from . import config
 
+TEXT_ATTACHMENTS = {".cs", ".csproj", ".sln", ".sh", ".md", ".py", ".go", ".rs", ".java", ".c", ".h", ".cpp", ".hpp", ".ts", ".tsx", ".jsx", ".sql", ".yaml", ".yml", ".toml", ".xml"}
+
+
+def artifact_media_type(path):
+    return "text/plain; charset=utf-8" if path.suffix.lower() in TEXT_ATTACHMENTS else (mimetypes.guess_type(str(path))[0] or "application/octet-stream")
+
+
 ALLOWED = {
     ".html",
     ".css",
@@ -113,6 +120,46 @@ class ArtifactStore:
             shutil.copytree(retained / name, workspace / name, dirs_exist_ok=True)
         shutil.copy(retained / "manifest.json", workspace / "manifest.json")
 
+    def checkpoint_path(self, job_id):
+        from uuid import UUID
+        path = self.root.parent / "checkpoints" / str(UUID(job_id))
+        return path if (path / "source").is_dir() else self.recovery_path(job_id)
+
+    def checkpoint(self, job_id, workspace):
+        from uuid import UUID
+        target = self.root.parent / "checkpoints" / str(UUID(job_id))
+        safe_tree(workspace)
+        if not safe_tree(workspace / "source"):
+            return False
+        staging = target.with_name(target.name + ".staging")
+        try:
+            staging.mkdir(parents=True, exist_ok=True, mode=0o700)
+            for name in ("source", "dist", "manifest.json"):
+                source = workspace / name
+                if source.is_dir():
+                    shutil.copytree(source, staging / name, dirs_exist_ok=True)
+                elif source.is_file():
+                    shutil.copy(source, staging / name)
+            if target.exists():
+                shutil.rmtree(target)
+            staging.rename(target)
+        finally:
+            if staging.exists():
+                shutil.rmtree(staging)
+        return True
+
+    def seed_checkpoint(self, job_id, workspace):
+        retained = self.checkpoint_path(job_id)
+        if retained is None:
+            raise ValueError("No saved workspace remains for this job. Use Re-run instead.")
+        safe_tree(retained)
+        for name in ("source", "dist", "manifest.json"):
+            source = retained / name
+            if source.is_dir():
+                shutil.copytree(source, workspace / name, dirs_exist_ok=True)
+            elif source.is_file():
+                shutil.copy(source, workspace / name)
+
     def seed(self, notebook, version, workspace):
         shutil.copytree(
             self.version_path(notebook, version) / "source",
@@ -134,8 +181,15 @@ def validate(workspace):
     dist = workspace / "dist"
     safe_tree(dist)
     for p in dist.rglob("*"):
-        if p.is_file() and p.suffix.lower() not in ALLOWED:
-            raise ValueError("Unsupported static artifact file: " + p.name)
+        if p.is_file() and p.suffix.lower() not in ALLOWED | TEXT_ATTACHMENTS:
+            raise ValueError("Unsupported static artifact file: " + str(p.relative_to(dist)) + ". Keep compiled binaries and build dependencies in source only; dist may contain web assets and UTF-8 teaching source attachments.")
+        if p.is_file() and p.suffix.lower() in TEXT_ATTACHMENTS:
+            try:
+                content = p.read_text(encoding="utf-8")
+                if "\x00" in content:
+                    raise ValueError("Source attachment contains binary data: " + p.name)
+            except UnicodeError:
+                raise ValueError("Source attachment must be UTF-8 text: " + p.name)
     manifest = json.loads((workspace / "manifest.json").read_text())
     if (
         not isinstance(manifest.get("title"), str)
@@ -198,8 +252,7 @@ def validate(workspace):
                 return
             route.fulfill(
                 body=path.read_bytes(),
-                content_type=mimetypes.guess_type(str(path))[0]
-                or "application/octet-stream",
+                content_type=artifact_media_type(path),
                 headers={
                     "Content-Security-Policy": config.artifact_csp(
                         "http://notebook.invalid/artifact/"
@@ -225,8 +278,16 @@ def validate(workspace):
                     action = check.get("action", "click")
                     if action == "click":
                         target.click(timeout=5000)
-                    elif action == "fill":
-                        target.fill(str(check["value"]), timeout=5000)
+                    elif action in ("fill", "select"):
+                        tag = target.evaluate("el => el.tagName.toLowerCase()")
+                        if tag == "select":
+                            # Older manifests used fill because the original contract
+                            # omitted dropdown selection. Keep those jobs recoverable.
+                            target.select_option(value=str(check["value"]), timeout=5000)
+                        elif action == "select":
+                            raise ValueError("The select action requires a <select> control; use fill for text fields")
+                        else:
+                            target.fill(str(check["value"]), timeout=5000)
                     elif action == "range":
                         target.evaluate(
                             '(el, value) => { el.value=value; el.dispatchEvent(new Event("input",{bubbles:true})); el.dispatchEvent(new Event("change",{bubbles:true})); }',

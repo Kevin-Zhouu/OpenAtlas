@@ -34,12 +34,13 @@ def configuration(host, token):
     host = validate_host(host)
     return {'services': {'app': {
         # Compose merges this with the existing loopback mapping.
-        'ports': [f'{host}:8000:8000'],
+        'ports': [f'{host}:8000:8001'],
         'environment': {
             'OPENATLAS_ALLOWED_HOSTS': 'localhost,127.0.0.1,' + host,
             'OPENATLAS_ACCESS_TOKEN': token,
             'OPENATLAS_LAN_URL': f'http://{host}:8000',
             'OPENATLAS_PUBLIC_ORIGIN': '',
+            'OPENATLAS_DESKTOP_PORT': '8000',
         },
     }}}
 
@@ -55,7 +56,7 @@ def main(action, host=None):
     if action in ('open', 'status'):
         env = json.loads(OVERRIDE.read_text())['services']['app']['environment']
         if action == 'open':
-            webbrowser.open('http://localhost:8000/#access_token=' + env['OPENATLAS_ACCESS_TOKEN'])
+            webbrowser.open('http://localhost:8000/')
         else:
             print('Configured phone URL: ' + env['OPENATLAS_LAN_URL'])
             print('Run enable to apply this configuration; open to sign in on this computer.')
@@ -85,7 +86,7 @@ def main(action, host=None):
         compose(False)
         raise ValueError('Docker could not bind the Wi-Fi address; localhost has been restored. On Colima, enable --network-host-addresses (see docs/lan-access.md).')
     print(f'Phone URL: http://{host}:8000')
-    print('Run python3 scripts/lan_access.py open to sign in on this computer, then Settings → Open on your phone.')
+    print('Open http://localhost:8000 → Settings → Open on your phone → Enable phone access.')
 
 
 if __name__ == '__main__':

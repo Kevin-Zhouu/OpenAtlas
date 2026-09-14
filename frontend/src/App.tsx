@@ -1,5 +1,6 @@
 import { pairFromFragment } from "./pairing";
-import { useEffect, useState } from "react";
+import { ReaderNavigation } from "./ReaderNavigation";
+import { useEffect, useState, useRef } from "react";
 import { Notifications } from "./Notifications";
 import { JobsDropdown } from "./JobsDropdown";
 import { DebugInspector } from "./DebugInspector";
@@ -71,6 +72,14 @@ async function api<T>(
 const Arrow = () => <span aria-hidden="true">↗</span>;
 
 export function App() {
+  const [readerCollapsed, setReaderCollapsed] = useState(false);
+  const readerFrame = useRef<HTMLIFrameElement>(null);
+  const [readerMenuOpen, setReaderMenuOpen] = useState(false);
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setReaderMenuOpen(false); };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, []);
   const [debugMode, setDebugMode] = useState(
     () => localStorage.getItem("openatlas-debug") === "true",
   );
@@ -110,6 +119,7 @@ export function App() {
       setNotebooks(n);
       setJobs(j);
       setJobsReady(true);
+      setAuth(false);
       if (notebookId) {
         const book = await api<Notebook>("/notebooks/" + notebookId);
         setReader(book);
@@ -126,15 +136,31 @@ export function App() {
   }
   useEffect(() => {
     let active = true;
-    let timer: ReturnType<typeof setInterval>;
-    pairFromFragment().then(() => {
-      if (!active) return;
-      refresh();
-      api<Skill[]>("/skills").then(setSkills).catch(handle);
-      api<Settings>("/settings").then(setSettings).catch(handle);
-      timer = setInterval(refresh, 1800);
-    }).catch(e => { if (active) { handle(e); setAuth(true); } });
-    return () => { active = false; clearInterval(timer); };
+    async function reconnect() {
+      try {
+        await pairFromFragment();
+        if (!active) return;
+        await refresh();
+        api<Skill[]>("/skills").then(setSkills).catch(handle);
+        api<Settings>("/settings").then(setSettings).catch(handle);
+      } catch (e) { if (active) { handle(e); setAuth(true); } }
+    }
+    reconnect();
+    const timer = setInterval(async () => {
+      try { await pairFromFragment(); if (active) await refresh(); }
+      catch { if (active) setAuth(true); }
+    }, 1800);
+    // Safari may restore the old home page (including its modal state) from
+    // the back/forward cache. Recheck the current cookie instead of keeping it.
+    window.addEventListener("pageshow", reconnect);
+    window.addEventListener("hashchange", reconnect);
+    window.addEventListener("focus", reconnect);
+    return () => {
+      active = false; clearInterval(timer);
+      window.removeEventListener("pageshow", reconnect);
+      window.removeEventListener("hashchange", reconnect);
+      window.removeEventListener("focus", reconnect);
+    };
   }, []);
   const generationProvider = revising
     ? reader?.versions?.find((v) => v.id === reader?.latest_version)
@@ -276,7 +302,7 @@ export function App() {
         placeholder={
           revising
             ? "How would you like to improve this Notebook?"
-            : "A topic, a big question, or something you’ve always wondered about…"
+            : "Enter a topic or question…"
         }
         rows={3}
       />
@@ -284,7 +310,7 @@ export function App() {
         <span className="hint">
           {generationProvider === "demo"
             ? "Demo mode · No API key needed"
-            : "Codex · Made for your curiosity"}
+            : ""}
         </span>
         <button className="primary" disabled={busy || prompt.trim().length < 3}>
           {busy
@@ -295,6 +321,8 @@ export function App() {
           <Arrow />
         </button>
       </div>
+      <details className="generation-preferences">
+      <summary>Customize <span>{readingMinutes} min</span></summary>
       <div className="reading-duration">
         <div className="duration-heading">
           <label htmlFor="reading-minutes">Time to explore</label>
@@ -321,11 +349,40 @@ export function App() {
         </p>
       </div>
       {options}
+      </details>
     </form>
   );
+  const jobControls = <>
+        <JobsDropdown
+          jobs={jobs}
+          onRetry={async (id, mode) => {
+            await api(`/jobs/${encodeURIComponent(id)}/retry`, { mode });
+            await refresh();
+          }}
+          onInspect={(id) => {
+            setDebugMode(true);
+            localStorage.setItem("openatlas-debug", "true");
+            setDebugJob(id);
+          }}
+        />
+        <Notifications
+          jobs={jobs}
+          ready={jobsReady}
+          error={error}
+          onInspect={(id) => {
+            setDebugMode(true);
+            localStorage.setItem("openatlas-debug", "true");
+            setDebugJob(id);
+          }}
+        />
+  </>;
   return (
     <>
-      <header className={"topbar " + (reader ? "reader-bar" : "")}>
+      {reader && <>
+        {readerMenuOpen && <button className="reader-shade" aria-label="Close Notebook menu" onClick={() => setReaderMenuOpen(false)} />}
+        <ReaderNavigation frame={readerFrame} version={version} menuOpen={readerMenuOpen} onToggle={() => setReaderMenuOpen(!readerMenuOpen)} onCollapse={setReaderCollapsed}>{jobControls}</ReaderNavigation>
+      </>}
+      <header id="reader-controls" className={"topbar " + (reader ? "reader-bar " + (readerMenuOpen ? "reader-menu-open" : "") : "")}>
         <a className="brand" href="/">
           <svg
             width="28"
@@ -347,24 +404,7 @@ export function App() {
           </svg>
           OpenAtlas
         </a>
-        <JobsDropdown
-          jobs={jobs}
-          onInspect={(id) => {
-            setDebugMode(true);
-            localStorage.setItem("openatlas-debug", "true");
-            setDebugJob(id);
-          }}
-        />
-        <Notifications
-          jobs={jobs}
-          ready={jobsReady}
-          error={error}
-          onInspect={(id) => {
-            setDebugMode(true);
-            localStorage.setItem("openatlas-debug", "true");
-            setDebugJob(id);
-          }}
-        />
+        {(!reader || readerCollapsed) && jobControls}
         {reader ? (
           <div className="reader-tools">
             <select
@@ -379,7 +419,7 @@ export function App() {
                 </option>
               ))}
             </select>
-            <button className="quiet" onClick={beginRevision}>
+            <button className="quiet" onClick={() => { setReaderMenuOpen(false); beginRevision(); }}>
               Revise Notebook
             </button>
           </div>
@@ -406,6 +446,8 @@ export function App() {
             </div>
           ))}
           <iframe
+            ref={readerFrame}
+            onLoad={() => readerFrame.current?.contentWindow?.postMessage({type: "openatlas:outline-request"}, "*")}
             key={version}
             className="notebook-frame"
             title="Notebook content"
@@ -417,14 +459,13 @@ export function App() {
               version +
               "/" +
               (reader.versions?.find((v) => v.id === version)?.manifest
-                .entrypoint || "index.html")
+                .entrypoint || "index.html") + "?reader=1"
             }
           />
         </>
       ) : (
         <main className="home">
           <section className="intro">
-            <div className="eyebrow">A PERSONAL LIBRARY FOR A CURIOUS MIND</div>
             <h1>
               {revising ? (
                 "A new way to see it."
@@ -435,11 +476,7 @@ export function App() {
                 </>
               )}
             </h1>
-            <p>
-              {revising
-                ? "Describe the change. Your current version stays in your library."
-                : "Follow your curiosity. Turn any question into a Notebook you can explore."}
-            </p>
+            {revising && <p>Describe the change. Your current version stays in your library.</p>}
           </section>
           {form}
           {revising && (
@@ -449,18 +486,6 @@ export function App() {
           )}
           {!revising && (
             <>
-              <div className="suggestions">
-                <span>Start somewhere</span>
-                {[
-                  "How does a language model remember?",
-                  "The hidden life of trees",
-                  "Why do planets orbit?",
-                ].map((t) => (
-                  <button key={t} onClick={() => setPrompt(t)}>
-                    {t} <Arrow />
-                  </button>
-                ))}
-              </div>
               <section className="library">
                 <div className="section-heading">
                   <h2>
@@ -494,15 +519,12 @@ export function App() {
                     </span>
                   </div>
                 ))}
-                {notebooks.map((n, i) => (
+                {notebooks.map((n) => (
                   <a
                     className="notebook-row"
                     href={"/notebooks/" + n.id}
                     key={n.id}
                   >
-                    <span className="book-number">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
                     <div>
                       <h3>{n.title}</h3>
                       <span>
@@ -567,12 +589,7 @@ export function App() {
                   </div>
                 )}
               </section>
-              <footer className="footer">
-                <span>
-                  <i /> Local-first. Yours to keep.
-                </span>
-                <span>Built for understanding, not just answers.</span>
-              </footer>
+
             </>
           )}
         </main>
@@ -617,10 +634,11 @@ export function App() {
             setDebugMode(enabled);
             localStorage.setItem("openatlas-debug", String(enabled));
           }}
-          onClose={() => setShowSettings(false)}
+          onClose={() => {setShowSettings(false); api<Skill[]>("/skills").then(setSkills).catch(handle);}}
           onSaved={(saved) => {
             setSettings(saved);
             setShowSettings(false);
+            api<Skill[]>("/skills").then(setSkills).catch(handle);
           }}
         />
       )}
@@ -639,7 +657,10 @@ export function App() {
               }
             }}
           >
-            <h2>Open your library</h2>
+            <h2>Reconnect your phone</h2>
+            <p>On your computer, open Settings → Open on your phone and scan the QR code again. You don’t need to type a token.</p>
+            <button type="button" className="primary" onClick={refresh}>Check connection again</button>
+            <details><summary>Advanced: enter an access token</summary>
             <label>
               Host access token
               <input
@@ -650,6 +671,7 @@ export function App() {
               />
             </label>
             <button className="primary">Continue</button>
+            </details>
           </form>
         </div>
       )}

@@ -13,4 +13,4 @@ COPY builtins ./builtins
 COPY --from=frontend /ui/dist ./frontend/dist
 ENV OPENATLAS_DATA=/data OPENATLAS_SKILLS=/skills PYTHONUNBUFFERED=1
 EXPOSE 8000
-CMD ["uvicorn","openatlas.api:app","--host","0.0.0.0","--port","8000"]
+CMD ["python", "-m", "openatlas.server"]

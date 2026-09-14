@@ -28,6 +28,35 @@ class DebugStore:
         except FileNotFoundError:
             return {"containers": [], "updated_at": None}
 
+    def invocations(self, job_id):
+        path = self.directory / (str(UUID(job_id)) + ".invocations.json")
+        try:
+            return json.loads(path.read_text())
+        except FileNotFoundError:
+            return []
+
+    def record_invocation(self, job_id, command, request, secrets=(), execution=None):
+        with self.lock:
+            records = self.invocations(job_id)
+            records.append({
+                "captured_at": datetime.now(timezone.utc).isoformat(),
+                "execution": execution or {},
+                "phase": "repair" if request.get("validation_feedback") else "continue" if request.get("continue_job") else "generate",
+                "command": command,
+                "prompt": command[-1] if command and command[0] == "codex" else None,
+                "model": request.get("model"),
+                "skills": request.get("skills", []),
+                "validation_feedback": request.get("validation_feedback"),
+            })
+            self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+            fd, tmp = tempfile.mkstemp(dir=self.directory)
+            try:
+                with os.fdopen(fd, "w") as out:
+                    out.write(redact(json.dumps(records[-8:]), secrets))
+                os.replace(tmp, self.directory / (str(UUID(job_id)) + ".invocations.json"))
+            finally:
+                Path(tmp).unlink(missing_ok=True)
+
     def record(self, job_id, snapshot):
         with self.lock:
             data = self.read(job_id)

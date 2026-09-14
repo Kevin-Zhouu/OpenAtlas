@@ -28,7 +28,7 @@ def test_phone_login_and_origin_boundary(tmp_path, monkeypatch):
 def test_phone_disabled(tmp_path, monkeypatch):
     monkeypatch.delenv('OPENATLAS_LAN_URL', raising=False)
     c = TestClient(create_app(Repository(tmp_path)), base_url='http://localhost')
-    assert c.get('/api/phone').json() == {'enabled': False, 'url': '', 'pairing_url': ''}
+    assert c.get('/api/phone').json() == {'enabled': False, 'url': '', 'pairing_url': '', 'available': False, 'desktop': False}
 
 
 @pytest.mark.parametrize('host', ['127.0.0.1', '0.0.0.0', '8.8.8.8', '169.254.1.1', 'evil.example'])
@@ -54,7 +54,7 @@ def test_setup_preserves_key_on_restart_and_only_restarts_app(tmp_path, monkeypa
     setup.main('enable', '192.168.1.9')
     setup.main('enable', '192.168.1.10')
     config = json.loads(setup.OVERRIDE.read_text())['services']['app']
-    assert config['ports'] == ['192.168.1.10:8000:8000']
+    assert config['ports'] == ['192.168.1.10:8000:8001']
     assert config['environment']['OPENATLAS_ACCESS_TOKEN'] == 'saved-token'
     assert all(c[-4:] == ['up', '-d', '--no-build', 'app'] for c in commands)
     setup.main('disable')
@@ -74,3 +74,48 @@ def test_failed_binding_restores_localhost(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='localhost has been restored'):
         setup.main('enable', '192.168.1.9')
     assert calls == [True, False]
+
+
+def test_desktop_ui_controls_phone_access_without_local_token(tmp_path, monkeypatch):
+    monkeypatch.setenv('OPENATLAS_LAN_URL', 'http://192.168.1.9:8000')
+    monkeypatch.setenv('OPENATLAS_ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.1.9')
+    monkeypatch.setenv('OPENATLAS_DESKTOP_PORT', '8000')
+    monkeypatch.setenv('OPENATLAS_ACCESS_TOKEN', 'initial-token')
+    app = create_app(Repository(tmp_path))
+    desktop = TestClient(app, base_url='http://localhost:8000')
+    # TestClient's URL models the desktop socket. The phone's public port maps
+    # to a different accepted socket inside Docker, independent of HTTP headers.
+    async def lan_socket(scope, receive, send):
+        scope = dict(scope, server=('0.0.0.0', 8001))
+        await app(scope, receive, send)
+    phone = TestClient(lan_socket, base_url='http://192.168.1.9:8000')
+    assert desktop.get('/api/notebooks').status_code == 200
+    assert desktop.get('/api/phone').json()['enabled'] is False
+    assert phone.get('/api/notebooks').status_code == 403
+    assert phone.get('/artifacts/book/version/index.html').status_code == 403
+    assert desktop.get('/api/phone', headers={'Origin':'null'}).status_code == 403
+    assert desktop.get('/api/phone', headers={'Sec-Fetch-Site':'cross-site'}).status_code == 403
+    response = desktop.put('/api/phone', json={'enabled':True}, headers={'Origin':'http://localhost:8000'})
+    assert response.status_code == 200
+    assert response.json()['enabled'] is True
+    assert phone.get('/api/notebooks').status_code == 401
+    spoof = {'Host':'localhost:8000', 'X-Forwarded-For':'127.0.0.1', 'X-Forwarded-Host':'localhost:8000'}
+    assert phone.get('/api/notebooks', headers=spoof).status_code == 401
+    assert phone.put('/api/phone', json={'enabled':False}, headers=spoof).status_code == 401
+    login = phone.post('/api/session', json={'token':'initial-token'})
+    assert login.status_code == 200
+    assert 'Max-Age=2592000' in login.headers['set-cookie']
+    assert 'Path=/' in login.headers['set-cookie']
+    assert 'HttpOnly' in login.headers['set-cookie']
+    assert phone.get('/api/notebooks').status_code == 200
+    assert phone.put('/api/phone', json={'enabled':False}).status_code == 403
+    rotated = desktop.put('/api/phone', json={'enabled':True,'rotate':True}).json()
+    assert 'initial-token' not in rotated['pairing_url']
+    assert phone.get('/api/notebooks').status_code == 401
+    assert phone.post('/api/session', json={'token':'initial-token'}).status_code == 403
+    # Persistent state survives recreating the API; desktop never needs a cookie.
+    restarted = TestClient(create_app(Repository(tmp_path)), base_url='http://localhost:8000')
+    assert restarted.get('/api/phone').json() == rotated
+    assert restarted.put('/api/phone', json={'enabled':False}).status_code == 200
+    assert phone.get('/api/notebooks').status_code == 403
+    assert desktop.get('/api/notebooks').status_code == 200

@@ -5,18 +5,23 @@ import secrets
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+from .reader import reader_document
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import config
-from .artifacts import ArtifactStore
+from .artifacts import ArtifactStore, artifact_media_type
+from .phone import PhoneAccess
 from .credentials import Credentials
-from .debug import DebugStore
+from .debug import DebugStore, redact
+import json
 from .models import DEFAULT_MODEL, MODELS
 from .repository import Repository
 from .skills import SkillCatalog
+from .agents import CodexAdapter, DEFAULT_TEACHING_PROMPT
+from .skill_editor import SkillEditor
 
 
 class Generation(BaseModel):
@@ -29,6 +34,7 @@ class Generation(BaseModel):
 
 
 class Settings(BaseModel):
+    teaching_prompt: Optional[str] = Field(default=None, max_length=40000)
     provider: str = "demo"
     concurrency: int = Field(default=2, ge=1, le=8)
     model: str = Field(
@@ -39,8 +45,32 @@ class Settings(BaseModel):
     )
 
 
+class PromptEdit(BaseModel):
+    content: str = Field(max_length=40000)
+
+
+class SkillFile(BaseModel):
+    skill_id: str
+    path: str
+    content: str = Field(max_length=500000)
+    revision: Optional[str] = None
+
+
+class SkillCreate(BaseModel):
+    name: str = Field(max_length=64)
+
+
 class CredentialUpdate(BaseModel):
     api_key: SecretStr
+
+
+class RetryJob(BaseModel):
+    mode: str = Field(default="continue", pattern=r"^(continue|rerun)$")
+
+
+class PhoneUpdate(BaseModel):
+    enabled: bool
+    rotate: bool = False
 
 
 class Login(BaseModel):
@@ -82,6 +112,16 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 or lan.fragment or lan.username or lan.password or not access_token):
             raise ValueError("Wi-Fi access requires a private IPv4 HTTP URL and an access token")
 
+    desktop_port = os.getenv("OPENATLAS_DESKTOP_PORT", "")
+    phone = PhoneAccess(repo.data, access_token)
+
+    def desktop_request(request):
+        # The host launcher maps this socket exclusively to host loopback.
+        # Host and forwarded client headers alone are never sufficient.
+        server = request.scope.get("server")
+        return bool(desktop_port and server and str(server[1]) == desktop_port
+                    and request.url.hostname in ("localhost", "127.0.0.1", "::1"))
+
     def browser_origin(request):
         # Serve terminates HTTPS before forwarding to the loopback HTTP port.
         # Only the explicit configured host uses the canonical HTTPS origin.
@@ -92,7 +132,18 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     @app.middleware("http")
     async def boundaries(request: Request, call_next):
         path = request.url.path
+        local = desktop_request(request)
+        sharing = phone.read() if desktop_port else None
+        # A disabled LAN listener serves no application data or artifacts.
+        if desktop_port and not local and (not sharing["enabled"] or not lan_url):
+            return JSONResponse({"detail": "Phone access is off. Enable it in Settings on the host computer."}, status_code=403)
         if path.startswith("/api/"):
+            # Local access is implicit authority: opaque generated frames and
+            # cross-site pages must not use it, including on read endpoints.
+            if local and (request.headers.get("sec-fetch-site") == "cross-site"
+                          or (request.headers.get("origin") is not None
+                              and request.headers["origin"] != browser_origin(request))):
+                return JSONResponse({"detail": "Cross-origin desktop access is not allowed"}, status_code=403)
             if request.method not in ("GET", "HEAD", "OPTIONS"):
                 origin = request.headers.get("origin")
                 if origin and origin != browser_origin(request):
@@ -105,10 +156,11 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                         {"detail": "Cross-site writes are not allowed"}, status_code=403
                     )
             if (
-                access_token
+                not local
+                and (desktop_port or access_token)
                 and path != "/api/session"
                 and not secrets.compare_digest(
-                    request.cookies.get("openatlas_session", ""), access_token
+                    request.cookies.get("openatlas_session", ""), sharing["token"] if sharing else access_token
                 )
             ):
                 return JSONResponse(
@@ -124,7 +176,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             )
             response.headers["Content-Security-Policy"] = config.artifact_csp(base)
             response.headers["Access-Control-Allow-Origin"] = "*"
-            response.headers["Cache-Control"] = "public,max-age=31536000,immutable"
+            response.headers["Cache-Control"] = "no-store" if "reader" in request.query_params else "public,max-age=31536000,immutable"
         else:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
@@ -134,20 +186,35 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
 
     @app.post("/api/session")
     def login(body: Login, response: Response, request: Request):
-        if not access_token or not secrets.compare_digest(body.token, access_token):
+        session_token = phone.read()["token"] if desktop_port else access_token
+        if not session_token or not secrets.compare_digest(body.token, session_token):
             raise HTTPException(403, "Invalid access token")
         response.set_cookie(
-            "openatlas_session", access_token, httponly=True, samesite="strict",
-            secure=browser_origin(request).startswith("https://")
+            "openatlas_session", session_token, httponly=True, samesite="strict",
+            secure=browser_origin(request).startswith("https://"),
+            max_age=30 * 24 * 60 * 60, path="/"
         )
         return {"ok": True}
 
+    def phone_details(request):
+        state = phone.read() if desktop_port else {"enabled": bool(lan_url), "token": access_token}
+        enabled = bool(lan_url and state["enabled"])
+        return {"enabled": enabled, "available": bool(lan_url and desktop_port),
+                "desktop": desktop_request(request), "url": lan_url,
+                "pairing_url": lan_url + "/#access_token=" + state["token"] if enabled else ""}
+
     @app.get("/api/phone")
-    def phone_access():
-        # Protected by the same owner session as settings. Fragments never go to
-        # the HTTP server; the trusted UI exchanges this for an HttpOnly cookie.
-        return {"enabled": bool(lan_url), "url": lan_url,
-                "pairing_url": lan_url + "/#access_token=" + access_token if lan_url else ""}
+    def phone_access(request: Request):
+        return phone_details(request)
+
+    @app.put("/api/phone")
+    def update_phone(body: PhoneUpdate, request: Request):
+        if not desktop_request(request):
+            raise HTTPException(403, "Manage phone access on the host computer")
+        if not lan_url:
+            raise HTTPException(409, "No Wi-Fi adapter is available. Reconnect the host to Wi-Fi and restart OpenAtlas.")
+        phone.update(body.enabled, body.rotate)
+        return phone_details(request)
 
     @app.get("/api/health")
     def health():
@@ -163,6 +230,47 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             raise HTTPException(422, "Unknown provider")
         repo.save_settings(body.model_dump())
         return repo.settings()
+
+    @app.get("/api/prompt")
+    def prompt_defaults():
+        return {"default": DEFAULT_TEACHING_PROMPT}
+
+    @app.post("/api/prompt/preview")
+    def prompt_preview(body: PromptEdit):
+        return {"prompt": CodexAdapter().prompt({"prompt": "[The learner’s topic]", "instructions": "[Additional instructions]", "skills": [], "teaching_prompt": body.content, "reading_minutes": 20})}
+
+    @app.get("/api/skill-files")
+    def skill_files(skill_id: str, path: Optional[str] = None):
+        try:
+            return SkillEditor(catalog).read(skill_id, path)
+        except (ValueError, OSError) as e:
+            raise HTTPException(422, str(e))
+
+    @app.put("/api/skill-files")
+    def save_skill_file(body: SkillFile):
+        try:
+            return SkillEditor(catalog).save(body.skill_id, body.path, body.content, body.revision)
+        except (ValueError, OSError) as e:
+            raise HTTPException(422, str(e))
+
+    @app.post("/api/skills/create", status_code=201)
+    def create_skill(body: SkillCreate):
+        try:
+            return SkillEditor(catalog).create(body.name)
+        except (ValueError, OSError) as e:
+            raise HTTPException(422, str(e))
+
+    @app.post("/api/skills/install", status_code=201)
+    async def install_skill(request: Request):
+        data = bytearray()
+        async for chunk in request.stream():
+            data.extend(chunk)
+            if len(data) > 20 * 1024 * 1024:
+                raise HTTPException(413, "ZIP exceeds 20 MB")
+        try:
+            return SkillEditor(catalog).install(bytes(data))
+        except (ValueError, OSError) as e:
+            raise HTTPException(422, str(e))
 
     @app.get("/api/models")
     def models():
@@ -239,6 +347,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 "skills_enabled": skills_enabled is not False,
                 "provider": provider,
                 "model": settings["model"],
+                "teaching_prompt": settings.get("teaching_prompt") or DEFAULT_TEACHING_PROMPT,
                 "base_version": base_version,
                 "reading_minutes": reading_minutes
                 if reading_minutes is not None
@@ -257,7 +366,28 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
 
     @app.get("/api/jobs")
     def jobs():
-        return repo.list_jobs()
+        return [dict(job, can_continue=job["status"] == "failed" and store.checkpoint_path(job["id"]) is not None) for job in repo.list_jobs()]
+
+    @app.post("/api/jobs/{job_id}/retry", status_code=202)
+    def retry_job(job_id: str, body: RetryJob):
+        original = repo.job(job_id)
+        if not original:
+            raise HTTPException(404, "Generation not found")
+        if original["status"] != "failed":
+            raise HTTPException(409, "Only failed jobs can be retried")
+        if body.mode == "continue" and store.checkpoint_path(job_id) is None:
+            raise HTTPException(409, "No saved workspace remains. Use Re-run to start a fresh attempt.")
+        request = dict(original["request"])
+        for key in ("revalidate_job", "continue_job", "validation_feedback", "previous_error", "job_id"):
+            request.pop(key, None)
+        request["retry_of"] = job_id
+        if body.mode == "continue":
+            request["continue_job"] = job_id
+            request["previous_error"] = (original.get("error") or "")[:2000]
+        try:
+            return repo.enqueue(request, original["notebook_id"], retry_of=job_id)
+        except ValueError as error:
+            raise HTTPException(409, str(error))
 
     @app.post("/api/jobs/{job_id}/revalidate", status_code=202)
     def revalidate_job(job_id: str):
@@ -277,7 +407,20 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         job = repo.job(job_id)
         if not job:
             raise HTTPException(404, "Generation not found")
-        return {"job": job, **DebugStore(repo.data).read(job_id)}
+        debug = DebugStore(repo.data)
+        request = job["request"]
+        agent_used = request.get("provider") == "codex" and not request.get("revalidate_job") and not request.get("local_edit")
+        invocations = debug.invocations(job_id)
+        prompt = CodexAdapter().prompt(request) if agent_used else None
+        metadata = {
+            "request": request,
+            "job": {k: v for k, v in job.items() if k != "request"},
+            "invocations": invocations,
+            "prompt": prompt,
+            "prompt_source": "captured" if invocations else "reconstructed" if agent_used else "not_applicable",
+            "skills": [{**s, "sandbox_path": "/workspace/skills/" + s["id"].replace(":", "--") + "/SKILL.md"} for s in request.get("skills", [])],
+        }
+        return {"job": job, **debug.read(job_id), "generation": json.loads(redact(json.dumps(metadata)))}
 
     @app.get("/api/jobs/{job_id}")
     def job(job_id: str):
@@ -287,13 +430,15 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         return result
 
     @app.get("/artifacts/{notebook_id}/{version_id}/{path:path}")
-    def artifact(notebook_id: str, version_id: str, path: str):
+    def artifact(notebook_id: str, version_id: str, path: str, reader: bool = False):
         if not repo.has_version(notebook_id, version_id):
             raise HTTPException(404, "Published Notebook version not found")
         result = store.artifact(notebook_id, version_id, path)
         if not result:
             raise HTTPException(404, "Artifact not found")
-        return FileResponse(result)
+        if reader and result.suffix.lower() == ".html":
+            return HTMLResponse(reader_document(result.read_text(encoding="utf-8")))
+        return FileResponse(result, media_type=artifact_media_type(result))
 
     if (config.FRONTEND / "assets").exists():
         app.mount(

@@ -1,7 +1,13 @@
+import { PromptEditor, SkillsManager } from "./GenerationStudio";
 import { PhoneAccess } from "./PhoneAccess";
 import { useEffect, useState } from "react";
 
-export type Settings = { provider: string; concurrency: number; model: string };
+export type Settings = {
+  provider: string;
+  concurrency: number;
+  model: string;
+  teaching_prompt?: string | null;
+};
 type CredentialStatus = { configured: boolean; source: string };
 type Model = { id: string; name: string; default?: boolean };
 
@@ -44,6 +50,9 @@ export function SettingsDialog({
   debugMode,
   onDebugChange,
 }: Props) {
+  const [skillsOpened, setSkillsOpened] = useState(false);
+  const [editorDirty, setEditorDirty] = useState(false);
+  const [tab, setTab] = useState("general");
   const [draft, setDraft] = useState(settings);
   const [key, setKey] = useState("");
   const [status, setStatus] = useState<CredentialStatus | null>(null);
@@ -109,7 +118,7 @@ export function SettingsDialog({
   return (
     <div className="modal-backdrop">
       <section
-        className="modal"
+        className={"modal settings-studio " + (tab !== "general" ? "wide" : "")}
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-title"
@@ -119,20 +128,49 @@ export function SettingsDialog({
           <button
             className="quiet"
             aria-label="Close settings"
-            disabled={busy}
+            disabled={busy || editorDirty}
             onClick={onClose}
           >
             ✕
           </button>
         </div>
-        <p className="hint">A few essentials for your local learning space.</p>
-        <PhoneAccess />
+        <nav className="settings-tabs" aria-label="Settings sections">
+          {["general", "prompt", "skills"].map((item) => (
+            <button
+              key={item}
+              type="button"
+              aria-pressed={tab === item}
+              onClick={() => {
+                setTab(item);
+                if (item === "skills") setSkillsOpened(true);
+              }}
+            >
+              {item === "general"
+                ? "General"
+                : item === "prompt"
+                  ? "Generation prompt"
+                  : "Skills"}
+            </button>
+          ))}
+        </nav>
+        {skillsOpened && (
+          <div hidden={tab !== "skills"}>
+            <SkillsManager onDirtyChange={setEditorDirty} />
+          </div>
+        )}
+        {editorDirty && tab !== "skills" && (
+          <p className="hint">
+            Save or discard your skill file edits in Skills before closing
+            settings.
+          </p>
+        )}
+        {tab === "general" && <PhoneAccess />}
         {error && (
           <p role="alert" className="settings-error">
             {error}
           </p>
         )}
-        {onDebugChange && (
+        {tab === "general" && onDebugChange && (
           <label className="debug-toggle">
             <input
               type="checkbox"
@@ -142,96 +180,114 @@ export function SettingsDialog({
             Debug mode · inspect generation activity
           </label>
         )}
-        <form onSubmit={save}>
-          <label>
-            Generation provider
-            <select
-              value={draft.provider}
-              onChange={(e) => setDraft({ ...draft, provider: e.target.value })}
-            >
-              <option value="demo">Demo · authored lesson, no inference</option>
-              <option value="codex">
-                Codex · real AI generation in Docker
-              </option>
-            </select>
-          </label>
-          <label>
-            OpenAI API key
-            <input
-              type="password"
-              autoComplete="new-password"
-              spellCheck={false}
-              autoCapitalize="none"
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder={
-                status?.configured
-                  ? "Leave blank to keep the configured key"
-                  : "sk-…"
+        <form
+          onSubmit={save}
+          style={{ display: tab === "skills" ? "none" : undefined }}
+        >
+          {tab === "prompt" && (
+            <PromptEditor
+              value={draft.teaching_prompt}
+              onChange={(teaching_prompt) =>
+                setDraft({ ...draft, teaching_prompt })
               }
-              maxLength={512}
             />
-          </label>
-          <div className="credential-status" role="status">
-            {status === null
-              ? "Checking key status…"
-              : status.configured
-                ? status.source === "saved"
-                  ? "API key saved locally"
-                  : "API key configured by the host"
-                : "No API key configured"}
-            {status?.source === "saved" && (
-              <button
-                type="button"
-                className="quiet"
-                disabled={busy}
-                onClick={removeKey}
+          )}
+          <div hidden={tab !== "general"}>
+            <label>
+              Generation provider
+              <select
+                value={draft.provider}
+                onChange={(e) =>
+                  setDraft({ ...draft, provider: e.target.value })
+                }
               >
-                Remove saved key
-              </button>
-            )}
-          </div>
-          <p className="hint">
-            Your key stays on this OpenAtlas host, separate from your Notebooks.
-            A saved key replaces the host-configured key for new generations.
-          </p>
-          <label>
-            Codex model
-            <select
-              value={draft.model}
-              onChange={(e) => setDraft({ ...draft, model: e.target.value })}
-            >
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                  {model.default ? " (default)" : ""}
+                <option value="demo">
+                  Demo · authored lesson, no inference
                 </option>
-              ))}
-              {!models.some((model) => model.id === draft.model) && (
-                <option value={draft.model}>
-                  {draft.model} (saved selection)
+                <option value="codex">
+                  Codex · real AI generation in Docker
                 </option>
+              </select>
+            </label>
+            <label>
+              OpenAI API key
+              <input
+                type="password"
+                autoComplete="new-password"
+                spellCheck={false}
+                autoCapitalize="none"
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder={
+                  status?.configured
+                    ? "Leave blank to keep the configured key"
+                    : "sk-…"
+                }
+                maxLength={512}
+              />
+            </label>
+            <div className="credential-status" role="status">
+              {status === null
+                ? "Checking key status…"
+                : status.configured
+                  ? status.source === "saved"
+                    ? "API key saved locally"
+                    : "API key configured by the host"
+                  : "No API key configured"}
+              {status?.source === "saved" && (
+                <button
+                  type="button"
+                  className="quiet"
+                  disabled={busy}
+                  onClick={removeKey}
+                >
+                  Remove saved key
+                </button>
               )}
-            </select>
-          </label>
-          <p className="hint">
-            GPT-6 Astra is the default. Available models depend on your OpenAI
-            account. Demo mode uses no API key or model inference.
-          </p>
-          <label>
-            Concurrent generations
-            <input
-              type="number"
-              min={1}
-              max={8}
-              required
-              value={draft.concurrency}
-              onChange={(e) =>
-                setDraft({ ...draft, concurrency: Number(e.target.value) })
-              }
-            />
-          </label>
-          <button className="primary" disabled={busy}>
+            </div>
+            <p className="hint">
+              Your key stays on this OpenAtlas host, separate from your
+              Notebooks. A saved key replaces the host-configured key for new
+              generations.
+            </p>
+            <label>
+              Codex model
+              <select
+                value={draft.model}
+                onChange={(e) => setDraft({ ...draft, model: e.target.value })}
+              >
+                {models.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                    {model.default ? " (default)" : ""}
+                  </option>
+                ))}
+                {!models.some((model) => model.id === draft.model) && (
+                  <option value={draft.model}>
+                    {draft.model} (saved selection)
+                  </option>
+                )}
+              </select>
+            </label>
+            <p className="hint">
+              GPT-6 Astra is the default. Available models depend on your OpenAI
+              account. Demo mode uses no API key or model inference.
+            </p>
+            <label>
+              Concurrent generations
+              <input
+                type="number"
+                min={1}
+                max={8}
+                required
+                value={draft.concurrency}
+                onChange={(e) =>
+                  setDraft({ ...draft, concurrency: Number(e.target.value) })
+                }
+              />
+            </label>
+          </div>
+          <button className="primary" disabled={busy || editorDirty}>
             {busy ? "Saving…" : "Save settings"}
           </button>
         </form>

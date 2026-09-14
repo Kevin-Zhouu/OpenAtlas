@@ -53,13 +53,49 @@ The trusted debug frontend normalizes Codex item events by container + item ID. 
 
 ### Same-Wi-Fi access
 
-The host-side `scripts/lan_access.py` writes a private Compose override with the
-host's RFC1918 IPv4 address, a separate port binding and a persisted owner token.
-This keeps adapter discovery and Docker configuration outside FastAPI. The API
-reads `OPENATLAS_LAN_URL` and provides authenticated phone-link metadata; the
-React Settings view generates the QR locally with the bundled qrcode library.
-The link fragment is consumed once and exchanged for the existing HttpOnly owner
-session before loading application data. No tunnel, discovery daemon, account
-provider or additional runtime service is introduced. Sandbox and artifact-serving
-boundaries are unchanged. This supports trusted home networks over HTTP, not
-public hosting or an individual-user authorization model.
+The desktop launcher discovers the host adapter and prepares separate Docker
+mappings for desktop and phone traffic on the same public port 8000. One Uvicorn
+process serves the same FastAPI app through two internal sockets (8000/8001).
+Desktop authority is determined by the accepted socket and loopback Host together,
+never by an untrusted Host or forwarding header alone. The desktop socket must
+only be published on host loopback. Cross-origin desktop API requests are blocked.
+
+Settings enables/disables LAN access and rotates phone credentials through a
+small atomic file-backed PhoneAccess store. Disabled LAN ingress serves neither
+APIs nor artifacts. The browser generates the QR locally; phone sign-in exchanges
+a fragment credential for the existing HttpOnly session. API processes never
+receive the Docker socket or host-control privileges. Host startup owns adapter
+and port configuration; normal sharing setup is entirely in the desktop UI.
+
+### Failed-job continuation
+
+Failed attempts remain immutable job history. `/api/jobs/{id}/retry` queues a new
+attempt with `retry_of` and optionally `continue_job`; the repository transaction
+rejects duplicate active attempts. The source job's Notebook and settings remain
+stable. ArtifactStore owns private checkpoint lookup/seeding; DockerExecutor
+collects a bounded, sanitized deliverable archive on failure before removing the
+container. Runner seeds this source into a fresh sandbox and applies the normal
+build/validation/publication flow. A continuation restores project files, not an
+agent session, and never publishes unvalidated checkpoint content.
+
+### Prompt and skill authoring
+
+The trusted Settings UI edits the teaching portion of `CodexAdapter`'s prompt.
+SQLite's existing settings JSON stores an optional `teaching_prompt`; enqueueing
+snapshots its effective value into the job request. No schema migration is needed.
+Runtime safety, output validation and the build contract remain separately enforced.
+
+`SkillEditor` handles bounded ZIP import, creation, UTF-8 editing and optimistic
+file revision checks. It never imports or executes skill code. Atomic file replacement
+and archive staging avoid partially written installs. Built-in overrides live in the
+configured skills directory under `.builtin-overrides` and retain the built-in ID.
+The existing catalog hashes and stages these through the same generation boundary.
+The local API process serializes editor mutations; this is not a distributed lock.
+
+The reader toolbar obtains a bounded text-only outline from the opaque Notebook
+iframe. HTML requested with `?reader=1` receives a small navigation bridge and
+reader spacing; that response is not cached. Stored artifacts and their original
+URLs remain unchanged. The bridge handles only outline requests and integer section
+selection. The trusted UI checks the sending iframe window and validates all heading
+strings, renders text through React, and never accepts URLs, HTML or app actions from
+the generated page. The iframe still has only `sandbox=allow-scripts`.

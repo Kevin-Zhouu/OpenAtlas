@@ -85,10 +85,15 @@ class Repository:
                 {"v": json.dumps(settings)},
             )
 
-    def enqueue(self, request, notebook_id=None):
+    def enqueue(self, request, notebook_id=None, retry_of=None):
         job, stamp = uid(), now()
         notebook_id = notebook_id or uid()
         with self.engine.begin() as c:
+            if retry_of:
+                c.exec_driver_sql("BEGIN IMMEDIATE")
+                existing = c.execute(text("SELECT id FROM jobs WHERE status IN ('queued','running') AND json_extract(request, '$.retry_of')=:id"), {"id": retry_of}).first()
+                if existing:
+                    raise ValueError("An attempt for this failed job is already queued or running")
             c.execute(
                 text(
                     "INSERT OR IGNORE INTO notebooks(id,title,created_at) VALUES (:id,:title,:stamp)"

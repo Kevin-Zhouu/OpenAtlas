@@ -107,3 +107,13 @@ inbox while remaining accessible in Jobs.
 Notification coverage includes historical/new failures, popup expiry, repeated
 request errors, read-state persistence, recovered jobs, Escape dismissal, direct
 inspection, and phone layouts down to 320px.
+
+## Astra CLI metadata correction
+
+The generation image now pins Codex CLI 0.154.0 (previously 0.114.0).
+OpenAI's changelog records Astra catalog support in 0.153.1 and bundled support
+in 0.154.0: https://learn.chatgpt.com/docs/changelog . The selected model is still
+passed explicitly, and the trusted relay forwards the request body unchanged.
+The relay now records only requested and API-reported model identifiers in its
+existing private container diagnostics. Historical jobs do not gain this evidence
+retroactively, and rebuilding an image does not change already-running containers.

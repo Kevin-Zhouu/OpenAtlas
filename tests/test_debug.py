@@ -79,3 +79,35 @@ def test_debug_snapshots_atomic_bounded_and_api_access(tmp_path, monkeypatch):
     monkeypatch.setenv("OPENATLAS_ACCESS_TOKEN", "host-test-token")
     protected = TestClient(create_app(repo), base_url="http://localhost")
     assert protected.get("/api/jobs/" + job["id"] + "/debug").status_code == 401
+
+
+def test_invocation_metadata_survives_snapshots_and_redacts_secrets(tmp_path):
+    from openatlas.agents import CodexAdapter
+    repo = Repository(tmp_path)
+    request = {'prompt':'Teach TLS', 'provider':'codex', 'model':'gpt-6-astra', 'skills':[], 'instructions':'Use diagrams'}
+    job = repo.enqueue(request)
+    store = DebugStore(tmp_path)
+    command = CodexAdapter().command(request)
+    command[-1] += '\nsecret-value-for-test'
+    store.record_invocation(job['id'], command, request, ('secret-value-for-test',))
+    store.record(job['id'], {'id':'container', 'observed_at':'now'})
+    store.record_invocation(job['id'], CodexAdapter().command(dict(request,validation_feedback='Repair quiz')), dict(request,validation_feedback='Repair quiz'))
+    client = TestClient(create_app(repo), base_url='http://localhost')
+    data = client.get('/api/jobs/'+job['id']+'/debug').json()['generation']
+    assert data['prompt_source']=='captured'
+    assert len(data['invocations'])==2
+    assert data['invocations'][1]['phase']=='repair'
+    assert data['invocations'][0]['prompt'].endswith('[redacted]')
+    assert 'secret-value-for-test' not in str(data)
+    assert data['request']['instructions']=='Use diagrams'
+    assert DebugStore(tmp_path).invocations(job['id'])==data['invocations']
+
+
+def test_old_codex_prompt_is_labeled_reconstructed(tmp_path):
+    repo=Repository(tmp_path)
+    job=repo.enqueue({'prompt':'Teach TCP','provider':'codex','model':'gpt-6-astra','skills':[]})
+    client=TestClient(create_app(repo),base_url='http://localhost')
+    data=client.get('/api/jobs/'+job['id']+'/debug').json()['generation']
+    assert data['prompt_source']=='reconstructed'
+    assert 'Teach TCP' in data['prompt']
+    assert data['invocations']==[]

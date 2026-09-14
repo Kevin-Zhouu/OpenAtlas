@@ -19,3 +19,14 @@ it('reports expired links without retaining the token', async () => {
   await expect(pairFromFragment()).rejects.toThrow('no longer valid');
   expect(window.location.hash).toBe('');
 });
+it('accepts a fresh QR after a rejected link in the same tab', async () => {
+  window.history.replaceState(null, '', '/#access_token=expired');
+  const fetcher = vi.fn().mockResolvedValueOnce({ok:false}).mockResolvedValueOnce({ok:true});
+  vi.stubGlobal('fetch', fetcher);
+  const { pairFromFragment } = await import('./pairing');
+  await expect(pairFromFragment()).rejects.toThrow('no longer valid');
+  window.history.replaceState(null, '', '/#access_token=fresh');
+  await pairFromFragment();
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(window.location.hash).toBe('');
+});

@@ -117,3 +117,15 @@ it("displays persisted failure details in generation history", async () => {
     ),
   ).toBeInTheDocument();
 });
+it('clears a stale sign-in popup when Safari restores home with a valid session', async () => {
+  let authorized = false;
+  fetcher.mockImplementation(async (url: string) => ({
+    ok: authorized, status: authorized ? 200 : 401,
+    json: async () => !authorized ? {detail:'Sign in'} : url.endsWith('/settings') ? {provider:'demo', model:'gpt-6-astra', concurrency:2} : [],
+  }));
+  render(<App />);
+  await screen.findByText('Reconnect your phone');
+  authorized = true;
+  fireEvent(window, new Event('pageshow'));
+  await waitFor(() => expect(screen.queryByText('Reconnect your phone')).not.toBeInTheDocument());
+});

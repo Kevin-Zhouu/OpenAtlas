@@ -40,8 +40,12 @@ class SkillCatalog:
             if not root.exists():
                 continue
             for folder in sorted(root.iterdir()):
-                if not folder.is_dir():
+                if folder.name.startswith(".") or not folder.is_dir():
                     continue
+                if prefix == "builtin":
+                    override = self.directory / ".builtin-overrides" / folder.name
+                    if override.exists():
+                        folder = override
                 record = {
                     "id": prefix + ":" + folder.name,
                     "name": folder.name,
@@ -60,6 +64,8 @@ class SkillCatalog:
                         raise ValueError(
                             "Use a lowercase, hyphenated skill folder name"
                         )
+                    if prefix == "builtin" and (self.directory / ".builtin-overrides").is_symlink():
+                        raise ValueError("Symbolic links are not supported")
                     digest = inspect_tree(folder)
                     raw = (folder / "SKILL.md").read_text()
                     if len(raw) > 100000 or not raw.startswith("---\n"):

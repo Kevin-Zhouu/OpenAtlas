@@ -10,7 +10,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
       - library:/data
-      - ${OPENATLAS_SKILLS_DIR:-./skills}:/skills:ro
+      - ${OPENATLAS_SKILLS_DIR:-./skills}:/skills
     restart: unless-stopped
   runner:
     image: openatlas:local

@@ -25,7 +25,7 @@ class Runner:
         self.store = store or ArtifactStore(self.repo.data)
         self.catalog = catalog or SkillCatalog()
         self.executor = executor or DockerExecutor(
-            Credentials(self.repo.data), debug=DebugStore(self.repo.data)
+            Credentials(self.repo.data), debug=DebugStore(self.repo.data), checkpoint_store=self.store
         )
         self.stop = threading.Event()
 
@@ -51,6 +51,9 @@ class Runner:
                     self.store.seed(
                         job["notebook_id"], request["base_version"], workspace
                     )
+
+                if request.get("continue_job"):
+                    self.store.seed_checkpoint(request["continue_job"], workspace)
 
                 def progress(message):
                     self.repo.progress(job["id"], message)

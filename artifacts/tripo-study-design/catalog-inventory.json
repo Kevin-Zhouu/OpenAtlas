@@ -1,0 +1,1791 @@
+{
+  "reviewed_on": "2026-09-14",
+  "scope": "Union of current and historical public catalogs; not a consistent live inventory. Prompt text intentionally omitted.",
+  "count": 222,
+  "entries": [
+    {
+      "id": "2095673885605630429",
+      "title": "Procedural living ocean and storm simulation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/procedural-living-ocean-and-storm-simulation-2095673885605630429",
+      "original_post": "https://x.com/emollick/status/2095673885605630429",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096013280519016608",
+      "title": "Gogh Strike multiplayer FPS",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gogh-strike-multiplayer-fps-2096013280519016608",
+      "original_post": "https://x.com/petergostev/status/2096013280519016608",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095988972879335792",
+      "title": "Cathedral hack-and-slash arena",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/cathedral-hack-and-slash-arena-2095988972879335792",
+      "original_post": "https://x.com/superalesha/status/2095988972879335792",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095967568825582044",
+      "title": "Anti-gravity combat racer",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/anti-gravity-combat-racer-2095967568825582044",
+      "original_post": "https://x.com/superalesha/status/2095967568825582044",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096551010089263181",
+      "title": "Interactive dual-ring energy core",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-dual-ring-energy-core-2096551010089263181",
+      "original_post": "https://x.com/oneruofeng/status/2096551010089263181",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096262733259837681",
+      "title": "Cluj-Napoca Union Square in voxels",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/cluj-napoca-union-square-in-voxels-2096262733259837681",
+      "original_post": "https://x.com/danmana/status/2096262733259837681",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095596175705399482",
+      "title": "Surviving society of autonomous Unreal humans",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/surviving-society-of-autonomous-unreal-humans-2095596175705399482",
+      "original_post": "https://x.com/mattshumer_/status/2095596175705399482",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095609734845927525",
+      "title": "Street-by-street Manhattan in Unreal Engine",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/street-by-street-manhattan-in-unreal-engine-2095609734845927525",
+      "original_post": "https://x.com/mattshumer_/status/2095609734845927525",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096068401294929940",
+      "title": "Build a Rough 3D Game in Astra from Concept Art",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2096068401294929940",
+      "original_post": "https://x.com/ChenshuoAI/status/2096068401294929940",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2096335588727349434",
+      "title": "Photorealistic Editable Dragon Reconstruction in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096335588727349434",
+      "original_post": "https://x.com/doomdave/status/2096335588727349434",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096338836854804782",
+      "title": "3D render of an X picture",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2096338836854804782",
+      "original_post": "https://x.com/MattJamesBoyle/status/2096338836854804782",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2096354461652488562",
+      "title": "Playable 3D Ensemble with Audio-Synchronized Animation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096354461652488562",
+      "original_post": "https://x.com/groovestreetgen/status/2096354461652488562",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096391653669953761",
+      "title": "Create and render a black hole in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096391653669953761",
+      "original_post": "https://x.com/JohnKlerAI/status/2096391653669953761",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096438110095585753",
+      "title": "Rebuilding Lego 1999 Racers",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096438110095585753",
+      "original_post": "https://x.com/EngMoElgaraihy/status/2096438110095585753",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096547658164834788",
+      "title": "Ezekiel’s Temple Vision in 3D",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096547658164834788",
+      "original_post": "https://x.com/KrixOnok/status/2096547658164834788",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096562462674079868",
+      "title": "Nuclear Explosion 3D City Simulation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096562462674079868",
+      "original_post": "https://x.com/ashishthakur___/status/2096562462674079868",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096567422253662372",
+      "title": "Add a 3D view to the website",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2096567422253662372",
+      "original_post": "https://x.com/Dgamax/status/2096567422253662372",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2096593372311941143",
+      "title": "Totality Engine: Cinematic Eclipse Cathedral",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/totality-engine-cinematic-eclipse-cathedral-2096593372311941143",
+      "original_post": "https://x.com/Chris_Wozniczek/status/2096593372311941143",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096596888799895855",
+      "title": "Create CS2 in Three.js",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096596888799895855",
+      "original_post": "https://x.com/neatpromptsai/status/2096596888799895855",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096629506047955327",
+      "title": "Windhaven Coastal Fantasy Adventure Game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096629506047955327",
+      "original_post": "https://x.com/tripoai/status/2096629506047955327",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096637091627364531",
+      "title": "Three.js dark-fantasy action RPG",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096637091627364531",
+      "original_post": "https://x.com/HiltonMisia/status/2096637091627364531",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096637194270134742",
+      "title": "Rotating Earth Render in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096637194270134742",
+      "original_post": "https://x.com/JohnKlerAI/status/2096637194270134742",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096641728497275011",
+      "title": "Mini World 3D exploration game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096641728497275011",
+      "original_post": "https://x.com/weijianzhang_/status/2096641728497275011",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096739993217577219",
+      "title": "Grand Theft Auto Game with San Andreas Characters and Cities",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2096739993217577219",
+      "original_post": "https://x.com/ElIngeRRC/status/2096739993217577219",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2096766465730847059",
+      "title": "LEGO Minifig Game Asset with Blender MCP",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/astra-3d-2096766465730847059",
+      "original_post": "https://x.com/_simonsmith/status/2096766465730847059",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096793432987464010",
+      "title": "Create an Interactive Soft-Body Slime with Three.js and WebGPU",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096793432987464010",
+      "original_post": "https://x.com/Delroy715/status/2096793432987464010",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096814981509775616",
+      "title": "Extremely detailed real-time 3D forest in the browser",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2096814981509775616",
+      "original_post": "https://x.com/rakib_hossen_ai/status/2096814981509775616",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2096907617117540478",
+      "title": "Hogwarts 3D scene",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096907617117540478",
+      "original_post": "https://x.com/HiltonMisia/status/2096907617117540478",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096950715277004976",
+      "title": "Turn an image into a 3D model and rotate it 360°",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2096950715277004976",
+      "original_post": "https://x.com/ZentrixHQ/status/2096950715277004976",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2096956214680965501",
+      "title": "Endless Miniature Street in Three.js WebGPU",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096956214680965501",
+      "original_post": "https://x.com/creativedash/status/2096956214680965501",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096966425017467344",
+      "title": "“The Horizon Where Gravity Broke” — A VRChat Landscape World",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096966425017467344",
+      "original_post": "https://x.com/shuminchuuu/status/2096966425017467344",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096971051334857181",
+      "title": "Interactive Chinese Courtyard",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096971051334857181",
+      "original_post": "https://x.com/MrLarus/status/2096971051334857181",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096986557244723371",
+      "title": "A 12-Second Forest Road in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096986557244723371",
+      "original_post": "https://x.com/Jomolos/status/2096986557244723371",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096990373813858591",
+      "title": "Edit a Blender scene for knurled posts and PCB fit",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2096990373813858591",
+      "original_post": "https://x.com/rboyd/status/2096990373813858591",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2097313247116341424",
+      "title": "Improve a 3D Model’s Facial Features in Blender Using a Reference Image",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097313247116341424",
+      "original_post": "https://x.com/carlos_olivera/status/2097313247116341424",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097323734504017936",
+      "title": "Temple of Heaven Hall of Prayer for Good Harvest — TypeScript + Three.js WebGL Project",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097323734504017936",
+      "original_post": "https://x.com/goan999999/status/2097323734504017936",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097336230078013598",
+      "title": "Recreate League of Legends as a Web Game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097336230078013598",
+      "original_post": "https://x.com/liyue_ai/status/2097336230078013598",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097339176094195899",
+      "title": "Playroom: Retro 3D Browser Arcade",
+      "catalog_url": "https://github.com/TripoGrowthLab/awesome-astra-prompts/blob/8bd28c05f13ce5264018335e1fc45d478e2c46d2/docs/catalog.en.md#2097339176094195899",
+      "original_post": "https://x.com/tripoai/status/2097339176094195899",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation",
+      "link_note": "Historical catalog anchor; no direct detail URL in reviewed record."
+    },
+    {
+      "id": "2097343467026289039",
+      "title": "Cozy Wetland Lake World",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097343467026289039",
+      "original_post": "https://x.com/givros/status/2097343467026289039",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096251574918013135",
+      "title": "Kaiju city battle",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/kaiju-city-battle-2096251574918013135",
+      "original_post": "https://x.com/majidmanzarpour/status/2096251574918013135",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095636679264780481",
+      "title": "Modern villa scene in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/modern-villa-scene-in-blender-2095636679264780481",
+      "original_post": "https://x.com/karankendre/status/2095636679264780481",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096525100518453342",
+      "title": "Switchable character expressions in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/switchable-character-expressions-in-blender-2096525100518453342",
+      "original_post": "https://x.com/Dstudio_ai/status/2096525100518453342",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095597137849446688",
+      "title": "One-shot Minecraft-style world",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/one-shot-minecraft-style-world-2095597137849446688",
+      "original_post": "https://x.com/flavioAd/status/2095597137849446688",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095599934766764338",
+      "title": "One-shot browser 3D game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/one-shot-browser-3d-game-2095599934766764338",
+      "original_post": "https://x.com/theo/status/2095599934766764338",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095598645190291775",
+      "title": "House photo to editable Blender world",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/house-photo-to-editable-blender-world-2095598645190291775",
+      "original_post": "https://x.com/tomkrcha/status/2095598645190291775",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095612137582526615",
+      "title": "Zillow listing to 3D property film",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/zillow-listing-to-3d-property-film-2095612137582526615",
+      "original_post": "https://x.com/realYunfanYe/status/2095612137582526615",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095756085890310311",
+      "title": "Steam-train drawing to editable Blender assembly",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/steam-train-drawing-to-editable-blender-assembly-2095756085890310311",
+      "original_post": "https://x.com/tomkrcha/status/2095756085890310311",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095630197257367857",
+      "title": "Procedural Oval Office set for Cycles",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/procedural-oval-office-set-for-cycles-2095630197257367857",
+      "original_post": "https://x.com/higgsfield_ai/status/2095630197257367857",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095653641164329143",
+      "title": "Palace of Fine Arts Blender recreation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/palace-of-fine-arts-blender-recreation-2095653641164329143",
+      "original_post": "https://x.com/sharifshameem/status/2095653641164329143",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095776685807346105",
+      "title": "Walkable town made from six Van Gogh paintings",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/walkable-town-made-from-six-van-gogh-paintings-2095776685807346105",
+      "original_post": "https://x.com/petergostev/status/2095776685807346105",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095608358086840647",
+      "title": "Voice-directed 3D game for beginners",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/voice-directed-3d-game-for-beginners-2095608358086840647",
+      "original_post": "https://x.com/EHuanglu/status/2095608358086840647",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095580402505400369",
+      "title": "Three themed kart games from one greybox",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/three-themed-kart-games-from-one-greybox-2095580402505400369",
+      "original_post": "https://x.com/chetaslua/status/2095580402505400369",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095596341422440714",
+      "title": "Open-world browser adventure",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/open-world-browser-adventure-2095596341422440714",
+      "original_post": "https://x.com/petergostev/status/2095596341422440714",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095619319690400253",
+      "title": "Photoreal 3D product mockup studio",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/photoreal-3d-product-mockup-studio-2095619319690400253",
+      "original_post": "https://x.com/joshmillgate/status/2095619319690400253",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095611134992945385",
+      "title": "Reference-image 3D aquarium game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/reference-image-3d-aquarium-game-2095611134992945385",
+      "original_post": "https://x.com/TimJayas/status/2095611134992945385",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095647685210669541",
+      "title": "Single-prompt playable real-time 3D game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/single-playable-real-time-3d-game-2095647685210669541",
+      "original_post": "https://x.com/higgsfield/status/2095647685210669541",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095840435319001278",
+      "title": "Single-turn Three.js naval war scene",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/single-turn-three-js-naval-war-scene-2095840435319001278",
+      "original_post": "https://x.com/synthwavedd/status/2095840435319001278",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095598026916049024",
+      "title": "10v10 Halo-inspired multiplayer FPS",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/10v10-halo-inspired-multiplayer-fps-2095598026916049024",
+      "original_post": "https://x.com/VikiingAI/status/2095598026916049024",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095719731860750613",
+      "title": "Interactive voxel railway table",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-voxel-railway-table-2095719731860750613",
+      "original_post": "https://x.com/DeryaTR_/status/2095719731860750613",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095699049722581065",
+      "title": "Living voxel ship in a bottle",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/living-voxel-ship-in-a-bottle-2095699049722581065",
+      "original_post": "https://x.com/DeryaTR_/status/2095699049722581065",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095641163441254676",
+      "title": "Printable USS Enterprise CAD assembly",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/printable-uss-enterprise-cad-assembly-2095641163441254676",
+      "original_post": "https://x.com/DeryaTR_/status/2095641163441254676",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095630044102279312",
+      "title": "Unity space trench-run game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/unity-space-trench-run-game-2095630044102279312",
+      "original_post": "https://x.com/ronaldmannak/status/2095630044102279312",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2093690427849191855",
+      "title": "Procedural voxel castle showcase",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/procedural-voxel-castle-showcase-2093690427849191855",
+      "original_post": "https://x.com/hakmgpt/status/2093690427849191855",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095597640587374887",
+      "title": "Asset-driven explorable Unity city",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/asset-driven-explorable-unity-city-2095597640587374887",
+      "original_post": "https://x.com/chetaslua/status/2095597640587374887",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095868420327710840",
+      "title": "Mechanically complete Blender locomotive",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/mechanically-complete-blender-locomotive-2095868420327710840",
+      "original_post": "https://x.com/sheemamoto/status/2095868420327710840",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095819786651374023",
+      "title": "Tidal Rush eight-racer browser game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/tidal-rush-eight-racer-browser-game-2095819786651374023",
+      "original_post": "https://x.com/amazing13_13/status/2095819786651374023",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095805694603673631",
+      "title": "Real-time WebGL galaxy launch hero",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/real-time-webgl-galaxy-launch-hero-2095805694603673631",
+      "original_post": "https://x.com/Fluxora_Studios/status/2095805694603673631",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095898198413922791",
+      "title": "Self-playing cultural arcade game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/self-playing-cultural-arcade-game-2095898198413922791",
+      "original_post": "https://x.com/say_gm_/status/2095898198413922791",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095597560253862065",
+      "title": "One-shot premium interactive prototype",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/one-shot-premium-interactive-prototype-2095597560253862065",
+      "original_post": "https://x.com/AY_Orbach/status/2095597560253862065",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095776712579571725",
+      "title": "Exploded interactive 3D turbocharger",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/exploded-interactive-3d-turbocharger-2095776712579571725",
+      "original_post": "https://x.com/Feraser8/status/2095776712579571725",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095663498101662198",
+      "title": "One-shot Three.js surprise game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/one-shot-three-js-surprise-game-2095663498101662198",
+      "original_post": "https://x.com/pratt_builds/status/2095663498101662198",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095907526566990013",
+      "title": "Rapid playable game prototype",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/rapid-playable-game-prototype-2095907526566990013",
+      "original_post": "https://x.com/gibglue/status/2095907526566990013",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095872986477908108",
+      "title": "Prompt-to-open-world game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/open-world-game-from-a-prompt-2095872986477908108",
+      "original_post": "https://x.com/aeejazkhan/status/2095872986477908108",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095806515579879457",
+      "title": "Interactive Three.js galaxy homepage",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-three-js-galaxy-homepage-2095806515579879457",
+      "original_post": "https://x.com/threejsresource/status/2095806515579879457",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095898303019856230",
+      "title": "Looping cyberpunk bedroom in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/looping-cyberpunk-bedroom-in-blender-2095898303019856230",
+      "original_post": "https://x.com/CoinSh0t/status/2095898303019856230",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095871735824339279",
+      "title": "Van Gogh town in Three.js",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/van-gogh-town-in-three-js-2095871735824339279",
+      "original_post": "https://x.com/RealFedeURU/status/2095871735824339279",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095805115580199372",
+      "title": "Starry Night streets you can stroll",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/starry-night-streets-you-can-stroll-2095805115580199372",
+      "original_post": "https://x.com/BigRyan/status/2095805115580199372",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095742344293454148",
+      "title": "Driveable childhood train table",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/driveable-childhood-train-table-2095742344293454148",
+      "original_post": "https://x.com/BigRyan/status/2095742344293454148",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095623452678144366",
+      "title": "Text-to-explorable Unity city",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/text-to-explorable-unity-city-2095623452678144366",
+      "original_post": "https://x.com/0x0SojalSec/status/2095623452678144366",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095650251902239139",
+      "title": "Single-prompt aquarium benchmark",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/single-aquarium-benchmark-2095650251902239139",
+      "original_post": "https://x.com/iamtonyzhu/status/2095650251902239139",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095725404883476661",
+      "title": "Floor plan to complete 3D walkthrough",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/floor-plan-to-complete-3d-walkthrough-2095725404883476661",
+      "original_post": "https://x.com/aidarosgo3/status/2095725404883476661",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095777502681825541",
+      "title": "Real house to editable 60 FPS Blender scene",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/real-house-to-editable-60-fps-blender-scene-2095777502681825541",
+      "original_post": "https://x.com/alvinfoo/status/2095777502681825541",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095916820431827408",
+      "title": "Street Heat browser drift racer",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/street-heat-browser-drift-racer-2095916820431827408",
+      "original_post": "https://x.com/higgsfield_ai/status/2095916820431827408",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095616529572503593",
+      "title": "3D museum cinematography previsualization",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/3d-museum-cinematography-previsualization-2095616529572503593",
+      "original_post": "https://x.com/higgsfield_ai/status/2095616529572503593",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095695603808309497",
+      "title": "Playable 15-second product demo ad",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/playable-15-second-product-demo-ad-2095695603808309497",
+      "original_post": "https://x.com/zackpaid/status/2095695603808309497",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095624712244072551",
+      "title": "Blueprint to Blender to Unreal archviz",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/blueprint-to-blender-to-unreal-archviz-2095624712244072551",
+      "original_post": "https://x.com/LinusEkenstam/status/2095624712244072551",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095752726886105375",
+      "title": "Solace forest villa from brief to UE5",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/solace-forest-villa-from-brief-to-ue5-2095752726886105375",
+      "original_post": "https://x.com/NFT_Chen/status/2095752726886105375",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095844872171421771",
+      "title": "Thirty-second Blender scene challenge",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/thirty-second-blender-scene-challenge-2095844872171421771",
+      "original_post": "https://x.com/_satyam_ai/status/2095844872171421771",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095980885732704629",
+      "title": "Rube Goldberg chain-reaction machine",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/rube-goldberg-chain-reaction-machine-2095980885732704629",
+      "original_post": "https://x.com/thehypedotnews/status/2095980885732704629",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096035962824335798",
+      "title": "Explorable Taj Mahal",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/explorable-taj-mahal-2096035962824335798",
+      "original_post": "https://x.com/vikassabbi/status/2096035962824335798",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096225621303042258",
+      "title": "Orbital rendezvous simulator",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/orbital-rendezvous-simulator-2096225621303042258",
+      "original_post": "https://x.com/AlicanKiraz0/status/2096225621303042258",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096180220839760375",
+      "title": "Reference-image tugboat assembly",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/reference-image-tugboat-assembly-2096180220839760375",
+      "original_post": "https://x.com/NarvisAlex/status/2096180220839760375",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096059736693305794",
+      "title": "Single-view power drill reconstruction",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/single-view-power-drill-reconstruction-2096059736693305794",
+      "original_post": "https://x.com/SkyeSharkie/status/2096059736693305794",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095981655370666076",
+      "title": "3D slingshot bird game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/3d-slingshot-bird-game-2095981655370666076",
+      "original_post": "https://x.com/MozeTech/status/2095981655370666076",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095962376344309843",
+      "title": "Bullet-time third-person shooter",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/bullet-time-third-person-shooter-2095962376344309843",
+      "original_post": "https://x.com/HangoutWHAndrei/status/2095962376344309843",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096008241104711698",
+      "title": "Bouncy WebGPU jelly",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/bouncy-webgpu-jelly-2096008241104711698",
+      "original_post": "https://x.com/scottstts/status/2096008241104711698",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095967131573649552",
+      "title": "Interactive PS5 controller",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-ps5-controller-2095967131573649552",
+      "original_post": "https://x.com/blueemi99/status/2095967131573649552",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096079660605997264",
+      "title": "Astral War browser shooter",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/astral-war-browser-shooter-2096079660605997264",
+      "original_post": "https://x.com/0xRishi/status/2096079660605997264",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096079976433082502",
+      "title": "Schematic PDF to PCB and 3D view",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/schematic-pdf-to-pcb-and-3d-view-2096079976433082502",
+      "original_post": "https://x.com/swjtutl/status/2096079976433082502",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096149823216898445",
+      "title": "Browser flight game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/browser-flight-game-2096149823216898445",
+      "original_post": "https://x.com/givros/status/2096149823216898445",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096082432197837065",
+      "title": "Interactive globe dashboard",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-globe-dashboard-2096082432197837065",
+      "original_post": "https://x.com/hqmank/status/2096082432197837065",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096107322536051057",
+      "title": "Azadi Tower in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/azadi-tower-in-blender-2096107322536051057",
+      "original_post": "https://x.com/taesiri/status/2096107322536051057",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096245759121277132",
+      "title": "Scroll-driven 3D studio website",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/scroll-driven-3d-studio-website-2096245759121277132",
+      "original_post": "https://x.com/mx_debbiee/status/2096245759121277132",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096244208533455049",
+      "title": "Komorebi river kayaking",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/komorebi-river-kayaking-2096244208533455049",
+      "original_post": "https://x.com/ItsmeAjayKV/status/2096244208533455049",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096243989439713677",
+      "title": "Refractive bottle product story",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/refractive-bottle-product-story-2096243989439713677",
+      "original_post": "https://x.com/himanshubuildss/status/2096243989439713677",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096082580554777041",
+      "title": "Exploding procedural train assemblies",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/exploding-procedural-train-assemblies-2096082580554777041",
+      "original_post": "https://x.com/tomkrcha/status/2096082580554777041",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096201415051911597",
+      "title": "A playful toddler toy world",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/a-playful-toddler-toy-world-2096201415051911597",
+      "original_post": "https://x.com/aehyok/status/2096201415051911597",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096122429319852319",
+      "title": "Live jet-manufacturing plant",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/live-jet-manufacturing-plant-2096122429319852319",
+      "original_post": "https://x.com/konstantinsaifo/status/2096122429319852319",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096220264413409648",
+      "title": "A storm trapped in a cube",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/a-storm-trapped-in-a-cube-2096220264413409648",
+      "original_post": "https://x.com/zwb44/status/2096220264413409648",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096047660662722620",
+      "title": "Zork as a 3D action adventure",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/zork-as-a-3d-action-adventure-2096047660662722620",
+      "original_post": "https://x.com/emollick/status/2096047660662722620",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096133339329536249",
+      "title": "Rigged and animated T. rex",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/rigged-and-animated-t-rex-2096133339329536249",
+      "original_post": "https://x.com/majidmanzarpour/status/2096133339329536249",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096174858837074198",
+      "title": "Marine life in a coffee cup",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/marine-life-in-a-coffee-cup-2096174858837074198",
+      "original_post": "https://x.com/PolaczekSagi/status/2096174858837074198",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096250748099068377",
+      "title": "Interactive Hyperloop demo",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-hyperloop-demo-2096250748099068377",
+      "original_post": "https://x.com/hbanay98/status/2096250748099068377",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096234355395903672",
+      "title": "Procedural Napoleon bust",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/procedural-napoleon-bust-2096234355395903672",
+      "original_post": "https://x.com/leploutos/status/2096234355395903672",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096226711222546461",
+      "title": "Railway station concourse",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/railway-station-concourse-2096226711222546461",
+      "original_post": "https://x.com/0xWormhole404/status/2096226711222546461",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096222790894661841",
+      "title": "Animated onboarding diorama",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/animated-onboarding-diorama-2096222790894661841",
+      "original_post": "https://x.com/EmilHovv/status/2096222790894661841",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096206082712768897",
+      "title": "OX Vice Drive open-city racer",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/ox-vice-drive-open-city-racer-2096206082712768897",
+      "original_post": "https://x.com/qok_ai/status/2096206082712768897",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096111709496680842",
+      "title": "Playable remake of a mobile game ad",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/playable-remake-of-a-mobile-game-ad-2096111709496680842",
+      "original_post": "https://x.com/buildingadlicio/status/2096111709496680842",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095999578419929412",
+      "title": "Anime arena fighter in Roblox",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/anime-arena-fighter-in-roblox-2095999578419929412",
+      "original_post": "https://x.com/WoahWurdz/status/2095999578419929412",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096258619574513880",
+      "title": "Browser racing physics in C# and WASM",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/browser-racing-physics-in-c-and-wasm-2096258619574513880",
+      "original_post": "https://x.com/achepta_tm/status/2096258619574513880",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096141728487178503",
+      "title": "Automatic character rig and kung fu moves",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/automatic-character-rig-and-kung-fu-moves-2096141728487178503",
+      "original_post": "https://x.com/thebuggeddev/status/2096141728487178503",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096107343268257953",
+      "title": "Artwork to a playable character",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/artwork-to-a-playable-character-2096107343268257953",
+      "original_post": "https://x.com/noctav1a/status/2096107343268257953",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096023793772998704",
+      "title": "Personal 3D portfolio with a speaking globe",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/personal-3d-portfolio-with-a-speaking-globe-2096023793772998704",
+      "original_post": "https://x.com/HowDevelop/status/2096023793772998704",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096056285896536086",
+      "title": "Sonic-inspired Godot vertical slice",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/sonic-inspired-godot-vertical-slice-2096056285896536086",
+      "original_post": "https://x.com/AiBattle_/status/2096056285896536086",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096140378777010278",
+      "title": "Viking character in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/viking-character-in-blender-2096140378777010278",
+      "original_post": "https://x.com/fre4kspace/status/2096140378777010278",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096155883122413946",
+      "title": "Dropzone battle royale arena",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/dropzone-battle-royale-arena-2096155883122413946",
+      "original_post": "https://x.com/Motion_Viz/status/2096155883122413946",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096096998092841449",
+      "title": "Suzhou Museum garden walkthrough",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/suzhou-museum-garden-walkthrough-2096096998092841449",
+      "original_post": "https://x.com/whosamberella/status/2096096998092841449",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095986941753712841",
+      "title": "Interactive Titan science exhibit",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-titan-science-exhibit-2095986941753712841",
+      "original_post": "https://x.com/ArdaTugsat/status/2095986941753712841",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096040448477515874",
+      "title": "Evolving WebGL ecosystem",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/evolving-webgl-ecosystem-2096040448477515874",
+      "original_post": "https://x.com/yume_arasaki/status/2096040448477515874",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096042360513904742",
+      "title": "Delivery network with bridge closures",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/delivery-network-with-bridge-closures-2096042360513904742",
+      "original_post": "https://x.com/AgentWorkflowLa/status/2096042360513904742",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096062355692048605",
+      "title": "Sinclair ZX Spectrum simulator",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/sinclair-zx-spectrum-simulator-2096062355692048605",
+      "original_post": "https://x.com/DeryaTR_/status/2096062355692048605",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096092080397246707",
+      "title": "Photogrammetry scan to editable living room",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/photogrammetry-scan-to-editable-living-room-2096092080397246707",
+      "original_post": "https://x.com/bilawalsidhu/status/2096092080397246707",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096135808243876152",
+      "title": "Odyssey-inspired platform adventure",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/odyssey-inspired-platform-adventure-2096135808243876152",
+      "original_post": "https://x.com/AiHubMix/status/2096135808243876152",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096221988763173186",
+      "title": "Exploded interactive human anatomy",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/exploded-interactive-human-anatomy-2096221988763173186",
+      "original_post": "https://x.com/ashebytes/status/2096221988763173186",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096009146248122416",
+      "title": "Tesla Model X exploded view",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/tesla-model-x-exploded-view-2096009146248122416",
+      "original_post": "https://x.com/ashebytes/status/2096009146248122416",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096241295949975602",
+      "title": "Memory capsule machine",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/memory-capsule-machine-2096241295949975602",
+      "original_post": "https://x.com/gloria_zwq/status/2096241295949975602",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096125193580113957",
+      "title": "Formula One car in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/formula-one-car-in-blender-2096125193580113957",
+      "original_post": "https://x.com/Conor_D_Dart/status/2096125193580113957",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096308567863079420",
+      "title": "Warcraft-inspired character scene in Unity",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/warcraft-inspired-character-scene-in-unity-2096308567863079420",
+      "original_post": "https://x.com/luccacerf/status/2096308567863079420",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096015772334047319",
+      "title": "Three.js battle arena with Tripo assets",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/three-js-battle-arena-with-tripo-assets-2096015772334047319",
+      "original_post": "https://x.com/Normaneeeeee/status/2096015772334047319",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096579856133947507",
+      "title": "Rotatable 3D shogi board",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/rotatable-3d-shogi-board-2096579856133947507",
+      "original_post": "https://x.com/hatukougara/status/2096579856133947507",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096578761877860502",
+      "title": "Exploded desktop-computer atlas",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/exploded-desktop-computer-atlas-2096578761877860502",
+      "original_post": "https://x.com/icooperhero/status/2096578761877860502",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096578684010508736",
+      "title": "Children's room and workspace planner",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/children-s-room-and-workspace-planner-2096578684010508736",
+      "original_post": "https://x.com/dqlh47m/status/2096578684010508736",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095999282088378520",
+      "title": "Linked floor plan and 3D walkthrough",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/linked-floor-plan-and-3d-walkthrough-2095999282088378520",
+      "original_post": "https://x.com/onofumi_AI/status/2095999282088378520",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096557555086725159",
+      "title": "Interactive miniature of Seoul",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-miniature-of-seoul-2096557555086725159",
+      "original_post": "https://x.com/synabreu/status/2096557555086725159",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096460081982304546",
+      "title": "Surface-climbing procedural insect",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/surface-climbing-procedural-insect-2096460081982304546",
+      "original_post": "https://x.com/leo_xiaolei/status/2096460081982304546",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096467585785286808",
+      "title": "Wright Flyer through a Japanese forest",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/wright-flyer-through-a-japanese-forest-2096467585785286808",
+      "original_post": "https://x.com/thebuggeddev/status/2096467585785286808",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096576154337734865",
+      "title": "A house modeled from scratch in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/a-house-modeled-from-scratch-in-blender-2096576154337734865",
+      "original_post": "https://x.com/mizkun/status/2096576154337734865",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096143359505269079",
+      "title": "Coffee-shop photo to vertical walkthrough",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/coffee-shop-photo-to-vertical-walkthrough-2096143359505269079",
+      "original_post": "https://x.com/harrisonitsme/status/2096143359505269079",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096501340889374883",
+      "title": "Top-floor plan to Blender preview",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/top-floor-plan-to-blender-preview-2096501340889374883",
+      "original_post": "https://x.com/indigox/status/2096501340889374883",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096298425914450021",
+      "title": "Lisbon's Terreiro do Paço in Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/lisbon-s-terreiro-do-paco-in-blender-2096298425914450021",
+      "original_post": "https://x.com/goncalo_canhoto/status/2096298425914450021",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096574297703637111",
+      "title": "The Quiet Crossing exploration quest",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/the-quiet-crossing-exploration-quest-2096574297703637111",
+      "original_post": "https://x.com/Motion_Viz/status/2096574297703637111",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096263046918197609",
+      "title": "Dense procedural forest in Three.js",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/dense-procedural-forest-in-three-js-2096263046918197609",
+      "original_post": "https://x.com/LexnLin/status/2096263046918197609",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096013228090245181",
+      "title": "TP-7 recorder reference model",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/tp-7-recorder-reference-model-2096013228090245181",
+      "original_post": "https://x.com/ty_kra_lab/status/2096013228090245181",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096577430274429157",
+      "title": "Steam locomotive across the countryside",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/steam-locomotive-across-the-countryside-2096577430274429157",
+      "original_post": "https://x.com/dansanburu/status/2096577430274429157",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096561346766877106",
+      "title": "Vinyl-player tabletop scene",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/vinyl-player-tabletop-scene-2096561346766877106",
+      "original_post": "https://x.com/niteshseram/status/2096561346766877106",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096555856204644550",
+      "title": "Trading-card battle game loop",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/trading-card-battle-game-loop-2096555856204644550",
+      "original_post": "https://x.com/FaryaBlender3D/status/2096555856204644550",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096362653480562751",
+      "title": "Railway network simulation game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/railway-network-simulation-game-2096362653480562751",
+      "original_post": "https://x.com/tomkrcha/status/2096362653480562751",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096490395614019793",
+      "title": "Walkable low-poly Gwacheon village",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/walkable-low-poly-gwacheon-village-2096490395614019793",
+      "original_post": "https://x.com/ManasJoshi76254/status/2096490395614019793",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096505740643246231",
+      "title": "Complete Three.js puzzle level",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/complete-three-js-puzzle-level-2096505740643246231",
+      "original_post": "https://x.com/TvWoo/status/2096505740643246231",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096570815714414844",
+      "title": "Low-poly beach treasure hunt",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/low-poly-beach-treasure-hunt-2096570815714414844",
+      "original_post": "https://x.com/sorano_concon_g/status/2096570815714414844",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096560142871658589",
+      "title": "Blender models with Unity VFX",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/blender-models-with-unity-vfx-2096560142871658589",
+      "original_post": "https://x.com/CST_negi/status/2096560142871658589",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096556692842348826",
+      "title": "Mobile-playable Unity rally game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/mobile-playable-unity-rally-game-2096556692842348826",
+      "original_post": "https://x.com/kevinkern/status/2096556692842348826",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096572429066006845",
+      "title": "Indian mango tree in SpeedTree",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/indian-mango-tree-in-speedtree-2096572429066006845",
+      "original_post": "https://x.com/waitin4agi_/status/2096572429066006845",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096566598689783878",
+      "title": "Texture and rig a Tripo character",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/texture-and-rig-a-tripo-character-2096566598689783878",
+      "original_post": "https://x.com/chimerast/status/2096566598689783878",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096064140510970318",
+      "title": "The Legend of Astra game prototype",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/the-legend-of-astra-game-prototype-2096064140510970318",
+      "original_post": "https://x.com/lofihashbloom/status/2096064140510970318",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096566686266597754",
+      "title": "Apartment sketch to rendered interiors",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/apartment-sketch-to-rendered-interiors-2096566686266597754",
+      "original_post": "https://x.com/WorldEverett/status/2096566686266597754",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2095993826569502785",
+      "title": "Interactive browser river scene",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-browser-river-scene-2095993826569502785",
+      "original_post": "https://x.com/dangreenheck/status/2095993826569502785",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096128774203171021",
+      "title": "Adiyogi evening fly-through",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/adiyogi-evening-fly-through-2096128774203171021",
+      "original_post": "https://x.com/thejothiram/status/2096128774203171021",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096521798150242631",
+      "title": "Looping water with Geometry Nodes",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/looping-water-with-geometry-nodes-2096521798150242631",
+      "original_post": "https://x.com/uB95A7tobA17057/status/2096521798150242631",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096518775042707700",
+      "title": "One Piece-inspired sailing world",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/one-piece-inspired-sailing-world-2096518775042707700",
+      "original_post": "https://x.com/yash_yk45/status/2096518775042707700",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096572156453028193",
+      "title": "Interactive Lorenz attractor",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/interactive-lorenz-attractor-2096572156453028193",
+      "original_post": "https://x.com/juyeam/status/2096572156453028193",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096358854275543457",
+      "title": "Tavern with working staff and guests",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/tavern-with-working-staff-and-guests-2096358854275543457",
+      "original_post": "https://x.com/Rogue0114/status/2096358854275543457",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096506357868642342",
+      "title": "Personal room as an interactive portfolio",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/personal-room-as-an-interactive-portfolio-2096506357868642342",
+      "original_post": "https://x.com/kalanyei/status/2096506357868642342",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096503275910832461",
+      "title": "YF-24 boat on a gentle 3D sea",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/yf-24-boat-on-a-gentle-3d-sea-2096503275910832461",
+      "original_post": "https://x.com/yhmtmt1/status/2096503275910832461",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096413869841473930",
+      "title": "Playable D4-inspired apartment",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/playable-d4-inspired-apartment-2096413869841473930",
+      "original_post": "https://x.com/Swery65/status/2096413869841473930",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096398839830008292",
+      "title": "Browser city game with a supplied character",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/browser-city-game-with-a-supplied-character-2096398839830008292",
+      "original_post": "https://x.com/djrio_vr/status/2096398839830008292",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096339041679442428",
+      "title": "Orbital solar-system explorer",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/orbital-solar-system-explorer-2096339041679442428",
+      "original_post": "https://x.com/dzhohola/status/2096339041679442428",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096093614397170104",
+      "title": "Black-hole formation in WebGL",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/black-hole-formation-in-webgl-2096093614397170104",
+      "original_post": "https://x.com/zeeeeeen/status/2096093614397170104",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096559197999501724",
+      "title": "A 2D logo becomes an animated character",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/a-2d-logo-becomes-an-animated-character-2096559197999501724",
+      "original_post": "https://x.com/anthonyriera/status/2096559197999501724",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096337879173591171",
+      "title": "A crab game with action-driven mechanics",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/a-crab-game-with-action-driven-mechanics-2096337879173591171",
+      "original_post": "https://x.com/zeuuss_01/status/2096337879173591171",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096555183790575682",
+      "title": "Starry Night village with a day-night cycle",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/starry-night-village-with-a-day-night-cycle-2096555183790575682",
+      "original_post": "https://x.com/Firisis_/status/2096555183790575682",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096510126244999366",
+      "title": "Reference-matched Three.js interface",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/reference-matched-three-js-interface-2096510126244999366",
+      "original_post": "https://x.com/MengTo/status/2096510126244999366",
+      "text_source": "historical catalog 8bd28c05f13ce5264018335e1fc45d478e2c46d2",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096481425050743048",
+      "title": "Assemble and animate generated 3D assets",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/assemble-and-animate-generated-3d-assets-2096481425050743048",
+      "original_post": "https://x.com/Stefan_3D_AI/status/2096481425050743048",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096269057544831175",
+      "title": "Bioluminescent deep-sea landing page",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/bioluminescent-deep-sea-landing-page-2096269057544831175",
+      "original_post": "https://x.com/himanshubuildss/status/2096269057544831175",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097781208596029936",
+      "title": "Interactive 3D particle collider",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097781208596029936",
+      "original_post": "https://x.com/k1rallik/status/2097781208596029936",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098105648106078541",
+      "title": "Interactive 3D atlas of the human head and brain",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098105648106078541",
+      "original_post": "https://x.com/k1rallik/status/2098105648106078541",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "mosswing-mobile-3d-tap-to-flap-game",
+      "title": "Mosswing: Mobile 3D Tap-to-Flap Game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/mosswing-mobile-3d-tap-to-flap-game",
+      "original_post": "https://github.com/Ayi1337/gpt6-astra-one-shot-games#02--mosswing",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096342420543660277",
+      "title": "Character Concept to Rigged 3D Model and Cartoon",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096342420543660277",
+      "original_post": "https://x.com/higgsfield_ai/status/2096342420543660277",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096612394281603144",
+      "title": "Folding Carton Animation from a Dieline",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096612394281603144",
+      "original_post": "https://x.com/Salmaaboukarr/status/2096612394281603144",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2096685163111694556",
+      "title": "Interactive Smartphone Exploded View",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096685163111694556",
+      "original_post": "https://x.com/zairalaraib_/status/2096685163111694556",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097004192627933279",
+      "title": "Interactive Robot Pet on a Workbench",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097004192627933279",
+      "original_post": "https://x.com/zeuuss_01/status/2097004192627933279",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097065330728128920",
+      "title": "Interactive jelly lemon tree",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097065330728128920",
+      "original_post": "https://x.com/vib3coded/status/2097065330728128920",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097123382852829230",
+      "title": "Rig and animate a digitigrade mech in Godot",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097123382852829230",
+      "original_post": "https://x.com/om_patel5/status/2097123382852829230",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097153139795468365",
+      "title": "Japanese Flower Shop Exploded-View Animation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097153139795468365",
+      "original_post": "https://x.com/KanaWorks_AI/status/2097153139795468365",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097167383576383502",
+      "title": "Skyrim-Inspired Village Terrain from a Generated Reference",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097167383576383502",
+      "original_post": "https://x.com/TaroKichijo/status/2097167383576383502",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097320830602809682",
+      "title": "Recreate a Mini 3D Game Inspired by League of Legends",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097320830602809682",
+      "original_post": "https://x.com/LufzzLiz/status/2097320830602809682",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097534290112188602",
+      "title": "Backrooms-inspired Blender VHS scene",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097534290112188602",
+      "original_post": "https://x.com/chrisfirst/status/2097534290112188602",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097602565110419781",
+      "title": "Immersive 3D rice-field website",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097602565110419781",
+      "original_post": "https://x.com/YouWareAI/status/2097602565110419781",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097675660873605422",
+      "title": "Building a Comedy Scene of a Robotic Arm Chasing a Cat with GPT-6 Astra and Blender",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097675660873605422",
+      "original_post": "https://x.com/TanLuAI/status/2097675660873605422",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097678911882809407",
+      "title": "Build THE LAST GATE: A Crowd Runner with Math Gates",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097678911882809407",
+      "original_post": "https://x.com/KeWai386772/status/2097678911882809407",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097730920224534868",
+      "title": "Live 3D factory launch-pad simulation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097730920224534868",
+      "original_post": "https://x.com/konstantinsaifo/status/2097730920224534868",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097797479488246071",
+      "title": "Minecraft clone with multiplayer",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097797479488246071",
+      "original_post": "https://x.com/Armaan_Jain123/status/2097797479488246071",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097821164093480999",
+      "title": "Interactive fantasy graphics demo",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097821164093480999",
+      "original_post": "https://x.com/anshuc/status/2097821164093480999",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2097900087901106244",
+      "title": "Wordless 3D Cat Treat Short",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097900087901106244",
+      "original_post": "https://x.com/boboga777/status/2097900087901106244",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098038909514944562",
+      "title": "Make an 18-hole golf course more demanding",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098038909514944562",
+      "original_post": "https://x.com/Ror_Fly/status/2098038909514944562",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098043033446912315",
+      "title": "Interactive squid shoal",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098043033446912315",
+      "original_post": "https://x.com/vib3coded/status/2098043033446912315",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098049032195293190",
+      "title": "GTA-inspired cartoon car chase workflow",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098049032195293190",
+      "original_post": "https://x.com/PixVerse/status/2098049032195293190",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098063352832610473",
+      "title": "City Pulse",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098063352832610473",
+      "original_post": "https://x.com/tableau_viz/status/2098063352832610473",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098071577309122854",
+      "title": "Floating magical academy animation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098071577309122854",
+      "original_post": "https://x.com/PixVerse/status/2098071577309122854",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098079379297608050",
+      "title": "White-model shuttle flight through a city canyon",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098079379297608050",
+      "original_post": "https://x.com/PixVerseCreator/status/2098079379297608050",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098094339759149067",
+      "title": "Swordsman gate-destruction fantasy animation",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098094339759149067",
+      "original_post": "https://x.com/PixVerse/status/2098094339759149067",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098109252720078891",
+      "title": "Interactive 3D robotic hand piano demonstration",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098109252720078891",
+      "original_post": "https://x.com/KeWai386772/status/2098109252720078891",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098225609558335846",
+      "title": "Sol Horizon starter civilian courier ship",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098225609558335846",
+      "original_post": "https://x.com/jonathanplumb/status/2098225609558335846",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098367087475577273",
+      "title": "Automated Hair and Face Texture Generation and UV Transfer for Character Models",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098367087475577273",
+      "original_post": "https://x.com/_sagyoai/status/2098367087475577273",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098403061463224543",
+      "title": "Temple Miniature Diorama Scene",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098403061463224543",
+      "original_post": "https://x.com/rionaifantasy/status/2098403061463224543",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098406473273663992",
+      "title": "Girl Playing with a Robot Figurine",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098406473273663992",
+      "original_post": "https://x.com/94vanAI/status/2098406473273663992",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098492771170722032",
+      "title": "Interactive 3D Koi Pond",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098492771170722032",
+      "original_post": "https://x.com/vib3coded/status/2098492771170722032",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098697876155076820",
+      "title": "Zen Realm · Ancient Temple 3D Build Demo Video",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098697876155076820",
+      "original_post": "https://x.com/huoshan007/status/2098697876155076820",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098739181510164652",
+      "title": "Skybound browser flight game",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098739181510164652",
+      "original_post": "https://x.com/Kanojiyaaakash1/status/2098739181510164652",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098774359926297011",
+      "title": "Modular 3D-Printed Picture Frame with Connectors",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098774359926297011",
+      "original_post": "https://x.com/wada/status/2098774359926297011",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098795017955418202",
+      "title": "3D reconstruction of the 1893 Chicago World's Fair",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098795017955418202",
+      "original_post": "https://x.com/moreisdifferent/status/2098795017955418202",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    },
+    {
+      "id": "2098980384260456813",
+      "title": "UV Unwrapping and 4K Rebaking for a Headless Clothing Model",
+      "catalog_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098980384260456813",
+      "original_post": "https://x.com/_sagyoai/status/2098980384260456813",
+      "text_source": "current catalog (100-entry snapshot)",
+      "review_scope": "prompt/brief text; no individual output validation"
+    }
+  ]
+}

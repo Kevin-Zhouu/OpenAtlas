@@ -1,3 +1,4 @@
+import { GenerationDetails, type GenerationMetadata } from "./GenerationDetails";
 import { useEffect, useState } from "react";
 import { AgentActivity, ActivitySpinner } from "./AgentActivity";
 
@@ -16,6 +17,7 @@ type Container = {
   container_log: string;
 };
 type Snapshot = {
+  generation?: GenerationMetadata;
   updated_at: string | null;
   containers: Container[];
   job: {
@@ -32,6 +34,7 @@ export function DebugInspector({
   jobId: string;
   onClose: () => void;
 }) {
+  const [tab, setTab] = useState("activity");
   const [data, setData] = useState<Snapshot | null>(null),
     [error, setError] = useState(""),
     [paused, setPaused] = useState(false);
@@ -109,9 +112,11 @@ export function DebugInspector({
             {paused ? "Resume live updates" : "Pause live updates"}
           </button>
         </div>
+        <nav className="settings-tabs" aria-label="Inspector views"><button aria-pressed={tab === "activity"} onClick={()=>setTab("activity")}>Activity & logs</button><button aria-pressed={tab === "details"} onClick={()=>setTab("details")}>Generation details</button></nav>
+        {tab === "details" && data?.generation && <GenerationDetails key={jobId} data={data.generation}/>}
         {error && <p role="alert">{error}</p>}
         {!data && !error && <p>Loading diagnostics…</p>}
-        {data && (
+        {data && tab === "activity" && (
           <>
             <div className="debug-job-summary">
               <span className={`debug-job-state state-${data.job.status}`}>

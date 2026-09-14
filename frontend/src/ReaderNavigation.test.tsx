@@ -1,0 +1,34 @@
+import {cleanup,fireEvent,render,screen} from '@testing-library/react';
+import {afterEach,expect,it,vi} from 'vitest';
+import {ReaderNavigation} from './ReaderNavigation';
+afterEach(cleanup);
+it('keeps back and branding visible; accepts headings only from its Notebook frame',()=>{
+  const iframe=document.createElement('iframe');document.body.append(iframe);
+  const post=vi.spyOn(iframe.contentWindow!,'postMessage');
+  render(<ReaderNavigation frame={{current:iframe}} version="v1" menuOpen={false} onToggle={vi.fn()}/>);
+  expect(screen.getByRole('link',{name:'Back to library'})).toHaveAttribute('href','/');
+  expect(screen.getByRole('link',{name:'OpenAtlas home'})).toBeVisible();
+  fireEvent(window,new MessageEvent('message',{source:window,data:{type:'openatlas:outline',items:['Spoofed']}}));
+  fireEvent.click(screen.getByRole('button',{name:'Contents'}));
+  expect(screen.queryByText('Spoofed')).not.toBeInTheDocument();
+  fireEvent(window,new MessageEvent('message',{source:iframe.contentWindow,data:{type:'openatlas:outline',items:['Introduction','GPU flow']}}));
+  fireEvent.click(screen.getByRole('button',{name:'GPU flow'}));
+  expect(post).toHaveBeenCalledWith({type:'openatlas:section',index:1},'*');
+  expect(screen.queryByRole('region',{name:'Table of contents'})).not.toBeInTheDocument();
+  iframe.remove();
+});
+it('collapses from authenticated frame scroll messages and expands again near the top',()=>{
+  const iframe=document.createElement('iframe');document.body.append(iframe);
+  const collapse=vi.fn();
+  render(<ReaderNavigation frame={{current:iframe}} version="v2" menuOpen={false} onToggle={vi.fn()} onCollapse={collapse}/>);
+  const nav=screen.getByRole('navigation',{name:'Notebook navigation'});
+  expect(nav).toHaveClass('is-expanded');
+  fireEvent(window,new MessageEvent('message',{source:window,data:{type:'openatlas:scroll',y:200}}));
+  expect(nav).toHaveClass('is-expanded');
+  fireEvent(window,new MessageEvent('message',{source:iframe.contentWindow,data:{type:'openatlas:scroll',y:200}}));
+  expect(nav).toHaveClass('is-collapsed');
+  fireEvent(window,new MessageEvent('message',{source:iframe.contentWindow,data:{type:'openatlas:scroll',y:60}}));
+  expect(nav).toHaveClass('is-collapsed');
+  fireEvent(window,new MessageEvent('message',{source:iframe.contentWindow,data:{type:'openatlas:scroll',y:0}}));
+  expect(nav).toHaveClass('is-expanded');iframe.remove();
+});

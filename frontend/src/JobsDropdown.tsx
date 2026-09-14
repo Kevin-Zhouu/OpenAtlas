@@ -2,18 +2,30 @@ import { useRef, useState } from "react";
 type Job = {
   id: string;
   status: string;
+  can_continue?: boolean;
   progress: string;
   error?: string;
   created_at: string;
-  request: { prompt: string; provider: string; revalidate_job?: string };
+  request: { prompt: string; provider: string; retry_of?: string; continue_job?: string; revalidate_job?: string };
 };
 export function JobsDropdown({
   jobs,
   onInspect,
+  onRetry,
 }: {
   jobs: Job[];
   onInspect: (id: string) => void;
+  onRetry?: (id: string, mode: "continue" | "rerun") => Promise<void>;
 }) {
+  const [pending, setPending] = useState<string | null>(null);
+  const [retryError, setRetryError] = useState("");
+  async function retry(id: string, mode: "continue" | "rerun") {
+    if (!onRetry || pending) return;
+    setPending(id); setRetryError("");
+    try { await onRetry(id, mode); setFilter("queued"); }
+    catch (error) { setRetryError(error instanceof Error ? error.message : "Could not retry. Please try again."); }
+    finally { setPending(null); }
+  }
   const [filter, setFilter] = useState("all");
   const dropdown = useRef<HTMLDetailsElement>(null);
   const active = jobs.filter((j) =>
@@ -58,6 +70,7 @@ export function JobsDropdown({
         {shown.length === 0 && (
           <p>No {filter === "all" ? "" : filter + " "}jobs.</p>
         )}
+        {retryError && <p role="alert" className="jobs-error">{retryError}</p>}
         <ul>
           {shown.map((j) => (
             <li key={j.id}>
@@ -69,6 +82,15 @@ export function JobsDropdown({
               <p className={j.error ? "jobs-error" : ""}>
                 {j.error || j.progress}
               </p>
+              {j.request.retry_of && <p className="hint">{j.request.continue_job ? "Continued from saved work" : "Fresh re-run of a failed job"}</p>}
+              {j.status === "failed" && onRetry && <>
+                <div className="job-retry-actions">
+                  <button className="quiet" disabled={!!pending || !j.can_continue} onClick={() => retry(j.id, "continue")} title={j.can_continue ? "Resume the saved source in a new agent session" : "No saved workspace is available for this attempt"}>Continue</button>
+                  <button className="quiet" disabled={!!pending} onClick={() => retry(j.id, "rerun")}>Re-run</button>
+                  {pending === j.id && <span role="status">Queueing…</span>}
+                </div>
+                <p className="hint">{j.can_continue ? "Continue keeps saved work. Re-run starts over." : "No saved work remains; Re-run starts a fresh attempt."} {j.request.provider === "codex" && "Uses your current API credits."}</p>
+              </>}
               {j.request.revalidate_job && (
                 <p className="hint">
                   Recheck of a retained Notebook · no new inference

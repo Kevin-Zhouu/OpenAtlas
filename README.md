@@ -167,17 +167,102 @@ The agent inspector presents activity in chronological order, with the latest ta
 
 ## Access from your phone on the same Wi-Fi
 
-Run these commands from this directory after the normal Compose installation:
+After the normal Compose build/install, open **OpenAtlas.command** (macOS) or
+**OpenAtlas.cmd** (Windows), or run `python3 scripts/start.py` on Linux.
+The desktop UI opens at localhost without a token.
 
-```sh
-docker compose build app
-python3 scripts/lan_access.py enable
-python3 scripts/lan_access.py open
-```
-
-In **Settings → Open on your phone**, scan the QR code using your phone camera.
-No signup or additional phone app is required. On Windows use `python` in place
-of `python3`. Keep the host computer awake and on the same trusted home network.
-See [Wi-Fi setup](docs/lan-access.md) for restarts, address changes, and disabling.
+In **Settings → Open on your phone**, click **Enable phone access** and scan the QR.
+Disable access or reset the link from the same panel. No signup, phone app, or
+per-phone terminal setup is needed. Keep the host awake on the same trusted Wi-Fi.
+See [phone access](docs/lan-access.md) for startup and network details.
 
 Access from outside your home remains optional via [Tailscale Serve](docs/remote-access.md).
+
+### Codex model metadata
+
+The generation image pins Codex CLI **0.154.0**, including GPT-6 Astra metadata.
+After pulling code changes, rebuild it with
+`docker compose --profile build build generation-image`. New generation containers
+use the rebuilt image; already-running generations keep their original CLI.
+OpenAtlas always passes the selected model explicitly with `-m` and forwards it
+unchanged. A “fallback metadata” warning in older jobs refers to local CLI model
+capabilities, not proof that another model answered.
+
+In job debug → relay container logs, new generations record `requested_model` and
+`response_model` (when supplied in the API stream). These are model identifiers
+only; prompts, answers, and credentials are not logged by this diagnostic.
+
+### Continue or re-run failed generations
+
+Open **Jobs → Failed**. After replenishing API credits, choose **Continue** to
+resume saved source, or **Re-run** to start over with the original prompt, model,
+skills, duration and instructions. Both create a new queued attempt on the same
+Notebook and keep the old failure available for debugging. They use current
+credentials and may incur new inference charges. An active retry blocks duplicate
+submissions for the same failed attempt.
+
+Continue launches a fresh disposable agent session with the saved project; it
+does not resume a live process or restore the previous model conversation. Codex
+is instructed to inspect and finish the existing files, rebuild and pass browser
+validation before publication. Installed skills must still match the recorded
+selection. Re-run of a failed revision starts from that revision's original base.
+
+Partial `source/`, `dist/` and manifest files are collected privately before normal
+failure cleanup, including credit failures. Dependencies, agent credentials,
+agent history and skill folders are excluded. Unsafe or oversized snapshots are
+rejected. Checkpoints are never public artifacts. Continue is disabled when no
+safe source checkpoint or retained validation output exists—especially older
+failures whose containers were already deleted. Sudden host/daemon termination
+can prevent the final checkpoint; continuous crash-proof saving is not implemented.
+
+### Customize the generation prompt and skills
+
+Open **Settings → Generation prompt** to edit the teaching and design instructions,
+restore the shipped default, or preview the full Codex prompt. `{{reading_minutes}}`
+is replaced with the learner's selected duration. **Save settings** applies the
+change to future jobs. Each submitted job snapshots the effective teaching prompt;
+retrying that job retains its original prompt. The learner request, skill selection,
+build contract and sandbox/publication rules are supplied separately and remain enforced.
+
+Open **Settings → Skills** to browse installed and built-in skills. Select a skill
+and file to edit its UTF-8 text, then **Save file**. You can create a new standard
+skill or add files such as `references/notes.md` and `scripts/example.py`. Unsaved
+file edits must be saved or discarded before switching files or closing Settings.
+Malformed SKILL.md files can be repaired here; they cannot be selected for generation.
+Concurrent edits are checked before overwriting a file.
+
+To install, upload a ZIP containing exactly one skill folder, for example
+`visual-guide/SKILL.md` alongside its resources. Archives are limited to 20 MB
+uncompressed and 2,000 entries. Links, special files and paths outside that folder
+are rejected. Text editing is limited to 500 KB per file; binary assets may be
+included in the ZIP and are listed but not text-editable. Installation never runs
+skill scripts. Existing skill names are not overwritten by ZIP installation.
+
+Local skills stay in the configured skills directory. Built-in edits are stored in
+its `.builtin-overrides` subdirectory and survive image upgrades. The app needs
+write access to the skills directory (the default Compose setup provides it); the
+runner still mounts it read-only. Changes affect future selections. If a queued
+job's selected skill changes, its fingerprint check fails rather than silently using
+different instructions; submit a new generation to use the changed skill. Published
+Notebook versions remain independent of installed skills.
+
+Teaching Notebooks may bundle supporting UTF-8 source files (for example C# project
+files, shell scripts and Markdown instructions) alongside their web artifact.
+OpenAtlas serves these as plain text with `nosniff`; it does not execute them.
+Compiled binaries remain blocked, and publication still requires a built HTML
+entrypoint plus passing browser interaction checks. Failed jobs retained before
+this support was added can be revalidated without model inference.
+
+In **Generation inspector → Generation details**, inspect the saved learning request,
+custom instructions, model, duration, revision/retry links, selected skill versions
+and fingerprints, and complete saved job metadata. New Codex invocations capture the
+assembled prompt, CLI arguments and execution context before launch; repair attempts
+are listed separately. Known credentials are redacted and container environments are
+never exposed. Older jobs without a capture show a clearly labeled reconstruction
+using saved inputs and the current prompt adapter, not a claimed historical transcript.
+
+Publication interaction checks support `click`, `fill`, `select`, and `range`.
+Use `select` for a native dropdown and provide the option's `value`, not its label.
+For compatibility with older generated manifests, `fill` on a `<select>` also
+selects its option. Both paths use browser selection events and retain the same
+visible-feedback assertions; missing options or broken interactions still fail.

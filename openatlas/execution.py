@@ -71,11 +71,12 @@ def extract_output(chunks, destination):
 
 
 class DockerExecutor:
-    def __init__(self, credentials=None, client=None, adapter=None, debug=None):
+    def __init__(self, credentials=None, client=None, adapter=None, debug=None, checkpoint_store=None):
         self.credentials = credentials or Credentials()
         self.client = client
         self.adapter = adapter or CodexAdapter()
         self.debug = debug
+        self.checkpoint_store = checkpoint_store
 
     def run(self, workspace, request, progress):
         client = self.client or docker.from_env()
@@ -142,12 +143,15 @@ class DockerExecutor:
                 connection.close()
             container.exec_run(["mkdir", "-p", "/tmp/home/.codex"], user="1000:1000")
             progress("Codex is writing, building, and testing your Notebook")
+            agent_command = self.adapter.command(request)
+            if self.debug:
+                self.debug.record_invocation(request["job_id"], agent_command, request, (key, token), execution={"container_id": container.id, "image": config.GENERATION_IMAGE, "timeout_seconds": config.TIMEOUT, "workdir": "/workspace", "user": "1000:1000"})
             command = [
                 "sh",
                 "-c",
                 'exec "$@" > /tmp/codex-output.log 2>&1',
                 "openatlas",
-            ] + self.adapter.command(request)
+            ] + agent_command
             execution = client.api.exec_create(
                 container.id, command, workdir="/workspace", user="1000:1000"
             )
@@ -220,6 +224,27 @@ class DockerExecutor:
                         yield stdout
 
             extract_output(output_chunks(), workspace)
+        except Exception:
+            # Collect only deliverable files, never agent home/auth/history or
+            # skills. A failed generation can be partial and lack a manifest.
+            if container is not None and self.checkpoint_store is not None:
+                try:
+                    import tempfile
+                    result = container.exec_run([
+                        "tar", "cf", "-", "--exclude=node_modules", "--exclude=.git",
+                        "--exclude=.env*", "--ignore-failed-read", "-C", "/workspace",
+                        "source", "dist", "manifest.json",
+                    ], stream=True, demux=True, user="1000:1000")
+                    with tempfile.TemporaryDirectory(prefix="openatlas-checkpoint-") as tmp:
+                        saved = Path(tmp)
+                        extract_output((out for out, err in result.output if out), saved)
+                        if self.checkpoint_store.checkpoint(request["job_id"], saved):
+                            progress("Saved partial work; this job can be continued")
+                except Exception:
+                    # Never replace the original provider error with a recovery
+                    # error or claim that an incomplete/unsafe archive was saved.
+                    pass
+            raise
         finally:
             for c in (container, broker):
                 if c:
