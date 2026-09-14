@@ -88,7 +88,7 @@ metadata:
 
 Put the skill instructions after the frontmatter. Folder and name must match, use lowercase letters/numbers/hyphens, and be at most 64 characters. Linked files, special files, and skills over 20 MB are rejected. Malformed skills appear disabled with a reason. Refresh the page after adding skills. No marketplace, remote install mechanism, or custom plugin format is involved.
 
-Expand **Generation skills & extra guidance** under the prompt, select capabilities, and optionally add instructions such as “Make the heart rotatable and animate blood flow.” You can always generate without touching this selector. `openatlas-core` is always included; built-in `visual-explainer` and `3d-explorer` are optional standard skills. Only core and selected folders are copied into that job. No skill script executes on the trusted host. A queued selection records a content hash; if a folder changes before execution, the job fails clearly rather than silently using different content.
+Expand **Generation skills & extra guidance** under the prompt, select capabilities, and optionally add instructions such as “Make the heart rotatable and animate blood flow.” You can always generate without touching this selector. `openatlas-core` and `blender` are included whenever skills are enabled; built-in `visual-explainer` and `3d-explorer` are optional standard skills. Only core and selected folders are copied into that job. No skill script executes on the trusted host. A queued selection records a content hash; if a folder changes before execution, the job fails clearly rather than silently using different content.
 
 Each immutable Notebook version records skill identifiers, names, optional versions, and SHA-256 hashes. **Revise Notebook** seeds a new workspace from retained source and defaults to the preceding version's selected skills and generation provider. You can change them. Removed skills must be deselected or reinstalled before revising. Already published versions have no runtime dependence on skills. The version selector keeps earlier versions readable; the stable `/notebooks/<id>` URL opens the latest version on a new visit. A reader already open on an older version stays there until the learner selects another version.
 
@@ -323,3 +323,37 @@ This verifies the real SDK execution path without claiming to evaluate live mode
 creativity. Evaluate topic quality separately with your configured API account;
 compare requests such as LLM inference, human anatomy and Chernobyl, checking that
 controls teach different mechanisms and explicit requirements survive planning.
+
+### Blender authoring
+
+New generations with skills enabled include both OpenAtlas core and the Blender
+core skill. The planner reads the same saved skill snapshot that is later supplied
+to Codex. Blender is an available authoring tool; it does not force 3D into lessons.
+Disabling skills also disables the Blender MCP registration. Existing jobs keep
+their saved skill selections.
+
+The default generation image includes Debian Blender 3.4, a pinned
+[Blender MCP](https://github.com/ahujasid/blender-mcp) server and matching addon
+(revision `5f8ddaf6e987c4aa0c3467fcc548838b28f64477`). Codex receives a stdio MCP
+configuration for scene/object inspection, Python modeling and viewport screenshots.
+Each MCP session starts Blender on a private Xvfb display with CPU rendering.
+No desktop session, host display, GPU, extra port or host volume is required.
+Telemetry is disabled; external asset-generation services are not configured.
+The planner does not start Blender. Container concurrency, limits and cleanup
+continue to be managed by the trusted runner.
+
+Keep editable `.blend` files in source and export local GLB/images for the static
+website. The reader never needs Blender. The core skill includes export and browser
+verification guidance. Blender startup logs are in `/tmp/blender-output.log` inside
+the disposable builder. Rebuild the generation image and app after updating:
+
+```sh
+docker compose --profile build build generation-image
+docker compose build app
+docker compose up -d --no-build app runner
+OPENATLAS_DOCKER_TEST=1 .venv/bin/python -m pytest tests/test_blender.py tests/test_docker.py
+```
+
+The Blender integration test uses the real MCP protocol to inspect and edit a
+scene, save native source, and export GLB under the production container limits.
+It also checks Codex accepts the MCP configuration. No inference credits are used.

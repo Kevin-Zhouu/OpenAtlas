@@ -1,0 +1,42 @@
+{
+  "notebook_id": "4ff70f1f-51a3-41d8-bd5c-4665b1f78f99",
+  "version_id": "f4e554af-cb43-4a07-a469-9b14ed7dbdb9",
+  "job_id": "f15a31c0-72b0-47a6-a0d0-4b1dea08c6fb",
+  "phase": "generate",
+  "captured_at": "2026-09-14T13:29:07.843631+00:00",
+  "command_without_prompt": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--dangerously-bypass-approvals-and-sandbox",
+    "--json",
+    "-m",
+    "gpt-6-astra",
+    "-c",
+    "model_provider=\"openatlas\"",
+    "-c",
+    "model_providers.openatlas={name=\"OpenAtlas relay\",base_url=\"http://127.0.0.1:9000/v1\",env_key=\"CODEX_API_KEY\",wire_api=\"responses\"}"
+  ],
+  "request_model": "gpt-6-astra",
+  "response_models": [
+    "gpt-6-astra"
+  ],
+  "selected_skills": [
+    {
+      "id": "builtin:openatlas-core",
+      "name": "openatlas-core",
+      "description": "Design accessible interactive learning Notebooks with progressive explanations, worked examples, and meaningful practice.",
+      "required": true,
+      "valid": true,
+      "version": "1.1.0",
+      "sha256": "e1c1742db21ac0691aebd71e9306e5a4ad08084f7a5a179fcbcb04e4a78163ac"
+    }
+  ],
+  "explicit_reasoning_effort": null,
+  "desktop_comparison": {
+    "model": "gpt-6-astra",
+    "effort": "medium",
+    "client_version": "0.153.4"
+  },
+  "retained_log_limit_bytes": 131072
+}

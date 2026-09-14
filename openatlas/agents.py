@@ -13,6 +13,9 @@ QUALITY REVIEW: Review the rendered Notebook multiple times as a learner, not ju
 READER_NAVIGATION_REQUIREMENTS = """APPLICATION NAVIGATION (fixed requirement): OpenAtlas supplies the reader toolbar, app logo, back navigation and table of contents outside your Notebook. Generate only the lesson content and topic-specific learning controls. Do not add an OpenAtlas logo, wordmark, application menu, branded masthead, 'OPENATLAS / FIELD NOTES' banner, edition/issue bar, or duplicate table-of-contents toolbar. Start with the subject's title and learning content in semantic main/article elements, with meaningful h1/h2 headings. A topic-specific title and controls for an experiment are welcome. Do not reserve space for the app toolbar; the reader supplies its own inset. For revisions and repairs, remove any existing duplicate application masthead while preserving lesson content and interactions. This application rule also applies when a creative brief or selected skill suggests otherwise."""
 
 
+BLENDER_MCP_CONFIG = 'mcp_servers.blender={command="/opt/blender-mcp/bin/python",args=["/opt/blender_mcp.py"],startup_timeout_sec=90,tool_timeout_sec=180,required=true,enabled_tools=["get_scene_info","get_object_info","execute_blender_code","get_viewport_screenshot","get_addon_status"]}'
+
+
 class CodexAdapter:
     def prompt(self, request):
         minutes = request.get("reading_minutes", 20)
@@ -66,5 +69,8 @@ Before finishing run a command to verify all three paths exist and the entrypoin
             'model_provider="openatlas"',
             "-c",
             'model_providers.openatlas={name="OpenAtlas relay",base_url="http://127.0.0.1:9000/v1",env_key="CODEX_API_KEY",wire_api="responses"}',
+            *(["-c", BLENDER_MCP_CONFIG] if any(
+                s["id"] == "builtin:blender" for s in request.get("skills", [])
+            ) else []),
             self.prompt(request),
         ]

@@ -1,0 +1,195 @@
+{
+  "title": "Chernobyl Atlas \u2014 Inside the machine, beyond the accident",
+  "description": "A 20-minute interactive 3D study of an intact RBMK power block, its steam cycle, the Chernobyl story and a brief connection to the Tauri framework. Educational interpretation, not an engineering replica.",
+  "entrypoint": "index.html",
+  "target_reading_minutes": 20,
+  "estimated_reading_minutes": 20,
+  "checks": [
+    {
+      "selector": "#explode",
+      "action": "range",
+      "value": "70",
+      "expect_selector": "#status",
+      "expect_text": "Disassembly \u00b7 70%"
+    },
+    {
+      "selector": "#spacing",
+      "action": "range",
+      "value": "15",
+      "expect_selector": "#status",
+      "expect_text": "Layer spacing \u00b7 1.5\u00d7"
+    },
+    {
+      "selector": "#shell",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Building envelope \u00b7 off"
+    },
+    {
+      "selector": "#shell",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Building envelope \u00b7 on"
+    },
+    {
+      "selector": "#core",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Core & shielding \u00b7 off"
+    },
+    {
+      "selector": "#core",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Core & shielding \u00b7 on"
+    },
+    {
+      "selector": "#pipes",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Steam & water \u00b7 off"
+    },
+    {
+      "selector": "#pipes",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Steam & water \u00b7 on"
+    },
+    {
+      "selector": "#machines",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Turbines & pumps \u00b7 off"
+    },
+    {
+      "selector": "#machines",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Turbines & pumps \u00b7 on"
+    },
+    {
+      "selector": "#label-toggle",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Labels \u00b7 off"
+    },
+    {
+      "selector": "#label-toggle",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Labels \u00b7 on"
+    },
+    {
+      "selector": "#wire",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Wireframe \u00b7 on"
+    },
+    {
+      "selector": "#wire",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Wireframe \u00b7 off"
+    },
+    {
+      "selector": "#transparent",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Transparency \u00b7 on"
+    },
+    {
+      "selector": "#transparent",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Transparency \u00b7 off"
+    },
+    {
+      "selector": "#section",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Section cut \u00b7 on"
+    },
+    {
+      "selector": "#section",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Section cut \u00b7 off"
+    },
+    {
+      "selector": "#reset",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "View reset \u00b7 assembled"
+    },
+    {
+      "selector": "#tab-circuit",
+      "action": "click",
+      "expect_selector": "#view-title",
+      "expect_text": "Follow the energy"
+    },
+    {
+      "selector": "#speed",
+      "action": "select",
+      "value": "2",
+      "expect_selector": "#status",
+      "expect_text": "Playback speed \u00b7 2\u00d7"
+    },
+    {
+      "selector": "#play",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Motion paused"
+    },
+    {
+      "selector": "#play",
+      "action": "click",
+      "expect_selector": "#status",
+      "expect_text": "Motion playing"
+    },
+    {
+      "selector": "#tab-motion",
+      "action": "click",
+      "expect_selector": "#view-title",
+      "expect_text": "A system in circulation"
+    },
+    {
+      "selector": "#tab-block",
+      "action": "click",
+      "expect_selector": "#view-title",
+      "expect_text": "Anatomy of a power station"
+    },
+    {
+      "selector": "#answer-a",
+      "action": "click",
+      "expect_selector": "#quiz-feedback",
+      "expect_text": "Not quite. Steam is water vapor"
+    },
+    {
+      "selector": "#answer-b",
+      "action": "click",
+      "expect_selector": "#quiz-feedback",
+      "expect_text": "Correct."
+    },
+    {
+      "selector": "#answer-c",
+      "action": "click",
+      "expect_selector": "#quiz-feedback",
+      "expect_text": "Not quite. The feedback was inside"
+    },
+    {
+      "selector": "#reflection summary",
+      "action": "click",
+      "expect_selector": "#reflection p",
+      "expect_text": "Training helps"
+    },
+    {
+      "selector": "#tauri-details summary",
+      "action": "click",
+      "expect_selector": "#tauri-details pre",
+      "expect_text": "chernobyl-atlas/"
+    }
+  ],
+  "demo": false,
+  "planning_attempt_id": "38ccde41-cf13-49f2-a1d5-7ac434b41cd3",
+  "prompt_revision_id": "102aec65-eb86-42e2-97d4-42cfa40c316c"
+}

@@ -49,6 +49,7 @@ def test_full_publication_revision_and_restart(system):
     v = n["versions"][0]
     assert {s["id"] for s in v["provenance"]} == {
         "builtin:openatlas-core",
+        "builtin:blender",
         "builtin:visual-explainer",
     }
     url = f"/artifacts/{n['id']}/{v['id']}/index.html"
@@ -113,6 +114,7 @@ def test_skills_malformed_selection_and_changed_snapshot(system, tmp_path):
     selected = catalog.resolve(["local:test-skill"])
     catalog.stage(selected, tmp_path / "staged")
     assert sorted(p.name for p in (tmp_path / "staged").iterdir()) == [
+        "builtin--blender",
         "builtin--openatlas-core",
         "local--test-skill",
     ]

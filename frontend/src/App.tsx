@@ -240,7 +240,7 @@ export function App() {
           <span>
             <strong>Use generation skills</strong>
             <small>
-              Turn off to exclude all skills, including OpenAtlas core, for this
+              Turn off to exclude all skills, including OpenAtlas core and Blender, for this
               generation.
             </small>
           </span>

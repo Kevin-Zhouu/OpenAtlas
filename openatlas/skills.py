@@ -7,6 +7,8 @@ import yaml
 
 from . import config
 
+CORE_SKILLS = ("builtin:openatlas-core", "builtin:blender")
+
 MAX_SKILL_BYTES = 20 * 1024 * 1024
 
 
@@ -50,7 +52,7 @@ class SkillCatalog:
                     "id": prefix + ":" + folder.name,
                     "name": folder.name,
                     "description": "",
-                    "required": prefix == "builtin" and folder.name == "openatlas-core",
+                    "required": prefix + ":" + folder.name in CORE_SKILLS,
                     "path": str(folder),
                     "valid": False,
                 }
@@ -106,7 +108,7 @@ class SkillCatalog:
 
     def resolve(self, ids):
         catalog = {s["id"]: s for s in self.discover()}
-        chosen = list(dict.fromkeys(["builtin:openatlas-core"] + ids))
+        chosen = list(dict.fromkeys(list(CORE_SKILLS) + ids))
         output = []
         for id in chosen:
             s = catalog.get(id)
