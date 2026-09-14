@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    image: openatlas:local
+    ports:
+      - "${OPENATLAS_BIND:-127.0.0.1}:8000:8000"
+    environment:
+      OPENATLAS_ALLOWED_HOSTS: ${OPENATLAS_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      OPENATLAS_ACCESS_TOKEN: ${OPENATLAS_ACCESS_TOKEN:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - library:/data
+      - ${OPENATLAS_SKILLS_DIR:-./skills}:/skills:ro
+    restart: unless-stopped
+  runner:
+    image: openatlas:local
+    build: .
+    command: ["python", "-m", "openatlas.runner"]
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENATLAS_JOB_TIMEOUT: ${OPENATLAS_JOB_TIMEOUT:-1800}
+      OPENATLAS_GENERATION_IMAGE: openatlas-generation:local
+    volumes:
+      - library:/data
+      - ${OPENATLAS_SKILLS_DIR:-./skills}:/skills:ro
+      - ${OPENATLAS_DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
+    restart: unless-stopped
+  generation-image:
+    profiles: ["build"]
+    image: openatlas-generation:local
+    build:
+      context: .
+      dockerfile: generation/Dockerfile
+    entrypoint: ["true"]
+volumes:
+  library:

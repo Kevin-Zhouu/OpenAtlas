@@ -1,0 +1,17 @@
+# Notebook teaching and design direction
+
+The user-supplied TACACS+ over TLS course in Downloads was reviewed in its actual browser UI and source. Its useful qualities are a sustained real-world story, prerequisites introduced when needed, dark readable text, distinct blue/teal/orange visual roles, integrated diagrams, optional deep dives, and experiments with explanations before and after them. It is a teaching reference, not an asset dependency or a layout to clone. Its downloadable labs, external links, React runtime and source are not copied into generation containers.
+
+The previous vLLM course combined pale/green-on-green diagrams, small labels and a permanent sidebar with progress/edition widgets. OpenAtlas now explicitly asks the agent to separate brand identity from diagram semantics, keep content primary, and collapse chapter navigation to a small rounded Contents control by default. It asks for readable text and diagram contrast, keyboard navigation, Escape/outside/selection dismissal, and phone layouts.
+
+Creativity is chosen per topic rather than supplied as a shared template. The prompt asks for a scrollable experience that feels like exploring a piece of art that teaches: visual, playful and rewarding to understand. Codex chooses the structure, pacing and teaching techniques, recording its approach in `source/DESIGN.md`. SVG illustrations and explanatory graphics should be woven within and alongside passages, with meaningful manipulation and discovery where useful. Connected prose supports understanding without dominating the experience. The prompt references https://ciechanow.ski/ as optional generation-time inspiration, with instructions not to copy it or claim to have reviewed it if inaccessible. Published artifacts have no dependency on that site. The core and visual-explainer skills share this autonomy; they do not prescribe quizzes, roadmaps or a teaching sequence. These are generation instructions, not model fine-tuning or a guarantee of visual quality.
+
+The 5–50 minute slider defaults to 20 minutes and estimates reading plus core interactions. Requests persist `reading_minutes`; immutable version manifests retain `target_reading_minutes`. Revisions inherit the previous target unless changed. New requests for legacy versions without a target use 20 minutes. Duration is an approximate scope guide. There are no duration tiers, prose budgets, or prescribed counts of sections, examples, experiments, exercises or quizzes. The agent decides what deserves depth and where each teaching technique helps, without padding the lesson. Demo material remains the fixed, clearly labelled caching example and does not claim to adapt its length.
+
+The backend validates duration bounds and persists the target; the browser publisher verifies static output and interaction behavior. Duration fit, creative quality and contrast are agent review requirements and still benefit from human inspection. No automatic reading-time or full accessibility certification is claimed.
+
+For a generation without skill guidance, turn off **Use generation skills** under
+Generation skills. This excludes every skill, including core; it does not remove
+the main Notebook prompt or sandbox/publication requirements. The switch defaults
+to enabled for new Notebooks. Revisions inherit whether the published version used
+skills, and users can change it. Empty skill provenance is retained with versions.

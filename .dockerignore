@@ -1,0 +1,14 @@
+.venv
+.data
+.env
+.git
+**/node_modules
+frontend/dist
+**/__pycache__
+.pytest_cache
+test-results
+playwright-report
+
+.lan
+.remote
+artifacts

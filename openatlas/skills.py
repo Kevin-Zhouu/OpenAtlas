@@ -1,0 +1,120 @@
+import hashlib
+import re
+import shutil
+from pathlib import Path
+
+import yaml
+
+from . import config
+
+MAX_SKILL_BYTES = 20 * 1024 * 1024
+
+
+def inspect_tree(root):
+    total = 0
+    digest = hashlib.sha256()
+    if root.is_symlink():
+        raise ValueError("Symbolic links are not supported")
+    for p in sorted(root.rglob("*")):
+        if p.is_symlink() or not (p.is_file() or p.is_dir()):
+            raise ValueError("Skill contains links or special files")
+        if p.is_file():
+            total += p.stat().st_size
+            if total > MAX_SKILL_BYTES:
+                raise ValueError("Skill exceeds 20 MB")
+            digest.update(str(p.relative_to(root)).encode())
+            digest.update(p.read_bytes())
+    return digest.hexdigest()
+
+
+class SkillCatalog:
+    def __init__(self, directory=None):
+        self.directory = Path(directory or config.SKILLS)
+
+    def discover(self):
+        result = []
+        for prefix, root in [
+            ("builtin", config.ROOT / "builtins"),
+            ("local", self.directory),
+        ]:
+            if not root.exists():
+                continue
+            for folder in sorted(root.iterdir()):
+                if not folder.is_dir():
+                    continue
+                record = {
+                    "id": prefix + ":" + folder.name,
+                    "name": folder.name,
+                    "description": "",
+                    "required": prefix == "builtin" and folder.name == "openatlas-core",
+                    "path": str(folder),
+                    "valid": False,
+                }
+                try:
+                    if (
+                        not re.fullmatch(
+                            r"[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?", folder.name
+                        )
+                        or "--" in folder.name
+                    ):
+                        raise ValueError(
+                            "Use a lowercase, hyphenated skill folder name"
+                        )
+                    digest = inspect_tree(folder)
+                    raw = (folder / "SKILL.md").read_text()
+                    if len(raw) > 100000 or not raw.startswith("---\n"):
+                        raise ValueError("Expected YAML frontmatter in SKILL.md")
+                    header = re.match(r"\A---\n(.*?)\n---(?:\n|$)", raw, re.S)
+                    if not header:
+                        raise ValueError(
+                            "SKILL.md needs a closing frontmatter delimiter"
+                        )
+                    meta = yaml.safe_load(header.group(1))
+                    if (
+                        not isinstance(meta, dict)
+                        or meta.get("name") != folder.name
+                        or not isinstance(meta.get("description"), str)
+                        or not meta["description"].strip()
+                        or len(meta["description"]) > 1024
+                    ):
+                        raise ValueError(
+                            "Frontmatter needs matching name and a description"
+                        )
+                    metadata = meta.get("metadata") or {}
+                    record.update(
+                        name=meta["name"],
+                        description=meta["description"],
+                        version=str(metadata.get("version", ""))
+                        if isinstance(metadata, dict)
+                        else "",
+                        sha256=digest,
+                        valid=True,
+                    )
+                except (ValueError, OSError, yaml.YAMLError, IndexError) as e:
+                    record["error"] = str(e)
+                result.append(record)
+        return result
+
+    def resolve(self, ids):
+        catalog = {s["id"]: s for s in self.discover()}
+        chosen = list(dict.fromkeys(["builtin:openatlas-core"] + ids))
+        output = []
+        for id in chosen:
+            s = catalog.get(id)
+            if not s or not s["valid"]:
+                raise ValueError("Skill unavailable or malformed: " + id)
+            output.append({k: v for k, v in s.items() if k not in ("path", "error")})
+        return output
+
+    def stage(self, selected, destination):
+        catalog = {s["id"]: s for s in self.discover()}
+        for s in selected:
+            current = catalog.get(s["id"])
+            if not current or not current["valid"] or current["sha256"] != s["sha256"]:
+                raise ValueError(
+                    "Selected skill changed or was removed; submit again: " + s["id"]
+                )
+            target = destination / s["id"].replace(":", "--")
+            shutil.copytree(current["path"], target)
+            if inspect_tree(target) != s["sha256"]:
+                raise ValueError("Skill changed while copying")

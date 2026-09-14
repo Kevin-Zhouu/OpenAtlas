@@ -1,0 +1,183 @@
+# OpenAtlas
+
+A local-first, open-source learning application. Ask a question, generate an interactive **Notebook**, and keep its source and immutable published versions in your own library. Deep green, quiet typography, one application port.
+
+## Quick start: Docker Compose
+
+Install Docker Desktop (macOS/Windows, using Linux containers) or Docker Engine with Compose (Linux). From this directory:
+
+```sh
+docker compose up --build -d
+```
+
+Open **http://localhost:8000**. The default is **Demo**: an explicitly labelled, authored caching lesson with interactive controls. Any prompt works, but demo content does not adapt to the topic. No API key or generation image is needed for demo mode. The app and one trusted runner share a named volume; stopping/restarting Compose preserves Notebooks and job history. `docker compose down -v` deletes that volume: do not use it if you want to keep your library.
+
+On Homebrew installations where the plugin isn't linked, use `docker-compose` in place of `docker compose`. For Colima, start `colima start --cpu 4 --memory 6`. Compose mounts the daemon-side `/var/run/docker.sock`; keep that default. The native runner uses the host-forwarded socket path as documented below.
+
+## Real Codex generation
+
+```sh
+docker compose --profile build build generation-image
+cp .env.example .env
+```
+
+Open **Settings** in the web UI, enter your **OpenAI API key**, choose **Codex** as the generation provider, and choose a model from the dropdown. **GPT-6 Astra** (`gpt-6-astra`) is the default. Save settings, enter a learning request, and press **Generate Notebook**. Model availability depends on your OpenAI API account; saving a key checks its format, not account access. Demo mode never uses inference.
+
+Settings lets you replace or remove a saved key. Leaving the password field blank keeps the configured key; saved keys are never returned to the browser. Keys persist across restarts in `private/openai-key` inside the data volume, outside SQLite and Notebook artifacts. The file uses restricted permissions, not encryption; protect the host and volume backups.
+
+Codex CLI is pinned in `generation/Dockerfile`. It runs `codex exec` non-interactively inside a fresh non-root Docker container, with approval bypass only because Docker is the external sandbox. It can edit source, build, run Chromium/Playwright, and repair failures. It is instructed explicitly to read the selected skills. This is not a single model response saved as HTML. A failed publication check gives Codex one repair attempt using the existing source and concrete validation feedback. Final generation errors are persisted and displayed in **Generation history**; real failures never fall back to demo.
+
+The trusted API and runner can access the provider key. A separate disposable credential relay forwards job-authorized requests to OpenAI's Responses endpoint. The generation container gets a temporary relay token, not your provider key. Neither image contains secrets. The relay is not published on a host port. Docker administrators can inspect the trusted relay environment, just as they can inspect other local secrets.
+
+Alternatively, configure `OPENAI_API_KEY` in the private `.env` file and restart Compose, or set `OPENATLAS_OPENAI_KEY_FILE=/absolute/private/keyfile` for native API and runner processes. Never commit credentials. Precedence is: key saved in Settings, private key file, environment variable. Removing a saved key restores any host-configured fallback. No key file is mounted into the generation container.
+
+## Native development (macOS, Linux, Windows)
+
+Use Python **3.12 recommended** (3.9+ supported), Node **22+**, and a Docker engine for real generation. Demo generation runs locally and does not require Docker.
+
+```sh
+python3 -m venv .venv
+# macOS / Linux
+source .venv/bin/activate
+# Windows PowerShell instead: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.lock
+python -m pip install -e '.[test]' --no-deps
+python -m playwright install chromium
+# On Linux install browser OS dependencies too:
+# python -m playwright install --with-deps chromium
+cd frontend
+npm ci
+npm run build
+cd ..
+python -m uvicorn openatlas.api:app --host 127.0.0.1 --port 8000
+```
+
+In a second terminal with the same virtual environment activated:
+
+```sh
+python -m openatlas.runner
+```
+
+On Colima, set `DOCKER_HOST=unix:///absolute/path/to/.colima/default/docker.sock` for the native runner; the Docker Python SDK does not automatically use CLI contexts. Windows Docker Desktop generally exposes its standard named pipe to the SDK. `docker build -t openatlas-generation:local -f generation/Dockerfile .` builds the real generation image.
+
+The trusted frontend is built by Vite and served by FastAPI on the same port as everything else. During development, rebuild after frontend changes. Native data defaults to `.data/`; Compose data is in its named `library` volume. Configuration is read at process startup; restart both processes after changing environment variables.
+
+## Skills and additional guidance
+
+Drop a standard Agent Skills folder into `skills/` (or the directory configured by `OPENATLAS_SKILLS` for native development / `OPENATLAS_SKILLS_DIR` for Compose):
+
+```text
+skills/
+  anatomy-3d/
+    SKILL.md
+    references/
+    scripts/
+    assets/
+```
+
+Its `SKILL.md` begins with standard YAML frontmatter:
+
+```yaml
+---
+name: anatomy-3d
+description: Teach anatomy with interactive spatial explanations.
+metadata:
+  version: "1.0.0"
+---
+```
+
+Put the skill instructions after the frontmatter. Folder and name must match, use lowercase letters/numbers/hyphens, and be at most 64 characters. Linked files, special files, and skills over 20 MB are rejected. Malformed skills appear disabled with a reason. Refresh the page after adding skills. No marketplace, remote install mechanism, or custom plugin format is involved.
+
+Expand **Generation skills & extra guidance** under the prompt, select capabilities, and optionally add instructions such as “Make the heart rotatable and animate blood flow.” You can always generate without touching this selector. `openatlas-core` is always included; built-in `visual-explainer` and `3d-explorer` are optional standard skills. Only core and selected folders are copied into that job. No skill script executes on the trusted host. A queued selection records a content hash; if a folder changes before execution, the job fails clearly rather than silently using different content.
+
+Each immutable Notebook version records skill identifiers, names, optional versions, and SHA-256 hashes. **Revise Notebook** seeds a new workspace from retained source and defaults to the preceding version's selected skills and generation provider. You can change them. Removed skills must be deselected or reinstalled before revising. Already published versions have no runtime dependence on skills. The version selector keeps earlier versions readable; the stable `/notebooks/<id>` URL opens the latest version on a new visit. A reader already open on an older version stays there until the learner selects another version.
+
+## Configuration
+
+| Variable | Default / use |
+| --- | --- |
+| `OPENATLAS_DATA` | Native `.data`; Compose `/data` |
+| `OPENATLAS_SKILLS` | Native `skills`; Compose `/skills` |
+| `OPENATLAS_GENERATION_IMAGE` | `openatlas-generation:local` |
+| `OPENATLAS_JOB_TIMEOUT` | 1800 seconds per real generation attempt (at most two attempts) |
+| `OPENAI_API_KEY` | Fallback provider credential for trusted API and runner |
+| `OPENATLAS_OPENAI_KEY_FILE` | Native API/runner alternative private key file |
+| `OPENATLAS_ALLOWED_HOSTS` | `localhost,127.0.0.1`; comma-separated hostnames/IPs |
+| `OPENATLAS_ACCESS_TOKEN` | Optional shared local UI/API access token |
+
+Provider, model, and concurrency (1–8, default 2) are persisted in SQLite through Settings. Changing concurrency affects new claims; running jobs finish. Each job snapshots provider/model/instructions/skills at submission.
+
+To use from another device on a **trusted local network**, configure `OPENATLAS_BIND=0.0.0.0` in Compose and add the host's LAN IP to `OPENATLAS_ALLOWED_HOSTS`. Set `OPENATLAS_ACCESS_TOKEN` to a private shared token. Native development uses `--host 0.0.0.0`. Visit `http://<host-ip>:8000`. The UI is responsive. This is not an Internet-facing multi-user service: HTTP is unencrypted, and artifact URLs are bearer-like local read links. Do not port-forward it publicly. A hosted deployment requires proper authentication, per-workspace authorization, TLS, quotas, and execution network hardening.
+
+## Validation and tests
+
+```sh
+python -m pytest -q
+cd frontend
+npm test
+npm run build
+npx playwright install chromium
+# With FastAPI and the runner running (uses the app's demo library):
+npm run test:e2e
+```
+
+To also run the real Docker transfer/isolation regression (no inference), set `OPENATLAS_DOCKER_TEST=1` when running pytest; the generation image must be built. On Colima also set `DOCKER_HOST` as above.
+
+Backend tests cover publication, concurrency, restart persistence, revisions, provenance, malformed/changed skills, path traversal, expired leases, CSRF, and failure behavior. Browser validation is real Chromium, not mocked. Frontend unit tests cover submission, optional skills/instructions, settings, and errors. End-to-end tests submit through the UI, wait for publication, test interactions and browser isolation, reload, revise, and check a phone viewport. E2E tests create labelled demo Notebooks in the running library; use a separate `OPENATLAS_DATA` directory for an isolated test run.
+
+A successful artifact must have a built HTML entrypoint, meaningful rendered content, and passing declarative interaction checks. The validator loads it in the same opaque-origin sandbox as the reader, blocks outside requests, rejects missing resources and JavaScript errors, and exercises manifest-declared controls and visible outcomes. These are functional checks, not a proof of educational correctness or exhaustive coverage. Generated source is never executed by the trusted publisher. See [architecture](docs/architecture.md) and [verification notes](docs/verification.md).
+
+## Local operations and limitations
+
+- One trusted runner process handles up to eight simultaneous jobs with a thread pool. SQLite atomically enforces the configured global claim limit. No permanent worker per generation.
+- Progress and job status persist. Interrupted running jobs expire their lease and fail clearly; queued jobs remain queued. Submit again after a failure. There is no cancellation UI or automatic retry of failed jobs. Publication validation permits one in-job Codex repair attempt.
+- Real generation uses two disposable containers per job (agent and trusted credential relay); neither runs after publication. The runner cleans expired labelled containers after interruption when Docker becomes available.
+- Built artifacts and source have a 100 MB output cap; selected skills have a 20 MB per-folder cap; generated workspaces use bounded tmpfs and containers have CPU, memory, process, and time limits.
+- Docker is the execution boundary. Generated containers have no host mounts, database, Docker socket, application environment, other job workspaces, or real provider key. The runner is deliberately trusted and has Docker daemon authority. Outbound Internet access is currently available for Codex/package installation; this is not a hardened hostile multi-tenant execution service.
+- Publication is local only. SQLite plus filesystem backups are sufficient; stop the runner before copying the data directory to obtain a consistent backup. The library retains source, artifacts, manifest, skill provenance, desktop/phone screenshots, and validation report for every version. Outputs rejected by publication are quarantined under `failed/<job-id>/<attempt>/` for local debugging and are never served.
+- No accounts, syncing, deletion UI, full-text search, automatic skill upgrades, or cloud backends yet. CosmosDB can replace the small repository boundary later; no CosmosDB dependency is introduced now.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Debug mode and live Codex activity
+
+Open **Settings → Debug mode**. This switch takes effect immediately and is remembered in that browser. Each active job and generation-history entry has **Inspect generation**; the debug selector also opens any job, including from the Notebook reader.
+
+The inspector refreshes every two seconds and shows persisted job progress, model/provider, recent Codex events (commands, messages, file changes and errors), raw agent output, container IDs/images/status, configured CPU/memory limits, process executable names, and container stdout/stderr. Pause updates to read a snapshot. Codex runs through Docker exec, so its actual agent output is separate from container stdout.
+
+The trusted runner captures diagnostics every three seconds and before removing new generation containers. Diagnostics are collected even when the browser toggle is off so a finished generation can be inspected later. It retains the newest 128 KB of agent output and 32 KB of container logs per container, for at most 16 containers per job; this is a rolling snapshot, not a complete event archive. A large/truncated JSON event may appear only in the raw log. Demo jobs show job progress without containers. Jobs completed before this feature have no historical container snapshots.
+
+Snapshots live privately under `debug/` in the data volume, survive restarts, and are never published as Notebook artifacts. Environment variables, host mounts and full process command lines are excluded. Known container credentials and common key/bearer patterns are redacted. Logs can still include prompts and generated source, so treat diagnostics as private local data. The inspector shares the application's host access-token protection. Debug mode is a display preference, not an authorization boundary; no Docker socket or arbitrary container commands are exposed to the browser/API.
+
+The **Jobs** dropdown in the header is always available. Filter by Failed, Running, Queued, or Completed; **Debug failed job** opens the inspector directly, even when debug mode was previously off. Original failures remain in job history after recovery.
+
+Publication checks run sequentially and support feedback that becomes visible or is created after an action. Controls must be visible before acting, feedback must be visible afterward, and explicit expected text must match. Without expected text, feedback must be newly revealed or its visible text must change. Manifests accept 1–30 checks; additional agent tests belong in the retained source.
+
+For a failed job with retained artifacts, `POST /api/jobs/<job-id>/revalidate` queues a validation-only recovery using the latest quarantined artifact. It runs the current publication checks without invoking Codex or changing the original job. A successful recheck publishes to the same Notebook URL with the original skill provenance. Failed rechecks remain unpublished and do not silently spend inference on another repair.
+
+## Choose the depth and reading experience
+
+The **Time to explore** slider selects an approximate **5–50 minute** reading-and-interaction target (20 minutes by default). Short requests focus on one idea; longer sessions develop foundations, worked examples, deeper explanations and practice. The target is saved with each job and Notebook version, and revisions inherit it. Demo mode retains its fixed authored lesson and labels that limitation.
+
+Generation guidance asks for a fresh, topic-specific creative direction rather than one repeated layout. It prioritizes readable neutral text, purposeful supporting colors, story-driven illustrations and a small collapsed Contents control instead of a permanent sidebar. See [Notebook design guidance](docs/notebook-design.md) for the rationale and limitations.
+
+The agent inspector presents activity in chronological order, with the latest tasks at the bottom. Start/update/completion events for the same Codex item appear as one evolving row. Running tasks show animated indicators; completed jobs and paused views stop them, and reduced-motion preferences are respected. The feed follows new activity while you are at the bottom. Scroll upward to read older entries and use **Jump to latest** to resume following. Commands, output and file changes have distinct layouts; container details and raw logs remain available below the feed. Agent messages support safe Markdown formatting; embedded HTML, image loading and active links are disabled. There is no chat input or command execution control.
+
+## Access from your phone on the same Wi-Fi
+
+Run these commands from this directory after the normal Compose installation:
+
+```sh
+docker compose build app
+python3 scripts/lan_access.py enable
+python3 scripts/lan_access.py open
+```
+
+In **Settings → Open on your phone**, scan the QR code using your phone camera.
+No signup or additional phone app is required. On Windows use `python` in place
+of `python3`. Keep the host computer awake and on the same trusted home network.
+See [Wi-Fi setup](docs/lan-access.md) for restarts, address changes, and disabling.
+
+Access from outside your home remains optional via [Tailscale Serve](docs/remote-access.md).
