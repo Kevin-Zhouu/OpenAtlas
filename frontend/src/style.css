@@ -1811,3 +1811,24 @@ a {
   .stage-empty { padding: 26px 16px; }
   .stage-event-log li { gap: 10px; font-size: 12px; }
 }
+
+/* Reader chrome is a distinct, opaque surface on every Notebook palette. */
+.reader-mini-menu.is-expanded {
+  width: 100%;
+  padding-inline: max(24px, calc((100vw - 872px) / 2));
+  background: #fbfcf8;
+  border: 0;
+  border-bottom: 1px solid #dbe2d8;
+  box-shadow: 0 1px 0 #ffffff80;
+  backdrop-filter: none;
+}
+.reader-mini-menu.is-collapsed {
+  background: #fbfcf8;
+  border: 1px solid #d6dfd2;
+  box-shadow: 0 4px 24px #152c2426;
+  backdrop-filter: none;
+}
+.reader-mini-menu.is-expanded .reader-outline { right: max(14px, calc((100vw - 920px) / 2)); }
+@media(max-width:650px) {
+  .reader-mini-menu.is-expanded { padding-inline: max(10px, env(safe-area-inset-left)); }
+}

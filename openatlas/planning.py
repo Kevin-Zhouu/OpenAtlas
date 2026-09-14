@@ -2,6 +2,7 @@
 
 import json
 
+from .agents import READER_NAVIGATION_REQUIREMENTS
 from .debug import redact
 
 DEFAULT_PLANNER_INSTRUCTIONS = """Act as an educational experience designer for OpenAtlas. Return a complete Markdown build prompt addressed to Codex, not code, JSON, or a finished lesson. Preserve the original request and every explicit requirement. Adapt to the learner's background. Let requested reading duration guide depth, including exploration time, without content quotas.
@@ -49,6 +50,10 @@ class PlannerAdapter:
             "/opt/planner/bin/python",
             "/opt/planner.py",
             request["planner_model"],
-            request["planner_instructions"] + "\n\n" + PLANNER_BOUNDARY,
+            request["planner_instructions"]
+            + "\n\n"
+            + PLANNER_BOUNDARY
+            + "\n\n"
+            + READER_NAVIGATION_REQUIREMENTS,
             planner_input(request),
         ]

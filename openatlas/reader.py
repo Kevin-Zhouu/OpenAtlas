@@ -3,11 +3,22 @@ import re
 
 BRIDGE = r'''<style id="openatlas-reader-style">
 #contents-nav,nav[aria-label="Notebook contents"]{display:none!important}
-html{scroll-padding-top:88px!important}body{padding-top:64px!important}
+html{scroll-padding-top:96px!important}body{padding-top:80px!important}
+@media(max-width:650px){body{padding-top:70px!important}html{scroll-padding-top:86px!important}}
 </style><script>
 (() => {
   let sections = [];
   function outline() {
+    // Compatibility for a specific generated app masthead, not lesson headers.
+    document.querySelectorAll('body > header').forEach(header => {
+      const brand = header.querySelector('a');
+      if (brand && /^[◈◇◆◊\s]*OPENATLAS\s*\/\s*FIELD NOTES$/i.test(brand.textContent.replace(/\s+/g, ' ').trim()) &&
+          !header.querySelector('h1,h2,button,input,select,textarea') &&
+          header.querySelectorAll('a').length === 1) {
+        header.style.setProperty('display', 'none', 'important');
+        header.setAttribute('aria-hidden', 'true');
+      }
+    });
     sections = Array.from(document.querySelectorAll('main h1, main h2, article h1, article h2'));
     if (!sections.length) sections = Array.from(document.querySelectorAll('h1,h2'));
     sections = sections.filter(el => !el.closest('nav') && el.textContent.trim()).slice(0,150);
