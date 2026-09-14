@@ -1,4 +1,4 @@
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { DebugInspector } from "./DebugInspector";
 afterEach(() => {
@@ -66,12 +66,138 @@ it("explains demo jobs have no container", async () => {
   expect(
     await screen.findByText(/Demo generation uses no Codex container/),
   ).toBeInTheDocument();
-  expect(screen.getByText("Retained snapshot")).toBeInTheDocument();
+  expect(screen.getByText(/Retained snapshot/)).toBeInTheDocument();
 });
 it("shows connection failures", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
   render(<DebugInspector jobId="test" onClose={() => {}} />);
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Could not load diagnostics",
+  );
+});
+
+it("keeps activity and instructions scoped to the selected stage", async () => {
+  const request = {
+    prompt: "Inside LLM inference",
+    provider: "codex",
+    model: "builder-model",
+    planner_model: "planner-model",
+    planning_enabled: true,
+    build_prompt: "Saved creative brief",
+  };
+  const container = (id: string, stage: string, message: string) => ({
+    id,
+    stage,
+    role: "agent",
+    status: "running",
+    processes: [],
+    agent_log: JSON.stringify({
+      type: "item.completed",
+      item: { type: "agent_message", text: message },
+    }),
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        job: {
+          stage: "building",
+          status: "running",
+          progress: "Building the Notebook",
+          request,
+        },
+        containers: [
+          container("plan", "planning", "Planner inspected token resources"),
+          container(
+            "build",
+            "building",
+            "Builder is implementing the GPU view",
+          ),
+        ],
+        generation: {
+          request,
+          job: {},
+          prompt: "Builder prompt",
+          prompt_source: "captured",
+          skills: [],
+          invocations: [
+            {
+              phase: "planning",
+              captured_at: "2026-01-01",
+              prompt: "Exact planner instructions",
+              command: ["python", "planner"],
+              model: "planner-model",
+            },
+            {
+              phase: "generate",
+              captured_at: "2026-01-01",
+              prompt: "Exact builder instructions",
+              command: ["codex", "exec"],
+              model: "builder-model",
+            },
+          ],
+        },
+      }),
+    }),
+  );
+  render(<DebugInspector jobId="staged" onClose={() => {}} />);
+  expect(
+    await screen.findByText("Builder is implementing the GPU view"),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByText("Planner inspected token resources"),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /^Planning/ }));
+  expect(
+    screen.getByText("Planner inspected token resources"),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByText("Builder is implementing the GPU view"),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Generation details" }));
+  expect(screen.getByLabelText("Full planner instructions")).toHaveValue(
+    "Exact planner instructions",
+  );
+  expect(
+    screen.queryByText("Exact builder instructions"),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /^Validating/ }));
+  expect(screen.getByText("Validating hasn’t started yet")).toBeInTheDocument();
+  expect(
+    screen.queryByText("Builder is implementing the GPU view"),
+  ).not.toBeInTheDocument();
+});
+
+it("shows a failed validation at its recorded stage", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        job: {
+          stage: "failed",
+          status: "failed",
+          progress: "Failed",
+          error: "Interaction check failed",
+          request: { prompt: "Mechanics", provider: "codex" },
+        },
+        containers: [],
+        events: [
+          {
+            stage: "validating",
+            message: "Interaction check failed",
+            created_at: "2026-01-01",
+          },
+        ],
+      }),
+    }),
+  );
+  render(<DebugInspector jobId="failed" onClose={() => {}} />);
+  const stage = await screen.findByRole("button", { name: /^Validating/ });
+  expect(stage).toHaveAttribute("aria-current", "step");
+  expect(stage).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: /^Publishing/ })).toHaveTextContent(
+    "Up next",
   );
 });

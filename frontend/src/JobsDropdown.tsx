@@ -1,13 +1,20 @@
 import { useRef, useState } from "react";
 type Job = {
   id: string;
+  notebook_id?: string;
   status: string;
   stage?: string;
   can_continue?: boolean;
   progress: string;
   error?: string;
   created_at: string;
-  request: { prompt: string; provider: string; retry_of?: string; continue_job?: string; revalidate_job?: string };
+  request: {
+    prompt: string;
+    provider: string;
+    retry_of?: string;
+    continue_job?: string;
+    revalidate_job?: string;
+  };
 };
 export function JobsDropdown({
   jobs,
@@ -22,10 +29,20 @@ export function JobsDropdown({
   const [retryError, setRetryError] = useState("");
   async function retry(id: string, mode: "continue" | "rerun") {
     if (!onRetry || pending) return;
-    setPending(id); setRetryError("");
-    try { await onRetry(id, mode); setFilter("queued"); }
-    catch (error) { setRetryError(error instanceof Error ? error.message : "Could not retry. Please try again."); }
-    finally { setPending(null); }
+    setPending(id);
+    setRetryError("");
+    try {
+      await onRetry(id, mode);
+      setFilter("queued");
+    } catch (error) {
+      setRetryError(
+        error instanceof Error
+          ? error.message
+          : "Could not retry. Please try again.",
+      );
+    } finally {
+      setPending(null);
+    }
   }
   const [filter, setFilter] = useState("all");
   const dropdown = useRef<HTMLDetailsElement>(null);
@@ -33,7 +50,18 @@ export function JobsDropdown({
     ["queued", "running"].includes(j.status),
   ).length;
   const failed = jobs.filter((j) => j.status === "failed").length;
-  const shown = jobs.filter((j) => filter === "all" || j.status === filter);
+  const candidates = jobs.filter(
+    (j) => filter === "all" || j.status === filter,
+  );
+  const shown = candidates.filter(
+    (j, i) =>
+      !candidates
+        .slice(0, i)
+        .some(
+          (previous) =>
+            (previous.notebook_id || previous.id) === (j.notebook_id || j.id),
+        ),
+  );
   return (
     <details className="jobs-dropdown" ref={dropdown}>
       <summary aria-label="Jobs">
@@ -71,27 +99,62 @@ export function JobsDropdown({
         {shown.length === 0 && (
           <p>No {filter === "all" ? "" : filter + " "}jobs.</p>
         )}
-        {retryError && <p role="alert" className="jobs-error">{retryError}</p>}
+        {retryError && (
+          <p role="alert" className="jobs-error">
+            {retryError}
+          </p>
+        )}
         <ul>
           {shown.map((j) => (
             <li key={j.id}>
               <strong>{j.request.prompt}</strong>
               <p>
-                <span className="tag">{j.stage || j.status}</span> · {j.request.provider} ·{" "}
-                {new Date(j.created_at).toLocaleString()}
+                <span className="tag">{j.stage || j.status}</span> ·{" "}
+                {j.request.provider} · {new Date(j.created_at).toLocaleString()}
               </p>
               <p className={j.error ? "jobs-error" : ""}>
                 {j.error || j.progress}
               </p>
-              {j.request.retry_of && <p className="hint">{j.request.continue_job ? "Continued from saved work" : "Fresh re-run of a failed job"}</p>}
-              {j.status === "failed" && onRetry && <>
-                <div className="job-retry-actions">
-                  <button className="quiet" disabled={!!pending || !j.can_continue} onClick={() => retry(j.id, "continue")} title={j.can_continue ? "Resume the saved source in a new agent session" : "No saved workspace is available for this attempt"}>Continue</button>
-                  <button className="quiet" disabled={!!pending} onClick={() => retry(j.id, "rerun")}>Re-run</button>
-                  {pending === j.id && <span role="status">Queueing…</span>}
-                </div>
-                <p className="hint">{j.can_continue ? "Continue keeps saved work. Re-run starts over." : "No saved work remains; Re-run starts a fresh attempt."} {j.request.provider === "codex" && "Uses your current API credits."}</p>
-              </>}
+              {j.request.retry_of && (
+                <p className="hint">
+                  {j.request.continue_job
+                    ? "Continued from saved work"
+                    : "Fresh re-run of a failed job"}
+                </p>
+              )}
+              {j.status === "failed" && onRetry && (
+                <>
+                  <div className="job-retry-actions">
+                    <button
+                      className="quiet"
+                      disabled={!!pending || !j.can_continue}
+                      onClick={() => retry(j.id, "continue")}
+                      title={
+                        j.can_continue
+                          ? "Resume the saved source in a new agent session"
+                          : "No saved workspace is available for this attempt"
+                      }
+                    >
+                      Continue
+                    </button>
+                    <button
+                      className="quiet"
+                      disabled={!!pending}
+                      onClick={() => retry(j.id, "rerun")}
+                    >
+                      Re-run
+                    </button>
+                    {pending === j.id && <span role="status">Queueing…</span>}
+                  </div>
+                  <p className="hint">
+                    {j.can_continue
+                      ? "Continue keeps saved work. Re-run starts over."
+                      : "No saved work remains; Re-run starts a fresh attempt."}{" "}
+                    {j.request.provider === "codex" &&
+                      "Uses your current API credits."}
+                  </p>
+                </>
+              )}
               {j.request.revalidate_job && (
                 <p className="hint">
                   Recheck of a retained Notebook · no new inference
@@ -104,7 +167,7 @@ export function JobsDropdown({
                   onInspect(j.id);
                 }}
               >
-                {j.status === "failed" ? "Debug failed job" : "Inspect job"}
+                {j.status === "failed" ? "Inspect generation" : "Inspect job"}
               </button>
             </li>
           ))}

@@ -179,6 +179,8 @@ class Repository:
 
     def progress(self, job_id, message=None):
         with self.engine.begin() as c:
+            if message:
+                c.execute(text("INSERT INTO job_events(job_id,stage,message,created_at) SELECT id,stage,:m,:t FROM jobs WHERE id=:id AND status='running'"), {'id': job_id, 'm': message, 't': now()})
             c.execute(
                 text(
                     "UPDATE jobs SET progress=COALESCE(:p,progress),updated_at=:t,lease_until=:l WHERE id=:id AND status='running'"
@@ -188,6 +190,7 @@ class Repository:
 
     def fail(self, job_id, error):
         with self.engine.begin() as c:
+            c.execute(text("INSERT INTO job_events(job_id,stage,message,created_at) SELECT id,stage,:m,:t FROM jobs WHERE id=:id AND status='running'"), {'id': job_id, 'm': error[:2000], 't': now()})
             c.execute(
                 text(
                     "UPDATE jobs SET status='failed',stage='failed',progress='Generation failed',error=:e,updated_at=:t WHERE id=:id AND status='running'"

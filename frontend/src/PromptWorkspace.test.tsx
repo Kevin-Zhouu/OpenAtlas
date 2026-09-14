@@ -34,7 +34,8 @@ it("saves immutable edits before allowing a build and keeps a comparison candida
     };
   });
   vi.stubGlobal("fetch", fetcher);
-  render(<PromptWorkspace jobId="job" />);
+  const followJob = vi.fn();
+  render(<PromptWorkspace jobId="job" onJobQueued={followJob} />);
   await screen.findByRole("option", { name: /Generated/ });
   fireEvent.change(screen.getByLabelText("Prompt revision"), {
     target: { value: "original" },
@@ -65,5 +66,6 @@ it("saves immutable edits before allowing a build and keeps a comparison candida
       expect.objectContaining({ method: "POST" }),
     ),
   );
+  expect(followJob).toHaveBeenCalledWith("build-job");
   vi.unstubAllGlobals();
 });

@@ -173,7 +173,7 @@ export function App() {
     setBusy(true);
     setError("");
     try {
-      await api(
+      const created = await api<Job>(
         revising ? "/notebooks/" + notebookId + "/revisions" : "/jobs",
         {
           prompt,
@@ -186,6 +186,7 @@ export function App() {
           reading_minutes: readingMinutes,
         },
       );
+      setDebugJob(created.id);
       setPrompt("");
       setInstructions("");
       setRevising(false);
@@ -207,7 +208,8 @@ export function App() {
     setReadingMinutes(current?.manifest.target_reading_minutes || 20);
     setRevising(true);
   }
-  const active = jobs.filter(
+  const notebookJobs = jobs.filter((j, i) => !jobs.slice(0, i).some(previous => previous.notebook_id === j.notebook_id));
+  const active = notebookJobs.filter(
     (j) =>
       ["queued", "running"].includes(j.status) &&
       (!notebookId || j.notebook_id === notebookId),
@@ -366,8 +368,6 @@ export function App() {
             await refresh();
           }}
           onInspect={(id) => {
-            setDebugMode(true);
-            localStorage.setItem("openatlas-debug", "true");
             setDebugJob(id);
           }}
         />
@@ -376,8 +376,6 @@ export function App() {
           ready={jobsReady}
           error={error}
           onInspect={(id) => {
-            setDebugMode(true);
-            localStorage.setItem("openatlas-debug", "true");
             setDebugJob(id);
           }}
         />
@@ -577,7 +575,7 @@ export function App() {
                 {history && (
                   <div className="history">
                     {jobs.length === 0 && <p>No generation jobs yet.</p>}
-                    {jobs.map((j) => (
+                    {notebookJobs.map((j) => (
                       <div key={j.id}>
                         <strong>{j.request.prompt}</strong>
                         <span className="tag">{j.status}</span>
@@ -600,36 +598,7 @@ export function App() {
           )}
         </main>
       )}
-      {debugMode && (
-        <section className="debug-launcher">
-          <span className="tag">Debug mode</span>
-          <label>
-            Inspect a generation
-            <select
-              aria-label="Inspect a generation"
-              value=""
-              onChange={(e) => setDebugJob(e.target.value)}
-            >
-              <option value="">Choose a generation…</option>
-              {jobs.map((j) => (
-                <option value={j.id} key={j.id}>
-                  {j.status} · {j.request.prompt}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            className="quiet"
-            onClick={() => {
-              setDebugMode(false);
-              localStorage.setItem("openatlas-debug", "false");
-            }}
-          >
-            Turn off debug mode
-          </button>
-        </section>
-      )}
-      {debugMode && debugJob && (
+      {debugJob && (
         <DebugInspector jobId={debugJob} onClose={() => setDebugJob(null)} />
       )}
       {showSettings && (

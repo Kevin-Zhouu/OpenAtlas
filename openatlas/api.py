@@ -500,7 +500,15 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             known_key = credentials.openai_key()
         except ValueError:
             known_key = ''
-        return json.loads(redact(json.dumps({"job": job, **debug.read(job_id), "generation": metadata}), (known_key,)))
+        related = repo.rows("SELECT id,status,stage,created_at,version_id FROM jobs WHERE notebook_id=:n ORDER BY created_at", n=job['notebook_id'])
+        planning_job_id = None
+        if request.get('planning_attempt_id'):
+            attempts = repo.rows('SELECT job_id FROM planning_attempts WHERE id=:id', id=request['planning_attempt_id'])
+            if attempts:
+                planning_job_id = attempts[0]['job_id']
+        return json.loads(redact(json.dumps({"job": job, **debug.read(job_id), "generation": metadata,
+            "events": repo.rows('SELECT stage,message,created_at FROM job_events WHERE job_id=:id ORDER BY id', id=job_id),
+            "related_jobs": related, "planning_job_id": planning_job_id}), (known_key,)))
 
     @app.get("/api/jobs/{job_id}")
     def job(job_id: str):

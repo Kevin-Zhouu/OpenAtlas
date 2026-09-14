@@ -12,7 +12,15 @@ type Attempt = {
   created_at: string;
   revisions: Revision[];
 };
-export function PromptWorkspace({ jobId }: { jobId: string }) {
+export function PromptWorkspace({
+  jobId,
+  selectedRevision,
+  onJobQueued,
+}: {
+  jobId: string;
+  selectedRevision?: string;
+  onJobQueued?: (id: string) => void;
+}) {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [selected, setSelected] = useState("");
   const [draft, setDraft] = useState("");
@@ -53,6 +61,15 @@ export function PromptWorkspace({ jobId }: { jobId: string }) {
   }, [jobId]);
   const revisions = attempts.flatMap((a) => a.revisions);
   const revision = revisions.find((r) => r.id === selected);
+  useEffect(() => {
+    if (!selected && revisions.length) {
+      const initial =
+        revisions.find((r) => r.id === selectedRevision) ||
+        revisions[revisions.length - 1];
+      setSelected(initial.id);
+      setDraft(initial.content);
+    }
+  }, [revisions, selected, selectedRevision]);
   async function action(kind: string) {
     setBusy(true);
     setMessage("");
@@ -72,10 +89,12 @@ export function PromptWorkspace({ jobId }: { jobId: string }) {
       }
       if (kind === "build") {
         const job = await call(`prompts/${selected}/build`, {});
-        setMessage(`Build queued · ${job.id.slice(0, 8)}. Follow it in Jobs.`);
+        setMessage("Build queued. Continuing to implementation…");
+        onJobQueued?.(job.id);
       }
       if (kind === "regenerate") {
-        await call(`jobs/${jobId}/replan`, {});
+        const job = await call(`jobs/${jobId}/replan`, {});
+        onJobQueued?.(job.id);
         setMessage(
           "New planning attempt queued. Earlier candidates are retained.",
         );
@@ -87,18 +106,16 @@ export function PromptWorkspace({ jobId }: { jobId: string }) {
     }
   }
   return (
-    <div className="generation-details">
-      <h3>Notebook prompts</h3>
-      <p>
-        Select a candidate to inspect, edit, compare, or build. Saving creates a
-        new revision.
-      </p>
-      {attempts.map((a) => (
-        <p key={a.id}>
-          Planning · {new Date(a.created_at).toLocaleString()} · {a.status}
-          {a.error && ` · ${a.error}`}
-        </p>
-      ))}
+    <div className="generation-details prompt-workspace">
+      <div className="prompt-workspace-heading">
+        <div>
+          <h3>The creative brief</h3>
+          <p>
+            Review the experience before implementation. Edits are saved as a
+            new revision.
+          </p>
+        </div>
+      </div>
       <button
         className="quiet"
         disabled={busy}
@@ -186,6 +203,16 @@ export function PromptWorkspace({ jobId }: { jobId: string }) {
             />
           )}
         </>
+      )}
+      {attempts.some((a) => a.error) && (
+        <details className="prompt-history">
+          <summary>Previous planning errors</summary>
+          {attempts
+            .filter((a) => a.error)
+            .map((a) => (
+              <p key={a.id}>{a.error}</p>
+            ))}
+        </details>
       )}
       {message && <p role="status">{message}</p>}
     </div>

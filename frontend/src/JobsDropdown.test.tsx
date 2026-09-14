@@ -32,7 +32,7 @@ it("filters failed jobs and opens their debug inspector", () => {
   });
   expect(screen.queryByText("Trees")).not.toBeInTheDocument();
   expect(screen.getByText("Interaction check 9 failed")).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Debug failed job" }));
+  fireEvent.click(screen.getByRole("button", { name: "Inspect generation" }));
   expect(inspect).toHaveBeenCalledWith("1");
   expect(document.querySelector("details")).not.toHaveAttribute("open");
 });

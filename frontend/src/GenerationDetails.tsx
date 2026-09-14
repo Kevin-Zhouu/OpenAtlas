@@ -20,7 +20,13 @@ export type GenerationMetadata = {
     validation_feedback?: string;
   }[];
 };
-export function GenerationDetails({ data }: { data: GenerationMetadata }) {
+export function GenerationDetails({
+  data,
+  stage,
+}: {
+  data: GenerationMetadata;
+  stage?: "planning" | "building";
+}) {
   const [attempt, setAttempt] = useState(0);
   const invocation = data.invocations[attempt];
   const prompt = invocation?.prompt ?? data.prompt;
@@ -94,7 +100,13 @@ export function GenerationDetails({ data }: { data: GenerationMetadata }) {
       ) : (
         <p className="hint">No skills were selected.</p>
       )}
-      <h3>Instructions supplied to each agent</h3>
+      <h3>
+        {stage === "planning"
+          ? "Planner instructions"
+          : stage === "building"
+            ? "Implementation instructions"
+            : "Instructions supplied to each agent"}
+      </h3>
       {data.invocations.length > 0 ? (
         <>
           <label>
@@ -119,13 +131,17 @@ export function GenerationDetails({ data }: { data: GenerationMetadata }) {
       ) : (
         <p className="hint">
           {data.prompt_source === "not_applicable"
-            ? "This job did not invoke Codex (demo, local edit, or revalidation)."
+            ? "No agent invocation was recorded for this stage."
             : "Reconstructed from saved job inputs and the current adapter. No invocation has been captured for this job. The exact historical prompt, if any, may differ."}
         </p>
       )}
       {prompt && (
         <textarea
-          aria-label="Full Codex prompt"
+          aria-label={
+            stage === "planning"
+              ? "Full planner instructions"
+              : "Full Codex prompt"
+          }
           className="code-editor debug-prompt"
           readOnly
           value={prompt}
@@ -134,11 +150,17 @@ export function GenerationDetails({ data }: { data: GenerationMetadata }) {
       )}
       {invocation && (
         <details>
-          <summary>CLI arguments</summary>
-          <pre>{JSON.stringify(invocation.command.slice(0, -1), null, 2)}</pre>
+          <summary>Execution arguments</summary>
+          <pre>
+            {JSON.stringify(
+              invocation.command.slice(0, stage === "planning" ? 3 : -1),
+              null,
+              2,
+            )}
+          </pre>
           <p className="hint">
-            The prompt above is the final argument. Credential values and
-            environment variables are not included.
+            Captured for this invocation. Credential values and environment
+            variables are not included.
           </p>
         </details>
       )}

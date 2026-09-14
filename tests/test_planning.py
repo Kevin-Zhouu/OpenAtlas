@@ -226,3 +226,21 @@ def test_planner_command_preserves_inputs_and_enforces_skill_reads():
     assert inputs["learner_background"] == "Beginner"
     assert inputs["reading_minutes"] == 30
     assert inputs["instructions"] == request["instructions"]
+
+
+def test_inspector_links_reused_planning_and_records_stage_events(system):
+    repo, _, client, _, runner = system
+    job = client.post('/api/jobs', json={'prompt': 'Explore inference', 'provider': 'codex', 'prompt_only': True}).json()
+    runner.process(repo.claim(1))
+    revision = repo.job(job['id'])['request']['prompt_revision_id']
+    build = client.post('/api/prompts/'+revision+'/build').json()
+    repo.claim(1)
+    repo.stage(build['id'], 'validating')
+    repo.progress(build['id'], 'Checking keyboard interaction')
+    repo.progress(build['id'])
+    repo.fail(build['id'], 'Interaction check failed')
+    details = client.get('/api/jobs/'+build['id']+'/debug').json()
+    assert details['planning_job_id'] == job['id']
+    assert [j['id'] for j in details['related_jobs']] == [job['id'], build['id']]
+    assert [e['stage'] for e in details['events']] == ['validating', 'validating']
+    assert details['events'][-1]['message'] == 'Interaction check failed'

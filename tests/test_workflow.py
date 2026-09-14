@@ -283,7 +283,7 @@ def test_parallel_initial_migrations(tmp_path):
     with ThreadPoolExecutor(max_workers=2) as pool:
         repos = list(pool.map(lambda _: Repository(tmp_path / "new"), range(2)))
     assert all(r.settings()["concurrency"] == 2 for r in repos)
-    assert len(repos[0].rows("SELECT * FROM schema_migrations")) == 3
+    assert len(repos[0].rows("SELECT * FROM schema_migrations")) == 4
 
 
 def test_shared_access_token(system, monkeypatch):
