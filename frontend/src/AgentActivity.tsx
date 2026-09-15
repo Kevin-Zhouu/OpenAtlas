@@ -7,6 +7,7 @@ export type ActivitySource = {
   status: string;
   stage?: string;
   started_at?: string;
+  history_truncated?: boolean;
 };
 type Task = { text: string; completed: boolean };
 type Change = { path: string; kind: string };
@@ -89,7 +90,7 @@ export function parseActivity(log: string, scope: string): ActivityItem[] {
       /* The retained log can begin/end in the middle of a JSON line. */
     }
   }
-  return [...items.values()].slice(-60);
+  return [...items.values()];
 }
 
 export function ActivitySpinner({ label = "Running" }: { label?: string }) {
@@ -308,6 +309,7 @@ export function AgentActivity({
                 paused={paused}
               />
             ))}
+            {source.history_truncated && <p className="hint">This run reached the 10 MiB retained-log limit. Earlier retained events remain visible.</p>}
             {!items.length && (
               <p className="activity-empty">Waiting for agent events…</p>
             )}

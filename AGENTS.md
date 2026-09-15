@@ -34,6 +34,9 @@ for other representations. Creativity must remain compatible with factual accura
 - Prompt-only runs, immutable prompt revisions, comparisons, builds from saved
   prompts, editable planner instructions/models, and stage inspection exist.
   Continue/Re-run reuse saved prompts when available; replanning is explicit.
+  Stage resume actions retain the stopped stage. Validation resume checks the saved
+  build and required independent review without automatic implementation/repair.
+  Publishing resume requires a trusted receipt bound to the artifact and CSP.
 - Standard Agent Skills are selectable generation inputs. Settings supports skill
   installation and file editing. Only selected skills and enabled core skills are
   staged; skill snapshots and provenance are retained separately from artifacts.
@@ -83,6 +86,10 @@ Paths abbreviated in a row are relative to that row's package directory.
   successful Notebook requires a renderable HTML entrypoint and browser validation
   of declared interactions. Never execute generated build/test scripts on the trusted
   host/runner as a shortcut; use the generation sandbox.
+- Permanent deletion queues removal of the whole Notebook and all attempts. The
+  runner drains writers before purging files, containers and SQLite records/WAL.
+  Job-scoped temporary work lives under data/workspaces for crash cleanup.
+  Deleted jobs must never be recreated by diagnostic observers.
 - Keep the reader iframe opaque with `sandbox="allow-scripts"` and no
   `allow-same-origin`. Preserve artifact CSP and trusted UI protections. The limited
   reader navigation bridge validates the sending iframe and bounded messages; do
@@ -99,6 +106,13 @@ Paths abbreviated in a row are relative to that row's package directory.
   Redis, Kubernetes, cloud services, or generic frameworks without a concrete need.
 
 ## Development and verification
+
+The preview private VPS installer is `install.sh`, with root-owned lifecycle commands
+in `scripts/vps.py`. It uses its own Compose project/configuration and Tailscale Serve;
+do not mix desktop/LAN overrides into it. See `docs/vps-installation.md` and
+`docs/security-review.md` for implemented behavior, acceptance gaps and public-hosting
+blockers. Browser sessions are signed and expire server-side; owner-token rotation
+revokes them. Artifact URLs still require a private network boundary.
 
 Use Python 3.12 recommended (3.9+ supported), Node 22+, and Docker for real generation.
 See `README.md` for complete installation and platform-specific setup.

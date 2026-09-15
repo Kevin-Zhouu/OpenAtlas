@@ -2,6 +2,7 @@ import io
 import json
 import tarfile
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -287,7 +288,8 @@ def test_parallel_initial_migrations(tmp_path):
     with ThreadPoolExecutor(max_workers=2) as pool:
         repos = list(pool.map(lambda _: Repository(tmp_path / "new"), range(2)))
     assert all(r.settings()["concurrency"] == 2 for r in repos)
-    assert len(repos[0].rows("SELECT * FROM schema_migrations")) == 4
+    expected = {p.name for p in (Path(__file__).parents[1] / "openatlas" / "migrations").glob("*.sql")}
+    assert {r["version"] for r in repos[0].rows("SELECT * FROM schema_migrations")} == expected
 
 
 def test_shared_access_token(system, monkeypatch):

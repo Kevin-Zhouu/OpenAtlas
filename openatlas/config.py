@@ -7,7 +7,9 @@ SKILLS = Path(os.getenv("OPENATLAS_SKILLS", ROOT / "skills")).resolve()
 FRONTEND = ROOT / "frontend" / "dist"
 GENERATION_IMAGE = os.getenv("OPENATLAS_GENERATION_IMAGE", "openatlas-generation:local")
 TIMEOUT = int(os.getenv("OPENATLAS_JOB_TIMEOUT", "7200"))
-ARTIFACT_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' http: https: blob:; style-src 'unsafe-inline' http: https:; img-src http: https: data: blob:; font-src http: https: data:; connect-src http: https:; media-src http: https: data: blob:; worker-src blob:; frame-src 'none'; form-action 'none'; base-uri 'none'"
+# Model loaders fetch embedded textures through object URLs before decoding them.
+# Allow those local blobs while artifact_csp still confines network fetches.
+ARTIFACT_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' http: https: blob:; style-src 'unsafe-inline' http: https:; img-src http: https: data: blob:; font-src http: https: data:; connect-src http: https: blob:; media-src http: https: data: blob:; worker-src blob:; frame-src 'none'; form-action 'none'; base-uri 'none'"
 
 
 # Serving middleware narrows http(s) sources to the immutable artifact directory.

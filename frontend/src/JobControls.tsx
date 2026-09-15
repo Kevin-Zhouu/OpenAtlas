@@ -46,15 +46,14 @@ export function JobControls({ jobId, stage, running, codex }: {
   return <section className="job-controls" aria-label="Generation controls">
     {error && <p role="alert">{error}</p>}
     {stage === 'building' && codex && <>
-      <h4>Chat with the coding agent</h4>
-      <p className="hint">Messages are queued for the next Codex turn, before validation. Follow the agent’s replies in Activity & logs.</p>
+      <div className="steering-heading"><h4>Guide the build</h4><span>Codex</span></div>
       {!!data?.messages.length && <ol className="steering-messages" aria-label="Your instructions">
         {data.messages.map(m => <li key={m.id}><p>{m.message}</p><small>{({ queued: running ? 'Queued for next turn' : 'Not applied — generation stopped', applying: running ? 'Applying' : 'Interrupted', applied: 'Applied', failed: 'Could not apply' } as Record<string, string>)[m.status] || m.status}</small></li>)}
       </ol>}
-      {running && <form onSubmit={e => { e.preventDefault(); void act('steer'); }}>
-        <label htmlFor="agent-message">Message to Codex</label>
-        <textarea id="agent-message" rows={3} maxLength={8000} value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe a change or clarify what you want…" />
-        <button className="primary" disabled={busy || !message.trim()}>{busy ? 'Sending…' : 'Send instruction'}</button>
+      {running && <form className="steering-composer" onSubmit={e => { e.preventDefault(); void act('steer'); }}>
+        <label className="sr-only" htmlFor="agent-message">Message to Codex</label>
+        <textarea id="agent-message" rows={2} maxLength={8000} value={message} onChange={e => setMessage(e.target.value)} placeholder="Ask for a change…" />
+        <div className="steering-composer-footer"><span>Applied on the next coding turn</span><button type="submit" aria-label="Send instruction" disabled={busy || !message.trim()}>{busy ? 'Sending…' : 'Send ↑'}</button></div>
       </form>}
     </>}
     {stage === 'validating' && <>
@@ -62,7 +61,7 @@ export function JobControls({ jobId, stage, running, codex }: {
         <button className="quiet" disabled={!preview} onClick={() => setShowPreview(!showPreview)}>{showPreview ? 'Hide preview' : 'Preview current build'}</button>
         {running && !skipped && <button className="quiet" disabled={busy || !preview} onClick={() => void act('skip-validation')}>Skip checks & preview</button>}
       </div>
-      <p className="hint">{skipped ? 'Checks stopped. Draft retained; use Continue to finish validation and publish.' : 'Preview is an unvalidated draft. Skipping stops remaining checks after the current browser operation and retains the draft without publishing.'}</p>
+      <p className="hint">{skipped ? 'Checks stopped. Draft retained; use Resume validation to check this build and publish.' : 'Preview is an unvalidated draft. Skipping stops remaining checks after the current browser operation and retains the draft without publishing.'}</p>
     </>}
     {showPreview && preview && <div className="draft-preview">
       <h4>Draft preview · unvalidated</h4>

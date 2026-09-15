@@ -86,12 +86,38 @@ class Runner:
 
         heart = threading.Thread(target=heartbeat, daemon=True)
         heart.start()
+
+        def publish(workspace, manifest, request):
+            manifest["demo"] = request["provider"] == "demo"
+            manifest["target_reading_minutes"] = request.get("reading_minutes", 20)
+            manifest["planning_attempt_id"] = request.get("planning_attempt_id")
+            manifest["prompt_revision_id"] = request.get("prompt_revision_id")
+            self.store.retain_publication(job["id"], workspace, manifest)
+            self.repo.stage(job["id"], "publishing")
+            if self.stop.is_set() or self.repo.job(job["id"])["status"] != "running":
+                raise ValueError("Publishing stopped; validated artifact retained")
+            version = uid()
+            self.repo.progress(job["id"], "Saving the Notebook to your local library")
+            self.store.save(job["notebook_id"], version, workspace, manifest, request["skills"])
+            self.repo.publish(job, version, manifest)
+
         try:
-            with tempfile.TemporaryDirectory(prefix="openatlas-") as tmp:
+            workspaces = self.repo.data / "workspaces"
+            workspaces.mkdir(parents=True, exist_ok=True, mode=0o700)
+            with tempfile.TemporaryDirectory(
+                prefix=job["id"] + "-", dir=workspaces
+            ) as tmp:
                 workspace = Path(tmp)
                 (workspace / "source").mkdir()
                 (workspace / "dist").mkdir()
                 request = dict(job["request"], job_id=job["id"])
+                resume_stage = request.get("resume_stage")
+                if resume_stage == "publishing":
+                    manifest = self.store.seed_publication(request["resume_job"], workspace)
+                    if request.get("experience_review_required") and manifest.get("experience_review", {}).get("verdict") != "pass":
+                        raise ValueError("Independent review evidence is missing. Resume validation instead.")
+                    publish(workspace, manifest, request)
+                    return
                 recovery = request.get("revalidate_job")
                 if recovery:
                     original = self.repo.job(recovery)
@@ -118,6 +144,7 @@ class Runner:
                 if (
                     request.get("planning_enabled")
                     and not recovery
+                    and resume_stage not in ("building", "validating")
                     and not request.get("build_prompt")
                 ):
                     self.repo.stage(job["id"], "planning")
@@ -134,8 +161,8 @@ class Runner:
                 if request.get("prompt_only") and not recovery:
                     self.repo.complete_prompt(job["id"])
                     return
-                self.repo.stage(job["id"], "building")
-                if request.get("base_version"):
+                self.repo.stage(job["id"], "validating" if recovery or resume_stage == "validating" else "building")
+                if request.get("base_version") and resume_stage != "validating":
                     self.store.seed(
                         job["notebook_id"], request["base_version"], workspace
                     )
@@ -155,7 +182,10 @@ class Runner:
                         request["experience_review_state"] = state
                         self.repo.save_experience_review(job["id"], state)
 
-                if recovery:
+                if resume_stage == "validating":
+                    self.store.seed_checkpoint(request["resume_job"], workspace)
+                    progress("Resuming checks on the saved build without implementation")
+                elif recovery:
                     progress(
                         "Rechecking retained Notebook with the current browser validator"
                     )
@@ -287,7 +317,7 @@ class Runner:
                         if isinstance(validation_error, ReviewUnavailable):
                             self.store.checkpoint(job["id"], workspace)
                             raise
-                        if recovery or request["provider"] != "codex" or attempt == 2:
+                        if recovery or resume_stage == "validating" or request["provider"] != "codex" or attempt == 2:
                             raise
                         request["validation_feedback"] = (
                             str(validation_error)[:7000]
@@ -299,17 +329,7 @@ class Runner:
                         self.repo.stage(job["id"], "building")
                         run_agent(self.executor, workspace, request, progress)
                 ensure_running()
-                manifest["demo"] = request["provider"] == "demo"
-                manifest["target_reading_minutes"] = request.get("reading_minutes", 20)
-                manifest["planning_attempt_id"] = request.get("planning_attempt_id")
-                manifest["prompt_revision_id"] = request.get("prompt_revision_id")
-                version = uid()
-                self.repo.stage(job["id"], "publishing")
-                progress("Saving the Notebook to your local library")
-                self.store.save(
-                    job["notebook_id"], version, workspace, manifest, request["skills"]
-                )
-                self.repo.publish(job, version, manifest)
+                publish(workspace, manifest, request)
         except Exception as e:
             # Do not persist arbitrary provider output or Docker arguments containing secrets.
             message = (
@@ -347,6 +367,39 @@ class Runner:
         except Exception:
             pass
 
+    def process_deletions(self):
+        from .deletion import purge
+
+        requests = self.repo.rows("SELECT notebook_id FROM deletion_requests")
+        if not requests:
+            return
+        import docker
+
+        try:
+            client = docker.from_env(timeout=10)
+            client.ping()
+        except Exception:
+            client = None
+        try:
+            for request in requests:
+                try:
+                    if client is None and self.repo.rows(
+                        "SELECT 1 FROM jobs WHERE notebook_id=:id AND json_extract(request, '$.provider')='codex'",
+                        id=request["notebook_id"],
+                    ):
+                        continue
+                    purge(
+                        self.repo,
+                        request["notebook_id"],
+                        client.containers if client else None,
+                    )
+                except Exception:
+                    # No deleted content is included in retry diagnostics.
+                    log.warning("Permanent deletion pending; cleanup will retry")
+        finally:
+            if client:
+                client.close()
+
     def run(self):
         threading.Thread(
             target=SubscriptionWorker(self.subscription).run,
@@ -361,6 +414,13 @@ class Runner:
             futures = set()
             while not self.stop.is_set():
                 futures = {f for f in futures if not f.done()}
+                if self.repo.rows("SELECT 1 FROM deletion_requests"):
+                    # Stop claiming while writers drain; process() also releases
+                    # temporary directories and private Codex session archives.
+                    if not futures:
+                        self.process_deletions()
+                    self.stop.wait(0.5)
+                    continue
                 concurrency = self.repo.settings()["concurrency"]
                 if len(futures) < concurrency:
                     job = self.repo.claim(concurrency)

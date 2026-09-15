@@ -18,7 +18,7 @@ def test_remote_https_origin_login_and_csrf(tmp_path, monkeypatch):
     assert login.status_code == 200
     assert 'Secure' in login.headers['set-cookie']
     assert 'HttpOnly' in login.headers['set-cookie']
-    auth = {'Cookie': 'openatlas_session=test-host-token', 'Origin': 'https://' + host}
+    auth = {'Cookie': 'openatlas_session=' + login.cookies['openatlas_session'], 'Origin': 'https://' + host}
     assert c.post('/api/jobs', json={'prompt': 'Teach memory'}, headers=auth).status_code == 202
     auth['Origin'] = 'https://attacker.example'
     assert c.post('/api/jobs', json={'prompt': 'Teach memory'}, headers=auth).status_code == 403

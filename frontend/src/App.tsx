@@ -1,3 +1,4 @@
+import { DeleteNotebook } from "./DeleteNotebook";
 import { pairFromFragment } from "./pairing";
 import { ReaderNavigation } from "./ReaderNavigation";
 import { useEffect, useState, useRef } from "react";
@@ -106,21 +107,32 @@ export function App() {
     [version, setVersion] = useState(""),
     [revising, setRevising] = useState(false),
     [history, setHistory] = useState(false);
+  const refreshEpoch = useRef(0);
+  const [noticeReset, setNoticeReset] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState<{kind: 'jobs' | 'notebooks'; id: string; title: string} | null>(null);
+  const [deleting, setDeleting] = useState<string[]>([]);
   const [jobsReady, setJobsReady] = useState(false);
   const notebookId = window.location.pathname.match(
     /^\/notebooks\/([^/]+)$/,
   )?.[1];
   async function refresh() {
+    const epoch = ++refreshEpoch.current;
     try {
       const [n, j] = await Promise.all([
         api<Notebook[]>("/notebooks"),
         api<Job[]>("/jobs"),
       ]);
+      const deletionResponse = await fetch('/api/deletions');
+      if (epoch !== refreshEpoch.current) return;
+      if (deletionResponse.ok) {
+        const pending = await deletionResponse.json();
+        if (Array.isArray(pending)) setDeleting(pending.map((d: {notebook_id: string}) => d.notebook_id));
+      }
       setNotebooks(n);
       setJobs(j);
       setJobsReady(true);
       setAuth(false);
-      if (notebookId) {
+      if (notebookId && window.location.pathname.startsWith('/notebooks/')) {
         const book = await api<Notebook>("/notebooks/" + notebookId);
         setReader(book);
         setVersion((v) => v || book.latest_version);
@@ -363,15 +375,20 @@ export function App() {
   const jobControls = <>
         <JobsDropdown
           jobs={jobs}
+          onDelete={(id, title) => setDeleteTarget({kind:'jobs',id,title})}
           onRetry={async (id, mode) => {
             await api(`/jobs/${encodeURIComponent(id)}/retry`, { mode });
+            await refresh();
+          }}
+          onResume={async (id) => {
+            await api(`/jobs/${encodeURIComponent(id)}/resume`, {});
             await refresh();
           }}
           onInspect={(id) => {
             setDebugJob(id);
           }}
         />
-        <Notifications
+        <Notifications key={noticeReset}
           jobs={jobs}
           ready={jobsReady}
           error={error}
@@ -503,6 +520,7 @@ export function App() {
                     {history ? "Hide history" : "Generation history"}
                   </button>
                 </div>
+                {!!deleting.length && <p className="deletion-status" role="status">Permanently deleting {deleting.length === 1 ? 'Notebook and its history' : 'Notebooks and their history'}… Waiting for generation workers and local cleanup to finish.</p>}
                 {active.map((j) => (
                   <div className="job" key={j.id}>
                     <div className="spinner" />
@@ -518,13 +536,14 @@ export function App() {
                         </button>
                       )}
                     </div>
+                    <button className="quiet delete-link" onClick={() => setDeleteTarget({kind:'jobs',id:j.id,title:j.request.prompt})}>Delete</button>
                     <span className="tag">
                       {j.request.provider === "demo" ? "DEMO" : "CREATING"}
                     </span>
                   </div>
                 ))}
                 {notebooks.map((n) => (
-                  <a
+                  <div className="notebook-list-item" key={n.id}><a
                     className="notebook-row"
                     href={"/notebooks/" + n.id}
                     key={n.id}
@@ -543,7 +562,7 @@ export function App() {
                       </span>
                     </div>
                     <span className="row-arrow">↗</span>
-                  </a>
+                  </a><button className="quiet delete-link" aria-label={`Delete ${n.title}`} onClick={() => setDeleteTarget({kind:'notebooks',id:n.id,title:n.title})}>Delete</button></div>
                 ))}
                 {!notebooks.length && !active.length && (
                   <div className="empty">
@@ -579,6 +598,7 @@ export function App() {
                       <div key={j.id}>
                         <strong>{j.request.prompt}</strong>
                         <span className="tag">{j.status}</span>
+                        <button className="quiet delete-link" onClick={() => setDeleteTarget({kind:'jobs',id:j.id,title:j.request.prompt})}>Delete</button>
                         <p>{j.error || j.progress}</p>
                         {debugMode && (
                           <button
@@ -598,6 +618,16 @@ export function App() {
           )}
         </main>
       )}
+      {deleteTarget && <DeleteNotebook target={deleteTarget} onClose={() => setDeleteTarget(null)} onDeleted={(id) => {
+        ++refreshEpoch.current;
+        localStorage.removeItem('openatlas-notifications'); setNoticeReset(n => n + 1);
+        setDeleteTarget(null); setDebugJob(null); setError(''); setPrompt(''); setInstructions('');
+        setDeleting(old => [...new Set([...old,id])]);
+        setJobs(old => old.filter(job => job.notebook_id !== id));
+        setNotebooks(old => old.filter(book => book.id !== id));
+        if (reader?.id === id) { setReader(null); window.history.replaceState(null, '', '/'); }
+        void refresh();
+      }} />}
       {debugJob && (
         <DebugInspector jobId={debugJob} onClose={() => setDebugJob(null)} />
       )}

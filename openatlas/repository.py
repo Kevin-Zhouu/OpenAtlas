@@ -32,6 +32,7 @@ class Repository:
         @event.listens_for(self.engine, "connect")
         def configure_connection(connection, _):
             connection.execute("PRAGMA foreign_keys=ON")
+            connection.execute("PRAGMA secure_delete=ON")
 
         with self.engine.connect() as c:
             # SQLite's journal-mode transition can return SQLITE_BUSY immediately
@@ -66,11 +67,47 @@ class Repository:
         with self.engine.connect() as c:
             return [dict(r) for r in c.execute(text(query), args).mappings()]
 
+    def request_deletion(self, notebook_id):
+        with self.engine.connect() as c:
+            c.exec_driver_sql("BEGIN IMMEDIATE")
+            ids = list(
+                c.execute(
+                    text("SELECT id FROM jobs WHERE notebook_id=:id"),
+                    {"id": notebook_id},
+                ).scalars()
+            )
+            if (
+                not ids
+                and not c.execute(
+                    text("SELECT 1 FROM notebooks WHERE id=:id"), {"id": notebook_id}
+                ).first()
+            ):
+                raise ValueError("Notebook not found")
+            c.execute(
+                text("INSERT OR IGNORE INTO deletion_requests VALUES (:id,:jobs,:t)"),
+                {"id": notebook_id, "jobs": json.dumps(ids), "t": now()},
+            )
+            c.execute(
+                text(
+                    "UPDATE jobs SET status='deleting',progress='Permanently deleting Notebook and history' WHERE notebook_id=:id"
+                ),
+                {"id": notebook_id},
+            )
+            c.commit()
+        return {"notebook_id": notebook_id, "status": "deleting"}
+
+    def deleting(self, notebook_id):
+        return bool(
+            self.rows(
+                "SELECT 1 FROM deletion_requests WHERE notebook_id=:id", id=notebook_id
+            )
+        )
+
     def list_jobs(self):
         return [
             self.job(row["id"])
             for row in self.rows(
-                "SELECT id FROM jobs ORDER BY created_at DESC LIMIT 100"
+                "SELECT id FROM jobs WHERE status != 'deleting' ORDER BY created_at DESC LIMIT 100"
             )
         ]
 
@@ -113,8 +150,13 @@ class Repository:
         job, stamp = uid(), now()
         notebook_id = notebook_id or uid()
         with self.engine.begin() as c:
+            c.exec_driver_sql("BEGIN IMMEDIATE")
+            if c.execute(
+                text("SELECT 1 FROM deletion_requests WHERE notebook_id=:id"),
+                {"id": notebook_id},
+            ).first():
+                raise ValueError("This Notebook is being permanently deleted")
             if retry_of:
-                c.exec_driver_sql("BEGIN IMMEDIATE")
                 existing = c.execute(
                     text(
                         "SELECT id FROM jobs WHERE status IN ('queued','running') AND json_extract(request, '$.retry_of')=:id"
@@ -246,7 +288,7 @@ class Repository:
         with self.engine.begin() as c:
             result = c.execute(
                 text(
-                    "UPDATE jobs SET status='failed',progress='Draft preview ready',error='Validation skipped by user; draft retained for preview and Continue.',updated_at=:t WHERE id=:id AND status='running' AND stage='validating'"
+                    "UPDATE jobs SET stopped_stage=stage,status='failed',progress='Draft preview ready',error='Validation skipped by user; draft retained for preview and Continue.',updated_at=:t WHERE id=:id AND status='running' AND stage='validating'"
                 ),
                 {"id": job_id, "t": now()},
             )
@@ -278,7 +320,7 @@ class Repository:
             c.exec_driver_sql("BEGIN IMMEDIATE")
             c.execute(
                 text(
-                    "UPDATE jobs SET status='failed',stage='failed',progress='Runner interrupted',error='Generation lease expired; submit a revision or try again.',updated_at=:t WHERE status='running' AND lease_until<:s"
+                    "UPDATE jobs SET stopped_stage=stage,status='failed',stage='failed',progress='Runner interrupted',error='Generation lease expired; submit a revision or try again.',updated_at=:t WHERE status='running' AND lease_until<:s"
                 ),
                 {"t": now(), "s": time.time()},
             )
@@ -336,7 +378,7 @@ class Repository:
             )
             c.execute(
                 text(
-                    "UPDATE jobs SET status='failed',stage='failed',progress='Generation failed',error=:e,updated_at=:t WHERE id=:id AND status='running'"
+                    "UPDATE jobs SET stopped_stage=stage,status='failed',stage='failed',progress='Generation failed',error=:e,updated_at=:t WHERE id=:id AND status='running'"
                 ),
                 {"e": error[:2000], "t": now(), "id": job_id},
             )
@@ -394,7 +436,7 @@ class Repository:
 
     def library(self):
         return self.rows(
-            "SELECT n.*, v.provider FROM notebooks n JOIN versions v ON v.id=n.latest_version ORDER BY n.created_at DESC"
+            "SELECT n.*, v.provider FROM notebooks n JOIN versions v ON v.id=n.latest_version WHERE NOT EXISTS (SELECT 1 FROM deletion_requests d WHERE d.notebook_id=n.id) ORDER BY n.created_at DESC"
         )
 
     def notebook(self, notebook_id):
@@ -512,7 +554,7 @@ class Repository:
         with self.engine.begin() as c:
             c.execute(
                 text(
-                    "UPDATE jobs SET status='failed',stage='failed',progress='Cancelled',error='Cancelled by user; saved prompts can be reused',updated_at=:t WHERE id=:id AND status IN ('queued','running')"
+                    "UPDATE jobs SET stopped_stage=stage,status='failed',stage='failed',progress='Cancelled',error='Cancelled by user; saved prompts can be reused',updated_at=:t WHERE id=:id AND status IN ('queued','running')"
                 ),
                 {"t": now(), "id": job_id},
             )

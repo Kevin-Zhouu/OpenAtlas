@@ -110,7 +110,7 @@ def test_archival_capture_keeps_start_beyond_snapshot_tail_and_final_wins(
     store = DebugStore(tmp_path)
     capture(Container(), store, archive=True)
     snapshot = store.read(job_id)["containers"][0]
-    assert "FIRST EVENT" not in snapshot["agent_log"]
+    assert "FIRST EVENT" in snapshot["agent_log"]
     saved = store.trace(job_id, Container.id)
     assert "FIRST EVENT" in saved["agent_log"] and "LAST EVENT" in saved["agent_log"]
     assert "private-token" not in saved["agent_log"]

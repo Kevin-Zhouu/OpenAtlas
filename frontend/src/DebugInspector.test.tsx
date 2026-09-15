@@ -223,3 +223,33 @@ it('offers downloads for the selected stage and the entire attempt', async () =>
  expect(screen.getByRole('link',{name:'Download validating trace'})).toHaveAttribute('href','/api/jobs/test-job/trace?stage=validating');
  expect(screen.getByRole('link',{name:'Download validating trace'})).toHaveAttribute('download');
 });
+
+it('keeps the reviewer activity visible alongside validation checks', async () => {
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({
+    job:{status:'running',stage:'validating',progress:'Reviewing',request:{provider:'codex'}},
+    containers:[{id:'review',role:'agent',stage:'validating',status:'running',agent_log:JSON.stringify({type:'item.completed',item:{id:'item',type:'agent_message',text:'Reviewing the phone layout'}})}],
+    validation:[{round:1,status:'running',checks:[]}],
+  })}));
+  render(<DebugInspector jobId="job" onClose={()=>{}} />);
+  expect(await screen.findByText('Reviewing the phone layout')).toBeInTheDocument();
+  expect(screen.getByRole('log',{name:'Agent activity'})).toBeInTheDocument();
+});
+
+it('resumes the selected stopped stage in a new attempt', async () => {
+  const fetcher = vi.fn().mockImplementation(async (url: string, options?: RequestInit) => {
+    if (url.endsWith('/resume')) return {ok:true,json:async()=>({id:'resumed'})};
+    if (url.endsWith('/controls')) return {ok:true,json:async()=>({messages:[],preview:null})};
+    return {ok:true,json:async()=>({
+      job:{status:url.includes('/resumed/')?'queued':'failed', stage:'failed', stopped_stage:'validating',
+        resume_stages:['validating'], request:{provider:'demo',resume_stage:url.includes('/resumed/')?'validating':undefined}},
+      containers:[], events:[], updated_at:null,
+    })};
+  });
+  vi.stubGlobal('fetch',fetcher);
+  render(<DebugInspector jobId="stopped" onClose={()=>{}} />);
+  fireEvent.click(await screen.findByRole('button',{name:'Resume validation'}));
+  expect(fetcher).toHaveBeenCalledWith('/api/jobs/stopped/resume',expect.objectContaining({
+    method:'POST',body:JSON.stringify({stage:'validating'}),
+  }));
+  await screen.findByRole('button',{name:'Pause live updates'});
+});

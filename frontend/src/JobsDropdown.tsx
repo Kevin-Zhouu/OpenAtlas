@@ -1,10 +1,14 @@
 import { useRef, useState } from "react";
+import { stageNames, type ResumeStage } from './ResumeActions';
 type Job = {
   id: string;
   notebook_id?: string;
   status: string;
   stage?: string;
   can_continue?: boolean;
+  stopped_stage?: string;
+  resume_stages?: ResumeStage[];
+  resume_stage?: ResumeStage | null;
   progress: string;
   error?: string;
   created_at: string;
@@ -14,25 +18,31 @@ type Job = {
     retry_of?: string;
     continue_job?: string;
     revalidate_job?: string;
+    resume_stage?: ResumeStage;
   };
 };
 export function JobsDropdown({
   jobs,
   onInspect,
   onRetry,
+  onDelete,
+  onResume,
 }: {
   jobs: Job[];
+  onDelete?: (id: string, title: string) => void;
   onInspect: (id: string) => void;
   onRetry?: (id: string, mode: "continue" | "rerun") => Promise<void>;
+  onResume?: (id: string) => Promise<void>;
 }) {
   const [pending, setPending] = useState<string | null>(null);
   const [retryError, setRetryError] = useState("");
-  async function retry(id: string, mode: "continue" | "rerun") {
-    if (!onRetry || pending) return;
+  async function retry(id: string, mode: "resume" | "rerun") {
+    if (pending || (mode === "resume" ? !onResume : !onRetry)) return;
     setPending(id);
     setRetryError("");
     try {
-      await onRetry(id, mode);
+      if (mode === "resume") await onResume!(id);
+      else await onRetry!(id, "rerun");
       setFilter("queued");
     } catch (error) {
       setRetryError(
@@ -109,7 +119,7 @@ export function JobsDropdown({
             <li key={j.id}>
               <strong>{j.request.prompt}</strong>
               <p>
-                <span className="tag">{j.stage || j.status}</span> ·{" "}
+                <span className="job-stage-label">{j.status === 'failed' && j.stopped_stage ? `Stopped during ${stageNames[j.stopped_stage as ResumeStage] || j.stopped_stage}` : j.stage || j.status}</span> ·{" "}
                 {j.request.provider} · {new Date(j.created_at).toLocaleString()}
               </p>
               <p className={j.error ? "jobs-error" : ""}>
@@ -117,44 +127,25 @@ export function JobsDropdown({
               </p>
               {j.request.retry_of && (
                 <p className="hint">
-                  {j.request.continue_job
+                  {j.request.resume_stage ? `Resumed from ${stageNames[j.request.resume_stage]}` : j.request.continue_job
                     ? "Continued from saved work"
                     : "Fresh re-run of a failed job"}
                 </p>
               )}
-              {j.status === "failed" && onRetry && (
-                <>
-                  <div className="job-retry-actions">
-                    <button
-                      className="quiet"
-                      disabled={!!pending || !j.can_continue}
-                      onClick={() => retry(j.id, "continue")}
-                      title={
-                        j.can_continue
-                          ? "Resume the saved source in a new agent session"
-                          : "No saved workspace is available for this attempt"
-                      }
-                    >
-                      Continue
-                    </button>
-                    <button
-                      className="quiet"
-                      disabled={!!pending}
-                      onClick={() => retry(j.id, "rerun")}
-                    >
-                      Re-run
-                    </button>
-                    {pending === j.id && <span role="status">Queueing…</span>}
-                  </div>
-                  <p className="hint">
-                    {j.can_continue
-                      ? "Continue keeps saved work. Re-run starts over."
-                      : "No saved work remains; Re-run starts a fresh attempt."}{" "}
-                    {j.request.provider === "codex" &&
-                      "Uses your current API credits."}
-                  </p>
-                </>
-              )}
+              {j.status === "failed" && (onResume || onRetry) && <>
+                <div className="job-retry-actions">
+                  {onResume && <button className="quiet" disabled={!!pending || !j.resume_stage}
+                    title={j.resume_stage ? `Resume ${stageNames[j.resume_stage]} using saved work` : 'Saved input for the stopped stage is unavailable'}
+                    onClick={() => void retry(j.id, 'resume')}>Resume</button>}
+                  {onRetry && <button className="quiet" disabled={!!pending}
+                    onClick={() => void retry(j.id, 'rerun')}>Re-run</button>}
+                  {pending === j.id && <span role="status">Queueing…</span>}
+                </div>
+                <p className="hint">{j.resume_stage
+                  ? `Resumes ${stageNames[j.resume_stage]} from saved work. Re-run starts over.`
+                  : 'Saved input for the stopped stage is unavailable. Inspect the attempt or start over.'}</p>
+              </>}
+              {onDelete && <button className="quiet delete-link" onClick={() => { dropdown.current?.removeAttribute('open'); onDelete(j.id,j.request.prompt); }}>Delete permanently</button>}
               {j.request.revalidate_job && (
                 <p className="hint">
                   Recheck of a retained Notebook · no new inference

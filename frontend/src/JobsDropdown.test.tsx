@@ -38,21 +38,49 @@ it("filters failed jobs and opens their debug inspector", () => {
 });
 it('continues a failed job with saved work and shows the queued attempt', async () => {
   const retry = vi.fn().mockResolvedValue(undefined);
-  render(<JobsDropdown onInspect={vi.fn()} onRetry={retry} jobs={[{
-    id:'failed', status:'failed', can_continue:true, progress:'Failed', error:'No credits',
+  render(<JobsDropdown onInspect={vi.fn()} onResume={retry} jobs={[{
+    id:'failed', status:'failed', resume_stage:'building', can_continue:true, progress:'Failed', error:'No credits',
     created_at:'2026-09-14', request:{prompt:'Learn memory',provider:'codex'},
   }]} />);
   fireEvent.click(screen.getByText('Jobs'));
-  fireEvent.click(screen.getByRole('button', {name:'Continue'}));
-  expect(retry).toHaveBeenCalledWith('failed','continue');
+  fireEvent.click(screen.getByRole('button', {name:'Resume'}));
+  expect(retry).toHaveBeenCalledWith('failed');
   expect(await screen.findByText('No queued jobs.')).toBeInTheDocument();
 });
 it('offers rerun but disables continue when older work was not retained', () => {
-  render(<JobsDropdown onInspect={vi.fn()} onRetry={vi.fn()} jobs={[{
+  render(<JobsDropdown onInspect={vi.fn()} onRetry={vi.fn()} onResume={vi.fn()} jobs={[{
     id:'failed', status:'failed', can_continue:false, progress:'Failed', created_at:'2026-09-14',
     request:{prompt:'Learn memory',provider:'codex'},
   }]} />);
   fireEvent.click(screen.getByText('Jobs'));
-  expect(screen.getByRole('button', {name:'Continue'})).toBeDisabled();
+  expect(screen.getByRole('button', {name:'Resume'})).toBeDisabled();
   expect(screen.getByRole('button', {name:'Re-run'})).toBeEnabled();
+});
+
+it('resumes validation separately from editing', async () => {
+  const resume = vi.fn().mockResolvedValue(undefined);
+  const retry = vi.fn();
+  render(<JobsDropdown onInspect={vi.fn()} onRetry={retry} onResume={resume} jobs={[{
+    id:'saved', status:'failed', stopped_stage:'validating', can_continue:true,
+    resume_stage:'validating', resume_stages:['building','validating'], progress:'Stopped', created_at:'2026-09-15',
+    request:{prompt:'Saved Notebook',provider:'codex'},
+  }]} />);
+  fireEvent.click(screen.getByText('Jobs'));
+  expect(screen.getByText('Stopped during validation')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', {name:'Resume'}));
+  expect(resume).toHaveBeenCalledWith('saved');
+  expect(screen.queryByRole('button',{name:'Resume implementation'})).not.toBeInTheDocument();
+  expect(retry).not.toHaveBeenCalled();
+  expect(await screen.findByText('No queued jobs.')).toBeInTheDocument();
+});
+
+it('keeps a failed resume visible with its error', async () => {
+  render(<JobsDropdown onInspect={vi.fn()} onResume={vi.fn().mockRejectedValue(new Error('Saved evidence changed'))} jobs={[{
+    id:'saved', status:'failed', resume_stage:'publishing', resume_stages:['publishing'], progress:'Stopped', created_at:'2026-09-15',
+    request:{prompt:'Saved Notebook',provider:'codex'},
+  }]} />);
+  fireEvent.click(screen.getByText('Jobs'));
+  fireEvent.click(screen.getByRole('button', {name:'Resume'}));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Saved evidence changed');
+  expect(screen.getByRole('button', {name:'Resume'})).toBeEnabled();
 });

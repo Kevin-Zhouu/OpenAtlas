@@ -48,7 +48,7 @@ def extract_output(chunks, destination, secrets=()):
     # A returned workspace is a snapshot, not an overlay: repairs can delete files.
     # Validate everything in staging before replacing any existing deliverable.
     with tempfile.TemporaryDirectory(
-        prefix="openatlas-output-", dir=destination.parent
+        prefix=destination.name + "-output-", dir=destination.parent
     ) as temporary:
         staged = Path(temporary) / "incoming"
         staged.mkdir()
@@ -504,7 +504,7 @@ class DockerExecutor:
                         user="1000:1000",
                     )
                     with tempfile.TemporaryDirectory(
-                        prefix="openatlas-checkpoint-"
+                        prefix=request["job_id"] + "-checkpoint-", dir=workspace.parent
                     ) as tmp:
                         saved = Path(tmp)
                         extract_output(

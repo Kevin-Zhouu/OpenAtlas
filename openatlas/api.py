@@ -1,7 +1,6 @@
 import ipaddress
 import json
 import os
-import secrets
 from typing import Optional
 from urllib.parse import urlsplit
 
@@ -23,6 +22,7 @@ from .reader import reader_document
 from .repository import Repository
 from .skill_editor import SkillEditor
 from .skills import SkillCatalog
+from .sessions import LoginLimiter, SESSION_SECONDS, equal_secret, issue_session, valid_session
 from .subscription import SubscriptionStore, auth_secrets
 from .trace_export import STAGES, trace_archive
 from .validation_report import reports as validation_reports
@@ -100,13 +100,17 @@ class RetryJob(BaseModel):
     mode: str = Field(default="continue", pattern=r"^(continue|rerun)$")
 
 
+class ResumeJob(BaseModel):
+    stage: Optional[str] = Field(default=None, pattern=r"^(planning|building|validating|publishing)$")
+
+
 class PhoneUpdate(BaseModel):
     enabled: bool
     rotate: bool = False
 
 
 class Login(BaseModel):
-    token: str
+    token: str = Field(min_length=1, max_length=4096)
 
 
 def create_app(repo=None, catalog=None, store=None, credentials=None):
@@ -189,6 +193,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         return network_url(network_state) if network_state else lan_url
 
     phone = PhoneAccess(repo.data, access_token)
+    login_limiter = LoginLimiter()
 
     def desktop_request(request):
         # The host launcher maps this socket exclusively to host loopback.
@@ -240,6 +245,12 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 headers={"Retry-After": "3", "Cache-Control": "no-store"},
             )
         if path.startswith("/api/"):
+            if path == "/api/session" and request.method == "POST" and not login_limiter.allow():
+                return JSONResponse(
+                    {"detail": "Too many sign-in attempts. Try again in a minute."},
+                    status_code=429,
+                    headers={"Retry-After": "60", "Cache-Control": "no-store"},
+                )
             # Local access is implicit authority: opaque generated frames and
             # cross-site pages must not use it, including on read endpoints.
             if local and (
@@ -268,7 +279,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 not local
                 and (desktop_port or access_token)
                 and path != "/api/session"
-                and not secrets.compare_digest(
+                and not valid_session(
                     request.cookies.get("openatlas_session", ""),
                     sharing["token"] if sharing else access_token,
                 )
@@ -277,18 +288,38 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                     {"detail": "Enter the host access token to open this library"},
                     status_code=401,
                 )
+        parts = path.strip("/").split("/")
+        target = None
+        if len(parts) >= 3 and parts[:2] == ["api", "jobs"]:
+            record = repo.job(parts[2])
+            target = record["notebook_id"] if record else None
+        elif len(parts) >= 3 and parts[:2] == ["api", "notebooks"]:
+            target = parts[2]
+        elif len(parts) >= 2 and parts[0] == "artifacts":
+            target = parts[1]
+        elif len(parts) >= 2 and parts[0] == "previews":
+            record = repo.job(parts[1])
+            target = record["notebook_id"] if record else None
+        if target and repo.deleting(target):
+            if request.method == "DELETE":
+                return JSONResponse(
+                    {"notebook_id": target, "status": "deleting"}, status_code=202
+                )
+            return JSONResponse(
+                {"detail": "Notebook is being permanently deleted"},
+                status_code=410,
+                headers={"Cache-Control": "no-store"},
+            )
         response = await call_next(request)
+        if request.method == "DELETE" and response.status_code == 202:
+            response.headers["Clear-Site-Data"] = '"cache"'
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         if path.startswith(("/artifacts/", "/previews/")):
             base = browser_origin(request) + "/".join(path.split("/")[:4]) + "/"
             response.headers["Content-Security-Policy"] = config.artifact_csp(base)
             response.headers["Access-Control-Allow-Origin"] = "*"
-            response.headers["Cache-Control"] = (
-                "no-store"
-                if path.startswith("/previews/") or "reader" in request.query_params
-                else "public,max-age=31536000,immutable"
-            )
+            response.headers["Cache-Control"] = "no-store"
         else:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
@@ -299,15 +330,15 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     @app.post("/api/session")
     def login(body: Login, response: Response, request: Request):
         session_token = phone.read()["token"] if desktop_port else access_token
-        if not session_token or not secrets.compare_digest(body.token, session_token):
+        if not session_token or not equal_secret(body.token, session_token):
             raise HTTPException(403, "Invalid access token")
         response.set_cookie(
             "openatlas_session",
-            session_token,
+            issue_session(session_token),
             httponly=True,
             samesite="strict",
             secure=browser_origin(request).startswith("https://"),
-            max_age=30 * 24 * 60 * 60,
+            max_age=SESSION_SECONDS,
             path="/",
         )
         return {"ok": True}
@@ -601,9 +632,68 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 job,
                 can_continue=job["status"] == "failed"
                 and store.checkpoint_path(job["id"]) is not None,
+                resume_stages=resume_stages(job),
+                resume_stage=default_resume_stage(job),
             )
             for job in repo.list_jobs()
         ]
+
+    def resume_stages(job):
+        if job["status"] != "failed":
+            return []
+        stages = []
+        request = job["request"]
+        if request.get("planning_enabled") and not request.get("build_prompt"):
+            stages.append("planning")
+        if store.checkpoint_path(job["id"]) or request.get("build_prompt") or not request.get("planning_enabled"):
+            stages.append("building")
+        if store.can_validate_checkpoint(job["id"]):
+            stages.append("validating")
+        if store.publication_receipt(job["id"]):
+            stages.append("publishing")
+        return stages
+
+    def default_resume_stage(job):
+        available = resume_stages(job)
+        stopped = job.get("stopped_stage")
+        if stopped in available:
+            return stopped
+        # Legacy publication failures without a trusted receipt must recheck
+        # the saved build. Never silently send validation failures to a builder.
+        if stopped in ("validating", "publishing"):
+            return "validating" if "validating" in available else None
+        if stopped == "planning":
+            return "building" if "building" in available else None
+        for stage in ("validating", "planning", "building"):
+            if stage in available:
+                return stage
+        return None
+
+    @app.post("/api/jobs/{job_id}/resume", status_code=202)
+    def resume_job(job_id: str, body: ResumeJob):
+        original = repo.job(job_id)
+        if not original:
+            raise HTTPException(404, "Generation not found")
+        body.stage = body.stage or default_resume_stage(original)
+        if body.stage not in resume_stages(original):
+            raise HTTPException(409, "This stage has no saved input available to resume.")
+        request = dict(original["request"])
+        for key in ("revalidate_job", "continue_job", "resume_job", "resume_stage",
+                    "validation_feedback", "previous_error", "job_id"):
+            request.pop(key, None)
+        request.update(resume_job=job_id, resume_stage=body.stage, retry_of=job_id)
+        settings = repo.settings()
+        request.update(inference_auth=settings["inference_auth"],
+                       generation_timeout_minutes=settings["generation_timeout_minutes"])
+        if body.stage != "planning":
+            request["prompt_only"] = False
+        if body.stage == "building" and store.checkpoint_path(job_id):
+            request["continue_job"] = job_id
+            request["previous_error"] = (original.get("error") or "")[:2000]
+        try:
+            return repo.enqueue(request, original["notebook_id"], retry_of=job_id)
+        except ValueError as error:
+            raise HTTPException(409, str(error))
 
     @app.post("/api/jobs/{job_id}/retry", status_code=202)
     def retry_job(job_id: str, body: RetryJob):
@@ -619,6 +709,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         request = dict(original["request"])
         for key in (
             "revalidate_job",
+            "resume_job",
+            "resume_stage",
             "continue_job",
             "validation_feedback",
             "previous_error",
@@ -654,9 +746,28 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             raise HTTPException(
                 409, "Only failed jobs with retained artifacts can be rechecked"
             )
-        return repo.enqueue(
-            dict(original["request"], revalidate_job=job_id), original["notebook_id"]
-        )
+        request = dict(original["request"], revalidate_job=job_id)
+        for key in ("resume_job", "resume_stage", "continue_job"):
+            request.pop(key, None)
+        return repo.enqueue(request, original["notebook_id"])
+
+    @app.delete("/api/notebooks/{notebook_id}", status_code=202)
+    def delete_notebook(notebook_id: str):
+        try:
+            return repo.request_deletion(notebook_id)
+        except ValueError as error:
+            raise HTTPException(404, str(error))
+
+    @app.delete("/api/jobs/{job_id}", status_code=202)
+    def delete_job(job_id: str):
+        job = repo.job(job_id)
+        if not job:
+            raise HTTPException(404, "Job not found")
+        return repo.request_deletion(job["notebook_id"])
+
+    @app.get("/api/deletions")
+    def deletions():
+        return repo.rows("SELECT notebook_id FROM deletion_requests")
 
     @app.get("/api/jobs/{job_id}/controls")
     def job_controls(job_id: str):
@@ -748,6 +859,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         ]
         for key in (
             "continue_job",
+            "resume_job",
+            "resume_stage",
             "revalidate_job",
             "retry_of",
             "validation_feedback",
@@ -774,6 +887,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             "planning_attempt_id",
             "prompt_revision_id",
             "continue_job",
+            "resume_job",
+            "resume_stage",
             "retry_of",
             "revalidate_job",
             "job_id",
@@ -793,6 +908,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         job = repo.job(job_id)
         if not job:
             raise HTTPException(404, "Generation not found")
+        job = dict(job, resume_stages=resume_stages(job), resume_stage=default_resume_stage(job))
         debug = DebugStore(repo.data)
         request = job["request"]
         agent_used = (

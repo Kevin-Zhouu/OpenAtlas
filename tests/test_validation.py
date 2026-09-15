@@ -44,6 +44,46 @@ def workspace(tmp_path, script, feedback, target=""):
     return tmp_path
 
 
+@pytest.mark.parametrize("allow_blob_fetch", [False, True])
+def test_embedded_texture_fetch_in_opaque_reader(tmp_path, monkeypatch, allow_blob_fetch):
+    from openatlas import config
+
+    if not allow_blob_fetch:
+        monkeypatch.setattr(
+            config, "ARTIFACT_CSP",
+            config.ARTIFACT_CSP.replace(
+                "connect-src http: https: blob:", "connect-src http: https:"
+            ),
+        )
+    # Exercise the object-URL fetch/decode path used by embedded GLTF textures.
+    # Completing the interaction on failure also checks the final runtime gate.
+    path = workspace(tmp_path, """
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 2;
+        canvas.getContext('2d').fillRect(0, 0, 2, 2);
+        canvas.toBlob(async blob => {
+            const url = URL.createObjectURL(blob);
+            try {
+                if (!url.startsWith('blob:null/')) throw new Error('Reader is not opaque');
+                const response = await fetch(url);
+                const bitmap = await createImageBitmap(await response.blob());
+                if (bitmap.width !== 2) throw new Error('Texture did not decode');
+                bitmap.close();
+            } catch (error) {
+                console.error('Texture fetch failed: ' + error.message);
+            } finally {
+                URL.revokeObjectURL(url);
+                document.querySelector('#feedback').textContent = 'A visible explanation';
+            }
+        }, 'image/png');
+    """, '<p id="feedback">Waiting for texture</p>')
+    if allow_blob_fetch:
+        assert validate(path)["title"] == "Expandable lesson"
+    else:
+        with pytest.raises(ValueError, match="Browser validation failed:.*connect-src"):
+            validate(path)
+
+
 @pytest.mark.parametrize("kind", ["reveal", "insert", "reveal-without-text"])
 def test_feedback_can_be_revealed_or_created(tmp_path, kind):
     if kind == "insert":

@@ -16,6 +16,12 @@ On Homebrew installations where the plugin isn't linked, use `docker-compose` in
 
 ## Real Codex generation
 
+For a dedicated Linux VPS, see the [guided private VPS installer](docs/vps-installation.md)
+and [security review](docs/security-review.md). It adds `openatlas start`,
+`shutdown`, `doctor`, token rotation, and optional boot startup using private
+Tailscale HTTPS. This is a preview deployment flow, not approval for direct public
+Internet exposure with only a secret URL.
+
 ```sh
 docker compose --profile build build generation-image
 cp .env.example .env
@@ -206,20 +212,33 @@ In job debug → relay container logs, new generations record `requested_model` 
 `response_model` (when supplied in the API stream). These are model identifiers
 only; prompts, answers, and credentials are not logged by this diagnostic.
 
-### Continue or re-run failed generations
+### Resume a stopped stage or re-run a generation
 
-Open **Jobs → Failed**. After replenishing API credits, choose **Continue** to
-resume saved source, or **Re-run** to start over with the original prompt, model,
-skills, duration and instructions. Both create a new queued attempt on the same
-Notebook and keep the old failure available for debugging. They use current
-credentials and may incur new inference charges. An active retry blocks duplicate
-submissions for the same failed attempt.
+Open **Jobs → Failed → Resume** to automatically continue from the stopped stage.
+The menu shows one Resume button and explains which stage it will use.
+Explicit stage choices are available inside the generation inspector:
 
-Continue launches a fresh disposable agent session with the saved project; it
-does not resume a live process or restore the previous model conversation. Codex
-is instructed to inspect and finish the existing files, rebuild and pass browser
-validation before publication. Installed skills must still match the recorded
-selection. Re-run of a failed revision starts from that revision's original base.
+- **Resume planning** reruns an interrupted planner using the original request.
+- **Resume implementation** starts a coding session with the saved source and prompt.
+- **Resume validation** checks the latest saved build without implementation or
+  automatic repairs. Required independent experience review still runs and may
+  use inference credits. If checks fail, the draft stays saved for inspection or
+  an explicit implementation resume.
+- **Resume publishing** saves an already validated artifact. This is offered only
+  when trusted validation evidence matches the saved artifact and current CSP.
+  Older jobs without this evidence must resume validation first.
+
+Each action creates a new attempt on the same Notebook and preserves earlier
+attempts. Checks restart from the beginning of their stage, not the interrupted
+browser operation or model conversation. The stopped stage is retained across
+cancellation, failure and expired generation leases.
+
+**Continue editing** (the legacy Continue action) explicitly invokes the builder.
+**Re-run** starts over with the original request and saved prompt. These use the
+current credentials and may incur inference charges. An active retry blocks
+duplicate submissions for the same failed attempt. Installed skills must still
+match the recorded selection. Re-run of a failed revision starts from that
+revision's original base.
 
 Partial `source/`, `dist/` and manifest files are collected privately before normal
 failure cleanup, including credit failures. Dependencies, agent credentials,
@@ -471,3 +490,27 @@ docker compose -f compose.yaml -f .lan/compose.json up -d --no-build app
 
 Rebuild the application image after updating this code. Restart the runner only
 after active generations finish; it retains Codex sessions in memory.
+
+### Permanent deletion
+
+Use **Delete** beside a Notebook, or **Delete permanently** in Jobs. Confirm the
+Notebook and all related attempts: versions, prompts, steering, source, previews,
+failed builds, logs and diagnostics are removed together. Selecting a job has the
+same Notebook-wide scope because attempts can copy earlier sensitive inputs.
+
+Access is revoked as soon as deletion is queued. The running worker stops affected
+generations and drains active writers before purging files and containers. The UI
+shows deletion pending until cleanup finishes; the runner must be running. SQLite
+uses secure deletion, compaction and WAL truncation. Deletion requests survive a
+restart and cleanup retries after failures. Job workspaces are scoped beneath
+`data/workspaces` so abandoned temporary copies can also be removed.
+
+Installed skills, shared skill-input caches and provider settings remain separate
+from Notebook content. Downloaded/exported files, other devices’ existing copies,
+backups and inference-provider retention cannot be erased by this local action.
+Published responses now use `no-store`; deletion asks the current browser to clear
+its HTTP cache.
+
+Activity no longer rolls over after 60 items or a 128 KiB tail. Complete retained
+events stay in chronological order across polls and separate agent runs, including
+validation review. Each run has a 10 MiB log bound, displayed when reached.

@@ -244,6 +244,67 @@ class ArtifactStore:
             elif source.is_file():
                 shutil.copy(source, workspace / name)
 
+    def can_validate_checkpoint(self, job_id):
+        path = self.checkpoint_path(job_id)
+        if path is None:
+            return False
+        try:
+            # Capability discovery only; the validator checks the full tree.
+            manifest = json.loads((path / "manifest.json").read_text())
+            entry = (path / "dist" / manifest.get("entrypoint", "index.html")).resolve()
+            return (path / "source").is_dir() and entry.is_relative_to(
+                (path / "dist").resolve()
+            ) and entry.suffix == ".html" and entry.is_file()
+        except (OSError, ValueError, TypeError, AttributeError):
+            return False
+
+    def retain_publication(self, job_id, workspace, manifest):
+        """Trusted receipt, written only after all required validation succeeds."""
+        from .quality import artifact_fingerprint
+
+        self.checkpoint(job_id, workspace)
+        path = self.checkpoint_path(job_id)
+        for name in ("validation.json", "preview.png", "preview-mobile.png"):
+            if (workspace / name).is_file():
+                shutil.copy(workspace / name, path / name)
+        receipt = {
+            "fingerprint": artifact_fingerprint(path),
+            "policy": config.ARTIFACT_CSP,
+            "manifest": manifest,
+        }
+        temporary = path / "publication.json.tmp"
+        temporary.write_text(json.dumps(receipt))
+        temporary.replace(path / "publication.json")
+
+    def publication_receipt(self, job_id):
+        from .quality import artifact_fingerprint
+
+        path = self.checkpoint_path(job_id)
+        if path is None or not (path / "publication.json").is_file():
+            return None
+        try:
+            safe_tree(path)
+            receipt = json.loads((path / "publication.json").read_text())
+            validation = json.loads((path / "validation.json").read_text())
+            if (receipt["fingerprint"] == artifact_fingerprint(path)
+                    and receipt["policy"] == config.ARTIFACT_CSP
+                    and validation.get("passed") is True):
+                return receipt
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+        return None
+
+    def seed_publication(self, job_id, workspace):
+        receipt = self.publication_receipt(job_id)
+        if receipt is None:
+            raise ValueError("Saved publication evidence is unavailable or changed. Resume validation instead.")
+        self.seed_checkpoint(job_id, workspace)
+        path = self.checkpoint_path(job_id)
+        for name in ("validation.json", "preview.png", "preview-mobile.png"):
+            if (path / name).is_file():
+                shutil.copy(path / name, workspace / name)
+        return receipt["manifest"]
+
     def seed(self, notebook, version, workspace):
         shutil.copytree(
             self.version_path(notebook, version) / "source",

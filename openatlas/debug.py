@@ -27,7 +27,15 @@ class DebugStore:
 
     def read(self, job_id):
         try:
-            return json.loads(self.path(job_id).read_text())
+            data = json.loads(self.path(job_id).read_text())
+            for container in data["containers"]:
+                trace = self.trace(job_id, container["id"])
+                if trace and trace.get("agent_log"):
+                    lines = (
+                        trace["agent_log"] + "\n" + container.get("agent_log", "")
+                    ).splitlines()
+                    container["agent_log"] = "\n".join(dict.fromkeys(lines))
+            return data
         except FileNotFoundError:
             return {"containers": [], "updated_at": None}
 
@@ -40,6 +48,8 @@ class DebugStore:
 
     def record_invocation(self, job_id, command, request, secrets=(), execution=None):
         with self.lock:
+            if not self.job_retained(job_id):
+                return
             records = self.invocations(job_id)
             records.append(
                 {
@@ -68,10 +78,12 @@ class DebugStore:
                 }
             )
             self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-            fd, tmp = tempfile.mkstemp(dir=self.directory)
+            fd, tmp = tempfile.mkstemp(
+                prefix=str(UUID(job_id)) + "-", dir=self.directory
+            )
             try:
                 with os.fdopen(fd, "w") as out:
-                    out.write(redact(json.dumps(records[-8:]), secrets))
+                    out.write(redact(json.dumps(records), secrets))
                 os.replace(
                     tmp, self.directory / (str(UUID(job_id)) + ".invocations.json")
                 )
@@ -85,6 +97,8 @@ class DebugStore:
 
     def save_trace(self, job_id, container_id, content):
         with self.lock:
+            if not self.job_retained(job_id):
+                return
             previous = self.trace(job_id, container_id)
             if previous and (
                 previous.get("captured_at", "") > content.get("captured_at", "")
@@ -107,17 +121,64 @@ class DebugStore:
         except FileNotFoundError:
             return None
 
+    def job_retained(self, job_id):
+        database = self.directory.parent / "openatlas.sqlite3"
+        if not database.exists():
+            return True
+        import sqlite3
+
+        with sqlite3.connect(database) as connection:
+            return bool(
+                connection.execute(
+                    "SELECT 1 FROM jobs WHERE id=?", (job_id,)
+                ).fetchone()
+            )
+
     def record(self, job_id, snapshot):
         with self.lock:
+            if not self.job_retained(job_id):
+                return
             data = self.read(job_id)
+            previous = next(
+                (c for c in data["containers"] if c["id"] == snapshot["id"]), {}
+            )
+            # Merge complete JSON events, retaining start/update/completion order.
+            lines = list(
+                dict.fromkeys(
+                    (
+                        previous.get("agent_log", "")
+                        + "\n"
+                        + snapshot.get("agent_log", "")
+                    ).splitlines()
+                )
+            )
+            events = []
+            size = 0
+            for line in lines:
+                try:
+                    json.loads(line)
+                except ValueError:
+                    continue
+                size += len(line.encode("utf-8")) + 1
+                if size > MAX_TRACE_BYTES:
+                    snapshot["history_truncated"] = True
+                    break
+                events.append(line)
+            snapshot["agent_log"] = (
+                "\n".join(events)
+                if events
+                else previous.get("agent_log") or snapshot.get("agent_log", "")
+            )
             containers = [c for c in data["containers"] if c["id"] != snapshot["id"]]
             containers.append(snapshot)
             data = {
-                "containers": containers[-16:],
+                "containers": containers,
                 "updated_at": snapshot["observed_at"],
             }
             self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-            fd, tmp = tempfile.mkstemp(dir=self.directory)
+            fd, tmp = tempfile.mkstemp(
+                prefix=str(UUID(job_id)) + "-", dir=self.directory
+            )
             try:
                 with os.fdopen(fd, "w") as out:
                     json.dump(data, out)
@@ -194,11 +255,15 @@ def capture(
             pass
         if role == "agent":
             result = container.exec_run(
-                ["tail", "-c", "131072", "/tmp/codex-output.log"]
+                ["head", "-c", str(MAX_TRACE_BYTES), "/tmp/codex-output.log"]
             )
             if result.exit_code == 0:
+                raw = result.output
+                snapshot["history_truncated"] = len(raw) >= MAX_TRACE_BYTES
+                if snapshot["history_truncated"]:
+                    raw = raw.rsplit(b"\n", 1)[0] if b"\n" in raw else b""
                 snapshot["agent_log"] = redact(
-                    result.output.decode("utf-8", errors="replace"), secrets
+                    raw.decode("utf-8", errors="replace"), secrets
                 )
     try:
         snapshot["container_log"] = redact(

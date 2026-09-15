@@ -5,6 +5,7 @@ import {
   type GenerationMetadata,
 } from "./GenerationDetails";
 import { JobControls } from "./JobControls";
+import { ResumeActions, type ResumeStage } from './ResumeActions';
 import { AgentActivity } from "./AgentActivity";
 import { ValidationDetails, type ValidationRound } from "./ValidationDetails";
 
@@ -56,6 +57,8 @@ type Snapshot = {
   planning_job_id?: string;
   job: {
     stage?: string;
+    stopped_stage?: Stage;
+    resume_stages?: ResumeStage[];
     status: string;
     progress: string;
     error?: string;
@@ -70,10 +73,12 @@ type Snapshot = {
       build_prompt?: string;
       prompt_revision_id?: string;
       revalidate_job?: string;
+      resume_stage?: Stage;
     };
   };
 };
 function currentStage(data: Snapshot): Stage {
+  if (data.job.status === 'failed' && stages.some(s => s.id === data.job.stopped_stage)) return data.job.stopped_stage as Stage;
   if (stages.some((s) => s.id === data.job.stage))
     return data.job.stage as Stage;
   if (data.job.status === "succeeded")
@@ -83,6 +88,7 @@ function currentStage(data: Snapshot): Stage {
     .at(-1)?.stage;
   if (data.job.status === "failed" && recorded) return recorded as Stage;
   if (data.job.request.revalidate_job) return "validating";
+  if (data.job.request.resume_stage) return data.job.request.resume_stage;
   if (
     data.job.request.planning_enabled &&
     !data.job.request.build_prompt &&
@@ -179,7 +185,7 @@ export function DebugInspector({
     if (id === "planning" && !hasPlan) return "skipped";
     if (data.job.request.prompt_only && id !== "planning") return "pending";
     if (id === "planning" && data.job.request.build_prompt) return "complete";
-    if (id === "building" && data.job.request.revalidate_job) return "skipped";
+    if (id === "building" && (data.job.request.revalidate_job || ['validating', 'publishing'].includes(data.job.request.resume_stage || ''))) return "skipped";
     if (data.job.status === "queued") return "pending";
     if (id === "validating" && id !== current && (data.validation?.length || data.events?.some(e => e.stage === "validating"))) {
       const latest = data.validation?.at(-1);
@@ -363,6 +369,17 @@ export function DebugInspector({
                   </button>
                 )}
               </div>
+              {data.job.status === 'failed' && data.job.resume_stages?.includes(stage) && <ResumeActions
+                stages={[stage]} onResume={async resumeStage => {
+                  const response = await fetch(`/api/jobs/${encodeURIComponent(activeJob)}/resume`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stage: resumeStage }),
+                  });
+                  const result = await response.json();
+                  if (!response.ok) throw new Error(result.detail || 'Could not resume this stage.');
+                  setActiveJob(result.id);
+                }}
+              />}
               {(stage === "building" || stage === "validating") && <JobControls
                 key={activeJob} jobId={activeJob} stage={stage}
                 running={data.job.status === "running" && stage === current}
@@ -451,7 +468,10 @@ export function DebugInspector({
               {tab === "activity" && (
                 <>
                   {stage === "validating" && !!data.validation?.length ? (
-                    <ValidationDetails rounds={data.validation} />
+                    <>
+                      <ValidationDetails rounds={data.validation} />
+                      {containers.some(c => c.role === "agent") && <AgentActivity sources={containers.filter(c => c.role === "agent")} running={!!live} paused={paused} progress={data.job.progress} />}
+                    </>
                   ) : containers.some((c) => c.role === "agent") ? (
                     <AgentActivity
                       sources={containers.filter((c) => c.role === "agent")}

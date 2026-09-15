@@ -125,3 +125,12 @@ it('shows actual planner resource reads as observable activity', () => {
   expect(rows[0].text).toContain('Read local--anatomy/notes.md');
   expect(rows[0].status).toBe('completed');
 });
+
+it('keeps earlier activity when a run grows beyond sixty events', () => {
+  const events = Array.from({length:75}, (_,i) => JSON.stringify({type:'item.completed',item:{id:String(i),type:'agent_message',text:`Event ${i}`}}));
+  const view = render(<AgentActivity sources={[{id:'one',status:'running',agent_log:events.slice(0,60).join('\n')}]} running paused={false} progress="Reviewing" />);
+  view.rerender(<AgentActivity sources={[{id:'one',status:'running',agent_log:events.join('\n')}]} running paused={false} progress="Reviewing" />);
+  expect(screen.getByText('Event 0')).toBeInTheDocument();
+  expect(screen.getByText('Event 74')).toBeInTheDocument();
+  expect(parseActivity(events.join('\n'),'one')).toHaveLength(75);
+});
