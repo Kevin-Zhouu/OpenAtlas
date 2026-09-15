@@ -120,38 +120,108 @@ def test_revalidation_publishes_without_inference_preserving_failure(tmp_path):
 
 def test_teaching_source_attachments_are_plain_text_not_executed(tmp_path):
     from openatlas.artifacts import artifact_media_type
-    w = workspace(tmp_path, "document.querySelector('#feedback').textContent='A visible explanation'", '<p id="feedback"></p>')
-    for name, content in {'Wire.cs':'public class Wire {}', 'Demo.csproj':'<Project/>', 'certs.sh':'#!/bin/sh\nexit 1', 'README.md':'# Teaching prototype'}.items():
-        file = w/'dist'/name
+
+    w = workspace(
+        tmp_path,
+        "document.querySelector('#feedback').textContent='A visible explanation'",
+        '<p id="feedback"></p>',
+    )
+    for name, content in {
+        "Wire.cs": "public class Wire {}",
+        "Demo.csproj": "<Project/>",
+        "certs.sh": "#!/bin/sh\nexit 1",
+        "README.md": "# Teaching prototype",
+    }.items():
+        file = w / "dist" / name
         file.write_text(content)
-        assert artifact_media_type(file) == 'text/plain; charset=utf-8'
-    assert validate(w)['entrypoint'] == 'index.html'
-    (w/'dist/Wire.cs').write_bytes(b'\x00binary')
-    with pytest.raises(ValueError, match='binary data'): validate(w)
-    (w/'dist/Wire.cs').unlink()
-    (w/'dist/server.exe').write_bytes(b'MZ')
-    with pytest.raises(ValueError, match='Unsupported static artifact'): validate(w)
+        assert artifact_media_type(file) == "text/plain; charset=utf-8"
+    assert validate(w)["entrypoint"] == "index.html"
+    (w / "dist/Wire.cs").write_bytes(b"\x00binary")
+    with pytest.raises(ValueError, match="binary data"):
+        validate(w)
+    (w / "dist/Wire.cs").unlink()
+    (w / "dist/server.exe").write_bytes(b"MZ")
+    with pytest.raises(ValueError, match="Unsupported static artifact"):
+        validate(w)
 
 
-@pytest.mark.parametrize('action', ['select', 'fill'])
+@pytest.mark.parametrize("action", ["select", "fill"])
 def test_dropdown_selection_and_legacy_fill(tmp_path, action):
     w = workspace(tmp_path, "", '<p id="feedback"></p>')
-    html = '<!doctype html><html><body><p>' + 'Learn how changing a request changes its routing. ' * 6 + '</p><select id="request"><option value="one">One order</option><option value="all">All orders</option></select><p id="feedback">One order</p><script>document.querySelector("#request").addEventListener("change",e=>document.querySelector("#feedback").textContent=e.target.value==="all"?"All packed orders":"One order");</script></body></html>'
-    (w/'dist/index.html').write_text(html)
-    manifest=json.loads((w/'manifest.json').read_text())
-    manifest['checks']=[{'selector':'#request','action':action,'value':'all','expect_selector':'#feedback','expect_text':'All packed orders'}]
-    (w/'manifest.json').write_text(json.dumps(manifest))
-    assert validate(w)['entrypoint']=='index.html'
-    manifest['checks'][0]['value']='missing-option'
-    (w/'manifest.json').write_text(json.dumps(manifest))
-    with pytest.raises(ValueError, match='Interaction check 1 failed'):
+    html = (
+        "<!doctype html><html><body><p>"
+        + "Learn how changing a request changes its routing. " * 6
+        + '</p><select id="request"><option value="one">One order</option><option value="all">All orders</option></select><p id="feedback">One order</p><script>document.querySelector("#request").addEventListener("change",e=>document.querySelector("#feedback").textContent=e.target.value==="all"?"All packed orders":"One order");</script></body></html>'
+    )
+    (w / "dist/index.html").write_text(html)
+    manifest = json.loads((w / "manifest.json").read_text())
+    manifest["checks"] = [
+        {
+            "selector": "#request",
+            "action": action,
+            "value": "all",
+            "expect_selector": "#feedback",
+            "expect_text": "All packed orders",
+        }
+    ]
+    (w / "manifest.json").write_text(json.dumps(manifest))
+    assert validate(w)["entrypoint"] == "index.html"
+    manifest["checks"][0]["value"] = "missing-option"
+    (w / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="Interaction check 1 failed"):
         validate(w)
 
 
 def test_select_action_rejects_non_dropdown(tmp_path):
-    w=workspace(tmp_path,'', '<p id="feedback">A visible explanation</p>')
-    manifest=json.loads((w/'manifest.json').read_text())
-    manifest['checks'][0].update(action='select', value='all')
-    (w/'manifest.json').write_text(json.dumps(manifest))
-    with pytest.raises(ValueError, match='requires a <select>'):
+    w = workspace(tmp_path, "", '<p id="feedback">A visible explanation</p>')
+    manifest = json.loads((w / "manifest.json").read_text())
+    manifest["checks"][0].update(action="select", value="all")
+    (w / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="requires a <select>"):
         validate(w)
+
+
+def test_validation_rounds_keep_pass_failure_and_unrun_evidence(tmp_path):
+    from openatlas.validation_report import recording
+
+    repo = Repository(tmp_path / "data")
+    job = repo.enqueue({"prompt": "Explain a motor", "provider": "demo", "skills": []})
+    repo.claim(1)
+    work = tmp_path / "work"
+    work.mkdir()
+    workspace(work, "", '<p id="feedback" hidden>A visible explanation</p>')
+    with pytest.raises(ValueError, match="Interaction check 1 failed"):
+        with recording(repo.data, job["id"], 0):
+            validate(work)
+    client = TestClient(create_app(repo), base_url="http://localhost")
+    report = client.get(f"/api/jobs/{job['id']}/debug").json()["validation"][0]
+    checks = {c["id"]: c for c in report["checks"]}
+    assert report["status"] == "failed"
+    assert checks["source"]["status"] == "passed"
+    assert checks["interaction-1"]["status"] == "failed"
+    assert checks["interaction-1"]["definition"]["selector"] == "#toggle"
+    assert checks["interaction-1"]["duration_ms"] >= 0
+    assert checks["mobile"]["status"] == "not_run"
+    html = work / "dist/index.html"
+    html.write_text(html.read_text().replace(" hidden", ""))
+    with recording(repo.data, job["id"], 1):
+        validate(work)
+    rounds = client.get(f"/api/jobs/{job['id']}/debug").json()["validation"]
+    assert [r["status"] for r in rounds] == ["failed", "passed"]
+    interaction = next(c for c in rounds[1]["checks"] if c["id"] == "interaction-1")
+    assert interaction["after_text"] == "A visible explanation"
+    assert all(c["status"] == "passed" for c in rounds[1]["checks"])
+
+
+def test_preflight_failure_reports_unrun_checks(tmp_path):
+    from uuid import uuid4
+
+    from openatlas.validation_report import recording, reports
+
+    job = {"id": str(uuid4()), "status": "failed"}
+    with pytest.raises(ValueError, match="retained editable source"):
+        with recording(tmp_path, job["id"], 0):
+            validate(tmp_path / "missing")
+    report = reports(tmp_path, job)[0]
+    assert report["checks"][0]["status"] == "failed"
+    assert all(c["status"] == "not_run" for c in report["checks"][1:])

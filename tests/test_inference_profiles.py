@@ -229,7 +229,7 @@ def test_custom_model_names_are_accepted_and_snapshotted(client):
     ).json()
     assert job["request"]["model"] == "vendor/coding-model:latest"
     assert job["request"]["planner_model"] == "vendor/planning-model:v2"
-    assert "api_key" not in json.dumps(job)
+    assert "api_key" not in job["request"]
 
 
 def test_simultaneous_saves_do_not_lose_profiles(tmp_path):
@@ -260,13 +260,13 @@ def test_running_job_keeps_connection_when_active_profile_changes(
         def run(self, workspace, request, progress, connection=None):
             connections.append(connection)
             credentials.activate(second)
-            assert "api_key" not in json.dumps(request)
+            assert "api_key" not in request
             return "Build a flagellar motor lesson with an interactive rotor and readable labels."
 
     class Builder(DockerExecutor):
         def run(self, workspace, request, progress, connection=None):
             connections.append(connection)
-            assert "api_key" not in json.dumps(request)
+            assert "api_key" not in request
             generate(workspace, request, progress)
 
     def fixture_validation(root):

@@ -1,10 +1,13 @@
 import { PromptEditor, SkillsManager } from "./GenerationStudio";
 import { PhoneAccess } from "./PhoneAccess";
+import { ChatGPTSubscription } from "./ChatGPTSubscription";
 import { useEffect, useState } from "react";
 
 export type Settings = {
+  inference_auth?: "api_key" | "chatgpt";
   provider: string;
   concurrency: number;
+  generation_timeout_minutes?: number;
   model: string;
   planner_model?: string;
   planner_instructions?: string;
@@ -115,26 +118,28 @@ export function SettingsDialog({
     setError("");
     try {
       if (!profiles) throw new Error("Provider profiles have not loaded yet.");
-      if (profileId === "host") {
-        if (profiles.active_id !== "host") {
-          acceptProfiles(await request<Profiles>("inference-profile-selection", "PUT", {
-            profile_id: "host",
-          }));
-        }
-      } else {
-        const changed = profileId === "new" || key.trim() ||
-          profileName !== selectedProfile?.name || baseUrl !== selectedProfile?.base_url;
-        if (changed) {
-          acceptProfiles(await request<Profiles>(
-            profileId === "new" ? "inference-profiles" : `inference-profiles/${profileId}`,
-            profileId === "new" ? "POST" : "PUT",
-            { name: profileName.trim(), base_url: baseUrl.trim(),
-              ...(key.trim() ? { api_key: key.trim() } : {}), activate: true },
-          ));
-        } else if (profiles.active_id !== profileId) {
-          acceptProfiles(await request<Profiles>("inference-profile-selection", "PUT", {
-            profile_id: profileId,
-          }));
+      if (draft.inference_auth !== "chatgpt") {
+        if (profileId === "host") {
+          if (profiles.active_id !== "host") {
+            acceptProfiles(await request<Profiles>("inference-profile-selection", "PUT", {
+              profile_id: "host",
+            }));
+          }
+        } else {
+          const changed = profileId === "new" || key.trim() ||
+            profileName !== selectedProfile?.name || baseUrl !== selectedProfile?.base_url;
+          if (changed) {
+            acceptProfiles(await request<Profiles>(
+              profileId === "new" ? "inference-profiles" : `inference-profiles/${profileId}`,
+              profileId === "new" ? "POST" : "PUT",
+              { name: profileName.trim(), base_url: baseUrl.trim(),
+                ...(key.trim() ? { api_key: key.trim() } : {}), activate: true },
+            ));
+          } else if (profiles.active_id !== profileId) {
+            acceptProfiles(await request<Profiles>("inference-profile-selection", "PUT", {
+              profile_id: profileId,
+            }));
+          }
         }
       }
       onSaved(await request<Settings>("settings", "PUT", draft));
@@ -228,9 +233,15 @@ export function SettingsDialog({
         >
           {tab === "planner" && <>
             <label>Planner model<input value={draft.planner_model || "gpt-6-astra"} onChange={e => setDraft({...draft, planner_model: e.target.value})} required /></label>
-            <label>Planner instructions<textarea className="code-editor debug-prompt" value={draft.planner_instructions || ""} onChange={e => setDraft({...draft, planner_instructions: e.target.value})}/></label>
+            <label>
+              Planner instructions
+              <textarea className="planner-instructions-editor" rows={16}
+                value={draft.planner_instructions || ""}
+                onChange={e => setDraft({ ...draft, planner_instructions: e.target.value })}
+                aria-describedby="planner-instructions-help" />
+            </label>
             <button className="quiet" type="button" onClick={async () => { try { const defaults = await request<{planner_default: string}>("prompt"); setDraft({...draft, planner_instructions: defaults.planner_default}); } catch { setError("Could not load planner defaults"); } }}>Restore default planner instructions</button>
-            <p>Saved settings apply to new planning attempts. The legacy generation prompt is used only by historical jobs without a creative brief.</p>
+            <p className="hint" id="planner-instructions-help">Guide how the planner writes your Notebook’s creative brief. Saved changes apply to new planning attempts.</p>
           </>}
           {tab === "prompt" && (
             <PromptEditor
@@ -257,6 +268,15 @@ export function SettingsDialog({
                 </option>
               </select>
             </label>
+            <label>
+              Inference authentication
+              <select value={draft.inference_auth || "api_key"} disabled={busy}
+                onChange={(e) => setDraft({ ...draft, inference_auth: e.target.value as "api_key" | "chatgpt" })}>
+                <option value="api_key">API key · OpenAI or custom provider</option>
+                <option value="chatgpt">ChatGPT subscription · sign in</option>
+              </select>
+            </label>
+            {draft.inference_auth === "chatgpt" ? <ChatGPTSubscription /> :
             <fieldset disabled={busy || !profiles} className="inference-profiles">
               <legend>Inference API</legend>
               <label>
@@ -316,7 +336,7 @@ export function SettingsDialog({
                 Both Codex and the planner use this provider. For a server on this computer,
                 use host.docker.internal instead of localhost.
               </p>
-            </fieldset>
+            </fieldset>}
             <label>
               Codex model
               <input list="codex-model-options" value={draft.model} required maxLength={200}
@@ -329,6 +349,13 @@ export function SettingsDialog({
               Enter a model ID supported by your provider, or choose a suggestion.
               Set the planner’s model in the Planner tab. Demo mode uses no inference.
             </p>
+            <label>
+              Generation time limit (minutes)
+              <input type="number" min={1} max={1440} step={1} required
+                value={draft.generation_timeout_minutes ?? 120}
+                onChange={(e) => setDraft({ ...draft, generation_timeout_minutes: Number(e.target.value) })} />
+            </label>
+            <p className="hint">Applies separately to each planning, generation, or repair attempt. New jobs and retries use this limit; running attempts keep their original limit. Default: 120 minutes. Maximum: 24 hours.</p>
             <label>
               Concurrent generations
               <input

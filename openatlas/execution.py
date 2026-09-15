@@ -13,7 +13,8 @@ import docker
 from . import config
 from .agents import CodexAdapter
 from .credentials import Credentials
-from .debug import capture
+from .debug import capture, redact
+from .subscription import AUTH_PATH, SubscriptionStore, auth_secrets, upload_auth
 
 
 def ownership(info):
@@ -32,7 +33,7 @@ def archive_input(workspace):
     return stream.getvalue()
 
 
-def extract_output(chunks, destination):
+def extract_output(chunks, destination, secrets=()):
     # Reject links, devices, traversal and archive bombs before copying any output.
     stream = io.BytesIO()
     for chunk in chunks:
@@ -65,9 +66,12 @@ def extract_output(chunks, destination):
             else:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with tar.extractfile(member) as src, path.open("wb") as out:
-                    import shutil
-
-                    shutil.copyfileobj(src, out)
+                    content = src.read()
+                    if any(secret and secret.encode() in content for secret in secrets):
+                        raise ValueError(
+                            "Generation output contains a private credential and cannot be saved"
+                        )
+                    out.write(content)
 
 
 class DockerExecutor:
@@ -86,17 +90,36 @@ class DockerExecutor:
         self.adapter = adapter or CodexAdapter()
         self.debug = debug
         self.checkpoint_store = checkpoint_store
+        self.subscription = SubscriptionStore(
+            self.credentials.directory.parent
+            if isinstance(self.credentials, Credentials)
+            else None
+        )
 
     def run(self, workspace, request, progress, connection=None):
         if self.cancelled(request):
             raise ValueError("Generation cancelled before dispatch")
+        connection = connection or (
+            self.subscription.session()
+            if request.get("inference_auth") == "chatgpt"
+            else self.credentials.connection()
+        )
+        subscription = connection.get("mode") == "chatgpt"
+        if subscription:
+            connection = self.subscription.session(connection["epoch"])
+            request = dict(request, inference_auth="chatgpt")
         client = self.client or docker.from_env()
-        connection = connection or self.credentials.connection()
-        key = connection["api_key"]
+        key = connection.get("api_key", "")
         token = secrets.token_urlsafe(32)
+        private_values = [key, token] + (
+            auth_secrets(connection["auth"]) if subscription else []
+        )
         broker = container = None
         planning = request.get("execution_stage") == "planning"
-        deadline = time.monotonic() + config.TIMEOUT
+        timeout_seconds = (
+            request.get("generation_timeout_minutes", config.TIMEOUT / 60) * 60
+        )
+        deadline = time.monotonic() + timeout_seconds
         try:
             common = dict(
                 image=config.GENERATION_IMAGE,
@@ -110,28 +133,39 @@ class DockerExecutor:
                 labels={
                     "openatlas.job": request["job_id"],
                     "openatlas.stage": "planning" if planning else "building",
-                    "openatlas.expires": str(time.time() + config.TIMEOUT + 120),
+                    "openatlas.expires": str(time.time() + timeout_seconds + 120),
+                    "openatlas.authentication": "chatgpt"
+                    if subscription
+                    else "api_key",
                 },
                 log_config=docker.types.LogConfig(
                     type="json-file", config={"max-size": "5m", "max-file": "1"}
                 ),
             )
-            broker = client.containers.run(
-                command=["python3", "/opt/broker.py"],
-                environment={"OPENAI_API_KEY": key, "RELAY_TOKEN": token,
-                             "INFERENCE_BASE_URL": connection["base_url"]},
-                network_mode="bridge",
-                tmpfs={"/tmp": "rw,noexec,nosuid,size=32m"},
-                **common,
-            )
+            if not subscription:
+                broker = client.containers.run(
+                    command=["python3", "/opt/broker.py"],
+                    environment={
+                        "OPENAI_API_KEY": key,
+                        "RELAY_TOKEN": token,
+                        "INFERENCE_BASE_URL": connection["base_url"],
+                    },
+                    network_mode="bridge",
+                    tmpfs={"/tmp": "rw,noexec,nosuid,size=32m"},
+                    **common,
+                )
             container = client.containers.run(
                 command=["sleep", "infinity"],
                 environment={
-                    "CODEX_API_KEY": token,
+                    **(
+                        {"OPENATLAS_AUTH_MODE": "chatgpt"}
+                        if subscription
+                        else {"CODEX_API_KEY": token}
+                    ),
                     "HOME": "/tmp/home",
                     "CODEX_HOME": "/tmp/home/.codex",
                 },
-                network_mode="container:" + broker.id,
+                network_mode="bridge" if subscription else "container:" + broker.id,
                 tmpfs={
                     "/workspace": "rw,nosuid,uid=1000,gid=1000,size=768m",
                     "/tmp": "rw,nosuid,uid=1000,gid=1000,size=256m",
@@ -144,10 +178,10 @@ class DockerExecutor:
                 stdin=True,
                 user="1000:1000",
             )
-            connection = client.api.exec_start(upload["Id"], socket=True)
+            upload_connection = client.api.exec_start(upload["Id"], socket=True)
             try:
-                connection._sock.sendall(archive_input(workspace))
-                connection._sock.shutdown(socket.SHUT_WR)
+                upload_connection._sock.sendall(archive_input(workspace))
+                upload_connection._sock.shutdown(socket.SHUT_WR)
                 while client.api.exec_inspect(upload["Id"])["Running"]:
                     time.sleep(0.1)
                 if client.api.exec_inspect(upload["Id"])["ExitCode"] != 0:
@@ -155,8 +189,10 @@ class DockerExecutor:
                         "Could not transfer the isolated generation workspace"
                     )
             finally:
-                connection.close()
+                upload_connection.close()
             container.exec_run(["mkdir", "-p", "/tmp/home/.codex"], user="1000:1000")
+            if subscription:
+                upload_auth(client, container, connection["auth"])
             progress(
                 "Planner is designing your Notebook"
                 if planning
@@ -168,11 +204,11 @@ class DockerExecutor:
                     request["job_id"],
                     agent_command,
                     request,
-                    (key, token),
+                    private_values,
                     execution={
                         "container_id": container.id,
                         "image": config.GENERATION_IMAGE,
-                        "timeout_seconds": config.TIMEOUT,
+                        "timeout_seconds": timeout_seconds,
                         "workdir": "/workspace",
                         "user": "1000:1000",
                     },
@@ -190,6 +226,10 @@ class DockerExecutor:
                 raise ValueError("Generation cancelled before agent invocation")
             client.api.exec_start(execution["Id"], detach=True)
             while client.api.exec_inspect(execution["Id"])["Running"]:
+                if subscription and not self.subscription.current(connection["epoch"]):
+                    raise ValueError(
+                        "ChatGPT was signed out. Sign in again and retry this job."
+                    )
                 if self.cancelled(request):
                     raise ValueError(
                         "Generation cancelled or runner stopping; retry from saved output"
@@ -197,9 +237,17 @@ class DockerExecutor:
                 if time.monotonic() > deadline:
                     raise ValueError(
                         ("Planning" if planning else "Codex generation")
-                        + " exceeded the configured time limit"
+                        + f" exceeded the configured {timeout_seconds / 60:g}-minute time limit. Increase Generation time limit in Settings, then continue or retry."
                     )
                 time.sleep(2)
+            if subscription:
+                if not self.subscription.current(connection["epoch"]):
+                    raise ValueError(
+                        "ChatGPT was signed out. Sign in again and retry this job."
+                    )
+                refreshed = container.exec_run(["head", "-c", "200001", AUTH_PATH])
+                if refreshed.exit_code == 0:
+                    private_values += auth_secrets(json.loads(refreshed.output))
             if client.api.exec_inspect(execution["Id"])["ExitCode"] != 0:
                 diagnostic = container.exec_run(
                     ["tail", "-c", "3000", "/tmp/codex-output.log"]
@@ -215,10 +263,8 @@ class DockerExecutor:
                             messages.append(message)
                     except (ValueError, AttributeError):
                         pass
-                diagnostic = (
-                    (messages[-1] if messages else diagnostic[-600:])
-                    .replace(key, "[redacted]")
-                    .replace(token, "[redacted]")
+                diagnostic = redact(
+                    messages[-1] if messages else diagnostic[-600:], private_values
                 )
                 raise ValueError(
                     ("Planner" if planning else "Codex")
@@ -234,9 +280,7 @@ class DockerExecutor:
                 if result.exit_code != 0:
                     raise ValueError("Planning failed: missing build prompt")
                 return validate_prompt(
-                    result.output.decode("utf-8")
-                    .replace(key, "[redacted]")
-                    .replace(token, "[redacted]")
+                    redact(result.output.decode("utf-8"), private_values)
                 )
             progress("Collecting generated source and static files")
             # Remove generation-only inputs and dependencies before archive collection.
@@ -275,7 +319,7 @@ class DockerExecutor:
                     if stdout:
                         yield stdout
 
-            extract_output(output_chunks(), workspace)
+            extract_output(output_chunks(), workspace, private_values)
         except Exception:
             # Collect only deliverable files, never agent home/auth/history or
             # skills. A failed generation can be partial and lack a manifest.
@@ -311,7 +355,9 @@ class DockerExecutor:
                     ) as tmp:
                         saved = Path(tmp)
                         extract_output(
-                            (out for out, err in result.output if out), saved
+                            (out for out, err in result.output if out),
+                            saved,
+                            private_values,
                         )
                         if self.checkpoint_store.checkpoint(request["job_id"], saved):
                             progress("Saved partial work; this job can be continued")
@@ -321,11 +367,26 @@ class DockerExecutor:
                     pass
             raise
         finally:
+            if subscription and container is not None:
+                try:
+                    refreshed = container.exec_run(["head", "-c", "200001", AUTH_PATH])
+                    if refreshed.exit_code == 0:
+                        self.subscription.refresh(
+                            connection["epoch"], json.loads(refreshed.output)
+                        )
+                except Exception:
+                    # Preserve sign-out/cancellation and the original execution error.
+                    pass
             for c in (container, broker):
                 if c:
                     if self.debug:
                         try:
-                            capture(c, self.debug)
+                            capture(
+                                c,
+                                self.debug,
+                                extra_secrets=private_values,
+                                archive=True,
+                            )
                         except Exception:
                             pass
                     try:

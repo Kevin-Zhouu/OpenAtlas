@@ -11,11 +11,37 @@ from playwright.sync_api import expect, sync_playwright
 
 from . import config
 
-TEXT_ATTACHMENTS = {".cs", ".csproj", ".sln", ".sh", ".md", ".py", ".go", ".rs", ".java", ".c", ".h", ".cpp", ".hpp", ".ts", ".tsx", ".jsx", ".sql", ".yaml", ".yml", ".toml", ".xml"}
+TEXT_ATTACHMENTS = {
+    ".cs",
+    ".csproj",
+    ".sln",
+    ".sh",
+    ".md",
+    ".py",
+    ".go",
+    ".rs",
+    ".java",
+    ".c",
+    ".h",
+    ".cpp",
+    ".hpp",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".sql",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".xml",
+}
 
 
 def artifact_media_type(path):
-    return "text/plain; charset=utf-8" if path.suffix.lower() in TEXT_ATTACHMENTS else (mimetypes.guess_type(str(path))[0] or "application/octet-stream")
+    return (
+        "text/plain; charset=utf-8"
+        if path.suffix.lower() in TEXT_ATTACHMENTS
+        else (mimetypes.guess_type(str(path))[0] or "application/octet-stream")
+    )
 
 
 ALLOWED = {
@@ -122,11 +148,13 @@ class ArtifactStore:
 
     def checkpoint_path(self, job_id):
         from uuid import UUID
+
         path = self.root.parent / "checkpoints" / str(UUID(job_id))
         return path if (path / "source").is_dir() else self.recovery_path(job_id)
 
     def checkpoint(self, job_id, workspace):
         from uuid import UUID
+
         target = self.root.parent / "checkpoints" / str(UUID(job_id))
         safe_tree(workspace)
         if not safe_tree(workspace / "source"):
@@ -151,7 +179,9 @@ class ArtifactStore:
     def seed_checkpoint(self, job_id, workspace):
         retained = self.checkpoint_path(job_id)
         if retained is None:
-            raise ValueError("No saved workspace remains for this job. Use Re-run instead.")
+            raise ValueError(
+                "No saved workspace remains for this job. Use Re-run instead."
+            )
         safe_tree(retained)
         for name in ("source", "dist", "manifest.json"):
             source = retained / name
@@ -176,49 +206,141 @@ class ArtifactStore:
 
 
 def validate(workspace):
-    if not safe_tree(workspace / "source"):
-        raise ValueError("Notebook requires retained editable source files")
+    from .validation_report import current_report
+
+    report = current_report()
+    for key, title, expected in [
+        (
+            "source",
+            "Editable source",
+            "Retained source files contain no links or special files and fit the size limit.",
+        ),
+        (
+            "assets",
+            "Packaged assets",
+            "Static files use supported formats; source attachments are UTF-8 text.",
+        ),
+        (
+            "manifest",
+            "Notebook metadata",
+            "A valid JSON manifest has a title of 1–150 characters.",
+        ),
+        (
+            "entrypoint",
+            "HTML entrypoint",
+            "The manifest points to an existing HTML document inside dist/.",
+        ),
+        (
+            "contract",
+            "Interaction test definitions",
+            "The manifest declares 1–30 interaction checks.",
+        ),
+        (
+            "browser",
+            "Browser startup",
+            "Chromium can start with a sandboxed Notebook frame.",
+        ),
+        (
+            "desktop",
+            "Desktop rendering",
+            "At 1280 × 900, the Notebook renders at least 150 characters of learning content.",
+        ),
+        (
+            "desktop_capture",
+            "Desktop preview",
+            "The browser can capture the rendered desktop page.",
+        ),
+        (
+            "mobile",
+            "Phone layout",
+            "At 390 × 844, content does not overflow horizontally by more than 2 pixels.",
+        ),
+        (
+            "mobile_capture",
+            "Phone preview",
+            "The browser can capture the rendered phone page.",
+        ),
+        (
+            "runtime",
+            "Browser errors and resources",
+            "No JavaScript or console errors, missing local files, or blocked external resource requests.",
+        ),
+    ]:
+        report.add(key, title, expected)
+    try:
+        manifest = _validate(workspace, report)
+    except Exception as error:
+        report.finish(error)
+        raise
+    report.finish()
+    (workspace / "validation.json").write_text(json.dumps(report.data))
+    return manifest
+
+
+def _validate(workspace, report):
+    with report.check("source"):
+        if not safe_tree(workspace / "source"):
+            raise ValueError("Notebook requires retained editable source files")
     dist = workspace / "dist"
-    safe_tree(dist)
-    for p in dist.rglob("*"):
-        if p.is_file() and p.suffix.lower() not in ALLOWED | TEXT_ATTACHMENTS:
-            raise ValueError("Unsupported static artifact file: " + str(p.relative_to(dist)) + ". Keep compiled binaries and build dependencies in source only; dist may contain web assets and UTF-8 teaching source attachments.")
-        if p.is_file() and p.suffix.lower() in TEXT_ATTACHMENTS:
-            try:
-                content = p.read_text(encoding="utf-8")
-                if "\x00" in content:
-                    raise ValueError("Source attachment contains binary data: " + p.name)
-            except UnicodeError:
-                raise ValueError("Source attachment must be UTF-8 text: " + p.name)
-    manifest = json.loads((workspace / "manifest.json").read_text())
-    if (
-        not isinstance(manifest.get("title"), str)
-        or not 1 <= len(manifest["title"]) <= 150
-    ):
-        raise ValueError("Manifest needs a title of 1–150 characters")
-    entry = manifest.get("entrypoint", "index.html")
-    entry_path = (dist / entry).resolve()
-    if (
-        not entry_path.is_relative_to(dist.resolve())
-        or entry_path.suffix != ".html"
-        or not entry_path.is_file()
-    ):
-        available = [str(p.relative_to(dist)) for p in dist.rglob("*.html")][:20]
-        raise ValueError(
-            f"Notebook requires a built HTML entrypoint relative to dist/. Manifest entrypoint: {entry!r}. Available HTML files: {available}"
+    with report.check("assets"):
+        safe_tree(dist)
+        for p in dist.rglob("*"):
+            if p.is_file() and p.suffix.lower() not in ALLOWED | TEXT_ATTACHMENTS:
+                raise ValueError(
+                    "Unsupported static artifact file: "
+                    + str(p.relative_to(dist))
+                    + ". Keep compiled binaries and build dependencies in source only; dist may contain web assets and UTF-8 teaching source attachments."
+                )
+            if p.is_file() and p.suffix.lower() in TEXT_ATTACHMENTS:
+                try:
+                    content = p.read_text(encoding="utf-8")
+                    if "\x00" in content:
+                        raise ValueError(
+                            "Source attachment contains binary data: " + p.name
+                        )
+                except UnicodeError:
+                    raise ValueError("Source attachment must be UTF-8 text: " + p.name)
+    with report.check("manifest"):
+        manifest = json.loads((workspace / "manifest.json").read_text())
+        if (
+            not isinstance(manifest.get("title"), str)
+            or not 1 <= len(manifest["title"]) <= 150
+        ):
+            raise ValueError("Manifest needs a title of 1–150 characters")
+    with report.check("entrypoint"):
+        entry = manifest.get("entrypoint", "index.html")
+        entry_path = (dist / entry).resolve()
+        if (
+            not entry_path.is_relative_to(dist.resolve())
+            or entry_path.suffix != ".html"
+            or not entry_path.is_file()
+        ):
+            available = [str(p.relative_to(dist)) for p in dist.rglob("*.html")][:20]
+            raise ValueError(
+                f"Notebook requires a built HTML entrypoint relative to dist/. Manifest entrypoint: {entry!r}. Available HTML files: {available}"
+            )
+        if "<html" not in entry_path.read_text().lower():
+            raise ValueError("Entrypoint is not an HTML document")
+    with report.check("contract"):
+        checks = manifest.get("checks", [])
+        if not isinstance(checks, list) or not 1 <= len(checks) <= 30:
+            raise ValueError("Declare 1–30 browser interaction checks in manifest.json")
+    for index, check in enumerate(checks, 1):
+        report.add(
+            f"interaction-{index}",
+            f"Interaction {index}",
+            "Control is visible; the action makes feedback visible and matches expected text or changes the previous text.",
+            definition=check,
+            before="desktop_capture",
         )
-    if "<html" not in entry_path.read_text().lower():
-        raise ValueError("Entrypoint is not an HTML document")
-    checks = manifest.get("checks", [])
-    if not isinstance(checks, list) or not 1 <= len(checks) <= 30:
-        raise ValueError("Declare 1–30 browser interaction checks in manifest.json")
     errors = []
     with sync_playwright() as p:
-        browser = p.chromium.launch()
-        context = browser.new_context(
-            viewport={"width": 1280, "height": 900}, service_workers="block"
-        )
-        page = context.new_page()
+        with report.check("browser"):
+            browser = p.chromium.launch()
+            context = browser.new_context(
+                viewport={"width": 1280, "height": 900}, service_workers="block"
+            )
+            page = context.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.on(
             "console",
@@ -263,75 +385,111 @@ def validate(workspace):
 
         context.route("**/*", route_handler)
         try:
-            page.goto("http://notebook.invalid/reader")
-            frame = page.frame_locator("iframe")
-            frame.locator("body").wait_for()
-            if len(frame.locator("body").inner_text().strip()) < 150:
-                raise ValueError("Notebook has insufficient rendered learning content")
-            for index, check in enumerate(checks, 1):
-                try:
-                    target = frame.locator(check["selector"])
-                    output = frame.locator(check["expect_selector"])
-                    expect(target).to_be_visible(timeout=5000)
-                    before_visible = output.is_visible()
-                    before = output.inner_text() if before_visible else None
-                    action = check.get("action", "click")
-                    if action == "click":
-                        target.click(timeout=5000)
-                    elif action in ("fill", "select"):
-                        tag = target.evaluate("el => el.tagName.toLowerCase()")
-                        if tag == "select":
-                            # Older manifests used fill because the original contract
-                            # omitted dropdown selection. Keep those jobs recoverable.
-                            target.select_option(value=str(check["value"]), timeout=5000)
-                        elif action == "select":
-                            raise ValueError("The select action requires a <select> control; use fill for text fields")
-                        else:
-                            target.fill(str(check["value"]), timeout=5000)
-                    elif action == "range":
-                        target.evaluate(
-                            '(el, value) => { el.value=value; el.dispatchEvent(new Event("input",{bubbles:true})); el.dispatchEvent(new Event("change",{bubbles:true})); }',
-                            str(check["value"]),
-                        )
-                    else:
-                        raise ValueError("Unsupported interaction check action")
-                    # Feedback may be revealed or created by the action. It must be
-                    # visible afterward; matching hidden text never counts as success.
-                    expect(output).to_be_visible(timeout=5000)
-                    if "expect_text" in check:
-                        expect(output).to_contain_text(
-                            str(check["expect_text"]), timeout=5000
-                        )
-                    elif before_visible:
-                        expect(output).not_to_have_text(before, timeout=5000)
-                except Exception as error:
+            with report.check("desktop"):
+                page.goto("http://notebook.invalid/reader")
+                frame = page.frame_locator("iframe")
+                frame.locator("body").wait_for()
+                rendered_characters = len(frame.locator("body").inner_text().strip())
+                report.update(
+                    "desktop", observed=f"{rendered_characters} rendered characters."
+                )
+                if rendered_characters < 150:
                     raise ValueError(
-                        f"Interaction check {index} failed: control={check.get('selector')!r}, "
-                        f"feedback={check.get('expect_selector')!r}, action={check.get('action', 'click')!r}. "
-                        + str(error)[:1200]
-                    ) from error
-            page.screenshot(path=str(workspace / "preview.png"), full_page=True)
-            page.set_viewport_size({"width": 390, "height": 844})
-            if frame.locator("html").evaluate(
-                "(el) => el.scrollWidth > innerWidth + 2"
-            ):
-                raise ValueError("Notebook overflows the phone viewport")
-            page.screenshot(path=str(workspace / "preview-mobile.png"), full_page=True)
-            if errors:
-                raise ValueError(
-                    "Browser validation failed: " + "; ".join(errors)[:1000]
+                        "Notebook has insufficient rendered learning content"
+                    )
+            for index, check in enumerate(checks, 1):
+                with report.check(f"interaction-{index}"):
+                    try:
+                        target = frame.locator(check["selector"])
+                        output = frame.locator(check["expect_selector"])
+                        expect(target).to_be_visible(timeout=5000)
+                        before_visible = output.is_visible()
+                        before = output.inner_text() if before_visible else None
+                        report.update(
+                            f"interaction-{index}", before_text=(before or "")[:2000]
+                        )
+                        action = check.get("action", "click")
+                        if action == "click":
+                            target.click(timeout=5000)
+                        elif action in ("fill", "select"):
+                            tag = target.evaluate("el => el.tagName.toLowerCase()")
+                            if tag == "select":
+                                # Older manifests used fill because the original contract
+                                # omitted dropdown selection. Keep those jobs recoverable.
+                                target.select_option(
+                                    value=str(check["value"]), timeout=5000
+                                )
+                            elif action == "select":
+                                raise ValueError(
+                                    "The select action requires a <select> control; use fill for text fields"
+                                )
+                            else:
+                                target.fill(str(check["value"]), timeout=5000)
+                        elif action == "range":
+                            target.evaluate(
+                                '(el, value) => { el.value=value; el.dispatchEvent(new Event("input",{bubbles:true})); el.dispatchEvent(new Event("change",{bubbles:true})); }',
+                                str(check["value"]),
+                            )
+                        else:
+                            raise ValueError("Unsupported interaction check action")
+                        # Feedback may be revealed or created by the action. It must be
+                        # visible afterward; matching hidden text never counts as success.
+                        expect(output).to_be_visible(timeout=5000)
+                        if "expect_text" in check:
+                            expect(output).to_contain_text(
+                                str(check["expect_text"]), timeout=5000
+                            )
+                        elif before_visible:
+                            expect(output).not_to_have_text(before, timeout=5000)
+                        report.update(
+                            f"interaction-{index}",
+                            after_text=output.inner_text()[:2000],
+                        )
+                    except Exception as error:
+                        try:
+                            report.update(
+                                f"interaction-{index}",
+                                after_text=output.inner_text(timeout=1000)[:2000]
+                                if output.is_visible()
+                                else "",
+                            )
+                        except Exception:
+                            pass
+                        raise ValueError(
+                            f"Interaction check {index} failed: control={check.get('selector')!r}, "
+                            f"feedback={check.get('expect_selector')!r}, action={check.get('action', 'click')!r}. "
+                            + str(error)[:1200]
+                        ) from error
+            with report.check("desktop_capture"):
+                page.screenshot(path=str(workspace / "preview.png"), full_page=True)
+            with report.check("mobile"):
+                page.set_viewport_size({"width": 390, "height": 844})
+                dimensions = frame.locator("html").evaluate(
+                    "(el) => ({content: el.scrollWidth, viewport: innerWidth})"
                 )
-            (workspace / "validation.json").write_text(
-                json.dumps(
-                    {
-                        "passed": True,
-                        "checks": checks,
-                        "browser": "Chromium",
-                        "sandbox": "allow-scripts",
-                    }
+                report.update(
+                    "mobile",
+                    observed=f"Content width: {dimensions['content']}px; frame viewport: {dimensions['viewport']}px.",
                 )
-            )
+                if dimensions["content"] > dimensions["viewport"] + 2:
+                    raise ValueError("Notebook overflows the phone viewport")
+            with report.check("mobile_capture"):
+                page.screenshot(
+                    path=str(workspace / "preview-mobile.png"), full_page=True
+                )
+            with report.check("runtime"):
+                if errors:
+                    raise ValueError(
+                        "Browser validation failed: " + "; ".join(errors)[:1000]
+                    )
         finally:
+            if errors:
+                report.update(
+                    "runtime",
+                    status="failed",
+                    reason="Browser errors were recorded.",
+                    diagnostics=[str(error)[:2000] for error in errors[:50]],
+                )
             browser.close()
     manifest["entrypoint"] = entry
     return manifest

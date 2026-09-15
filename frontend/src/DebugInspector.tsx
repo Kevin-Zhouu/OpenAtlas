@@ -5,6 +5,7 @@ import {
   type GenerationMetadata,
 } from "./GenerationDetails";
 import { AgentActivity } from "./AgentActivity";
+import { ValidationDetails, type ValidationRound } from "./ValidationDetails";
 
 type Stage = "planning" | "building" | "validating" | "publishing";
 const stages: { id: Stage; title: string; description: string }[] = [
@@ -45,6 +46,7 @@ type Container = {
   container_log: string;
 };
 type Snapshot = {
+  validation?: ValidationRound[];
   generation?: GenerationMetadata;
   updated_at: string | null;
   containers: Container[];
@@ -178,6 +180,11 @@ export function DebugInspector({
     if (id === "planning" && data.job.request.build_prompt) return "complete";
     if (id === "building" && data.job.request.revalidate_job) return "skipped";
     if (data.job.status === "queued") return "pending";
+    if (id === "validating" && id !== current && (data.validation?.length || data.events?.some(e => e.stage === "validating"))) {
+      const latest = data.validation?.at(-1);
+      if (latest) return latest.status === "passed" ? "complete" : "failed";
+      return current === "building" ? "failed" : "complete";
+    }
     if (id === current)
       return data.job.status === "failed"
         ? "failed"
@@ -355,6 +362,10 @@ export function DebugInspector({
                   </button>
                 )}
               </div>
+              <div className="trace-downloads" aria-label="Download generation traces">
+                <a className="quiet" href={`/api/jobs/${encodeURIComponent(activeJob)}/trace?stage=${stage}`} download>Download {definition.title.toLowerCase()} trace</a>
+                <a className="quiet" href={`/api/jobs/${encodeURIComponent(activeJob)}/trace`} download>Download all stage traces</a>
+              </div>
               <nav
                 className="stage-tabs"
                 aria-label={`${definition.title} views`}
@@ -433,7 +444,9 @@ export function DebugInspector({
               )}
               {tab === "activity" && (
                 <>
-                  {containers.some((c) => c.role === "agent") ? (
+                  {stage === "validating" && !!data.validation?.length ? (
+                    <ValidationDetails rounds={data.validation} />
+                  ) : containers.some((c) => c.role === "agent") ? (
                     <AgentActivity
                       sources={containers.filter((c) => c.role === "agent")}
                       running={!!live}

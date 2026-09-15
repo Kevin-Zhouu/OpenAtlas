@@ -68,10 +68,14 @@ Before finishing run a command to verify all three paths exist and the entrypoin
             "--json",
             "-m",
             request["model"],
-            "-c",
-            'model_provider="openatlas"',
-            "-c",
-            'model_providers.openatlas={name="OpenAtlas relay",base_url="http://127.0.0.1:9000/v1",env_key="CODEX_API_KEY",wire_api="responses"}',
+            *([
+                "-c", 'model_provider="openai"',
+                "-c", 'forced_login_method="chatgpt"',
+                "-c", 'cli_auth_credentials_store="file"',
+            ] if request.get("inference_auth") == "chatgpt" else [
+                "-c", 'model_provider="openatlas"',
+                "-c", 'model_providers.openatlas={name="OpenAtlas relay",base_url="http://127.0.0.1:9000/v1",env_key="CODEX_API_KEY",wire_api="responses"}',
+            ]),
             *(["-c", BLENDER_MCP_CONFIG] if any(
                 s["id"] == "builtin:blender" for s in request.get("skills", [])
             ) else []),

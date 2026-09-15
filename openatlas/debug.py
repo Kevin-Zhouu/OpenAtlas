@@ -5,9 +5,12 @@ import os
 import re
 import tempfile
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
+
+MAX_TRACE_BYTES = 10 * 1024 * 1024
 
 
 class DebugStore:
@@ -38,24 +41,69 @@ class DebugStore:
     def record_invocation(self, job_id, command, request, secrets=(), execution=None):
         with self.lock:
             records = self.invocations(job_id)
-            records.append({
-                "captured_at": datetime.now(timezone.utc).isoformat(),
-                "execution": execution or {},
-                "phase": "planning" if request.get("execution_stage") == "planning" else "repair" if request.get("validation_feedback") else "continue" if request.get("continue_job") else "generate",
-                "command": command,
-                "prompt": command[-1] if command and command[0] == "codex" else "\n\n".join(command[-2:]) if request.get("execution_stage") == "planning" else None,
-                "model": request.get("planner_model") if request.get("execution_stage") == "planning" else request.get("model"),
-                "skills": request.get("skills", []),
-                "validation_feedback": request.get("validation_feedback"),
-            })
+            records.append(
+                {
+                    "captured_at": datetime.now(timezone.utc).isoformat(),
+                    "execution": execution or {},
+                    "phase": "planning"
+                    if request.get("execution_stage") == "planning"
+                    else "repair"
+                    if request.get("validation_feedback")
+                    else "continue"
+                    if request.get("continue_job")
+                    else "generate",
+                    "command": command,
+                    "prompt": command[-1]
+                    if command and command[0] == "codex"
+                    else "\n\n".join(command[-2:])
+                    if request.get("execution_stage") == "planning"
+                    else None,
+                    "model": request.get("planner_model")
+                    if request.get("execution_stage") == "planning"
+                    else request.get("model"),
+                    "skills": request.get("skills", []),
+                    "validation_feedback": request.get("validation_feedback"),
+                }
+            )
             self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
             fd, tmp = tempfile.mkstemp(dir=self.directory)
             try:
                 with os.fdopen(fd, "w") as out:
                     out.write(redact(json.dumps(records[-8:]), secrets))
-                os.replace(tmp, self.directory / (str(UUID(job_id)) + ".invocations.json"))
+                os.replace(
+                    tmp, self.directory / (str(UUID(job_id)) + ".invocations.json")
+                )
             finally:
                 Path(tmp).unlink(missing_ok=True)
+
+    def trace_path(self, job_id, container_id):
+        if not re.fullmatch(r"[a-zA-Z0-9_-]{1,128}", container_id):
+            raise ValueError("Invalid trace container identifier")
+        return self.directory / "traces" / str(UUID(job_id)) / (container_id + ".json")
+
+    def save_trace(self, job_id, container_id, content):
+        with self.lock:
+            previous = self.trace(job_id, container_id)
+            if previous and (
+                previous.get("captured_at", "") > content.get("captured_at", "")
+                or (previous.get("final_capture") and not content.get("final_capture"))
+            ):
+                return
+            path = self.trace_path(job_id, container_id)
+            path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            fd, temporary = tempfile.mkstemp(dir=path.parent)
+            try:
+                with os.fdopen(fd, "w") as out:
+                    json.dump(content, out)
+                os.replace(temporary, path)
+            finally:
+                Path(temporary).unlink(missing_ok=True)
+
+    def trace(self, job_id, container_id):
+        try:
+            return json.loads(self.trace_path(job_id, container_id).read_text())
+        except FileNotFoundError:
+            return None
 
     def record(self, job_id, snapshot):
         with self.lock:
@@ -84,7 +132,9 @@ def redact(value, secrets=()):
     return re.sub(r"(?i)(Bearer\s+)[A-Za-z0-9._\-]+", r"\1[redacted]", value)
 
 
-def capture(container, store, removed=False):
+def capture(
+    container, store, removed=False, extra_secrets=(), archive=False, preserve=False
+):
     """Whitelist inspect fields; never persist raw inspect, environment or process args."""
     container.reload()
     attrs = container.attrs
@@ -96,8 +146,27 @@ def capture(container, store, removed=False):
         if "=" in v
         and any(k in v.split("=", 1)[0] for k in ("KEY", "TOKEN", "SECRET", "PASSWORD"))
     ]
+    secrets += list(extra_secrets)
     role = "relay" if "/opt/broker.py" in (cfg.get("Cmd") or []) else "agent"
     state = attrs.get("State", {})
+    if (
+        state.get("Running")
+        and container.labels.get("openatlas.authentication") == "chatgpt"
+    ):
+        # Subscription tokens are in a private cache, never environment variables.
+        from .subscription import AUTH_PATH, SubscriptionStore, auth_secrets
+
+        try:
+            session_state = SubscriptionStore(store.directory.parent)._read()
+            secrets += auth_secrets(session_state.get("auth") or {})
+            result = container.exec_run(["head", "-c", "200001", AUTH_PATH])
+            if result.exit_code == 0:
+                secrets += auth_secrets(json.loads(result.output))
+            else:
+                return
+        except Exception:
+            # Do not persist unredacted subscription logs if the cache is unreadable.
+            return
     snapshot = {
         "id": container.id,
         "role": role,
@@ -135,6 +204,37 @@ def capture(container, store, removed=False):
         )
     except Exception:
         pass
+    trace_path = store.trace_path(container.labels["openatlas.job"], container.id)
+    due = preserve and (
+        not trace_path.exists() or time.time() - trace_path.stat().st_mtime >= 30
+    )
+    if (archive or due) and role == "agent" and state.get("Running"):
+        limit = MAX_TRACE_BYTES
+        result = container.exec_run(
+            ["head", "-c", str(limit + 1), "/tmp/codex-output.log"]
+        )
+        if result.exit_code == 0:
+            truncated = len(result.output) > limit
+            raw = result.output[:limit]
+            if truncated:
+                # Never retain a partial final line (which could split a credential).
+                raw = raw.rsplit(b"\n", 1)[0] if b"\n" in raw else b""
+            store.save_trace(
+                container.labels["openatlas.job"],
+                container.id,
+                {
+                    "stage": snapshot["stage"],
+                    "captured_at": snapshot["observed_at"],
+                    "retention": "truncated"
+                    if truncated
+                    else "complete"
+                    if archive
+                    else "in_progress",
+                    "byte_limit": limit,
+                    "final_capture": archive,
+                    "agent_log": redact(raw.decode("utf-8", errors="replace"), secrets),
+                },
+            )
     store.record(container.labels["openatlas.job"], snapshot)
 
 
@@ -154,7 +254,7 @@ def observe(data, stop):
                 ):
                     current[container.id] = container.labels.get("openatlas.job")
                     try:
-                        capture(container, store)
+                        capture(container, store, preserve=True)
                     except Exception:
                         pass  # A container may disappear between list and inspection.
                 for container_id, job_id in previous.items():

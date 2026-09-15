@@ -14,6 +14,7 @@ beforeEach(() => {
     const body = options?.body ? JSON.parse(options.body as string) : undefined;
     let result: unknown;
     if (url.endsWith("/phone")) result = { enabled: false, url: "", pairing_url: "" };
+    else if (url.endsWith("/subscription")) result = { status: "signed_out", runner_available: true };
     else if (url.endsWith("/models")) result = [{ id: "gpt-6-astra", name: "GPT-6 Astra", default: true }];
     else if (url.endsWith("/inference-profile-selection")) {
       profiles.active_id = body.profile_id;
@@ -128,4 +129,34 @@ it("prevents saves when provider profiles fail to load", async () => {
   render(<SettingsDialog settings={settings} onSaved={saved} onClose={vi.fn()} />);
   expect(await screen.findByRole("alert")).toHaveTextContent("Could not load settings");
   expect(screen.getByRole("button", { name: "Save settings" })).toBeDisabled();
+});
+
+
+it("saves subscription mode without changing saved API providers", async () => {
+  const saved = vi.fn();
+  render(<SettingsDialog settings={settings} onSaved={saved} onClose={vi.fn()} />);
+  await screen.findByText("API key saved locally");
+  fireEvent.change(screen.getByLabelText("Inference authentication"), { target: { value: "chatgpt" } });
+  expect(await screen.findByRole("button", { name: "Sign in with ChatGPT" })).toBeInTheDocument();
+  expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
+  await waitFor(() => expect(saved).toHaveBeenCalledWith({ ...settings, inference_auth: "chatgpt" }));
+  const writes = fetcher.mock.calls.filter(([, opts]) => opts?.method && opts.method !== "GET");
+  expect(writes).toHaveLength(1);
+  expect(writes[0][0]).toBe("/api/settings");
+  expect(profiles.active_id).toBe("openai");
+  expect(profiles.profiles).toHaveLength(3);
+});
+
+it("saves the generation time limit in minutes", async () => {
+  const saved = vi.fn();
+  render(<SettingsDialog settings={{ ...settings, generation_timeout_minutes: 120 }} onSaved={saved} onClose={vi.fn()} />);
+  await screen.findByText("API key saved locally");
+  const limit = screen.getByLabelText("Generation time limit (minutes)");
+  expect(limit).toHaveValue(120);
+  expect(limit).toHaveAttribute("min", "1");
+  expect(limit).toHaveAttribute("max", "1440");
+  fireEvent.change(limit, { target: { value: "240" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
+  await waitFor(() => expect(saved).toHaveBeenCalledWith({ ...settings, generation_timeout_minutes: 240 }));
 });

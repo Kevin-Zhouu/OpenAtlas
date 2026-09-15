@@ -7,9 +7,7 @@ RUN npm init -y && npm install playwright@1.58.2 && npx playwright install --wit
 ENV NODE_PATH=/opt/browser/node_modules PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
 RUN cp -a /root/.cache/ms-playwright /opt/browsers && chmod -R a+rX /opt/browsers
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/browsers
-COPY generation/broker.py /opt/broker.py
 RUN python3 -m venv /opt/planner && /opt/planner/bin/pip install --no-cache-dir openai-agents==0.8.4 openai==2.19.0
-COPY generation/planner.py /opt/planner.py
 # Matching server/addon from an immutable upstream revision. Blender uses a
 # private software-rendered display; no desktop display or GPU is mounted.
 ARG BLENDER_MCP_REVISION=5f8ddaf6e987c4aa0c3467fcc548838b28f64477
@@ -24,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends blender xvfb xa
 RUN apt-get update && apt-get install -y --no-install-recommends python3-numpy && rm -rf /var/lib/apt/lists/*
 ENV BLENDER_MCP_DISABLE_TELEMETRY=1 LIBGL_ALWAYS_SOFTWARE=1
 COPY generation/blender_startup.py generation/blender_mcp.py generation/blender_server.py /opt/
+COPY generation/broker.py generation/planner.py generation/subscription_model.py generation/subscription_login.py /opt/
 USER node
 WORKDIR /workspace
 CMD ["sleep", "infinity"]

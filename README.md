@@ -29,6 +29,18 @@ Third-party providers must support the **Responses API**, streaming, tool calls,
 
 Codex CLI is pinned in `generation/Dockerfile`. It runs `codex exec` non-interactively inside a fresh non-root Docker container, with approval bypass only because Docker is the external sandbox. It can edit source, build, run Chromium/Playwright, and repair failures. It is instructed explicitly to read the selected skills. This is not a single model response saved as HTML. A failed publication check gives Codex one repair attempt using the existing source and concrete validation feedback. Final generation errors are persisted and displayed in **Generation history**; real failures never fall back to demo.
 
+### Use a ChatGPT subscription
+
+In **Settings → Inference authentication**, choose **ChatGPT subscription**, then **Sign in with ChatGPT**. Open the official sign-in link, enter the one-time code, and finish signing in. You may need to enable device-code login in ChatGPT's security settings. OpenAtlas shows the signed-in account automatically. **Save settings** to use this mode for new jobs; retries and builds from saved plans also use the currently selected mode.
+
+Subscription mode uses Codex's managed ChatGPT login and your plan's Codex allowance. It is not general OpenAI API credit. The Agents SDK planner retains its resource tools and validation, with a custom model adapter that asks the signed-in Codex CLI for structured tool requests and final text. The builder uses the same login directly. API-key mode continues to use the standard Responses client. No paid API fallback occurs when subscription login fails or usage is exhausted.
+
+One account is shared by this library. Subscription jobs run serially so token refreshes cannot overwrite each other; API-key jobs retain the configured concurrency. **Sign out of ChatGPT** clears the local session, cancels pending sign-in, and stops active subscription inference. Saved API provider profiles are retained. The runner must be running for sign-in to work.
+
+The private session is stored in `private/subscription.json` (mode 0600) outside SQLite and artifacts. Only the trusted runner transfers the Codex auth cache into a job container's temporary home, retains refreshed credentials, and removes the container afterward. Subscription mode therefore gives the disposable Codex container its own copy of the login cache; run only trusted jobs. Known token values are redacted from diagnostics and rejected in collected artifacts. The Settings API returns account status, never tokens. This uses the pinned Codex app-server device-login protocol; the upstream app-server interface is experimental.
+
+References: [Codex authentication](https://learn.chatgpt.com/docs/auth) and [Codex app-server account login](https://learn.chatgpt.com/docs/app-server).
+
 The trusted API and runner can access the provider key. A separate disposable credential relay forwards job-authorized requests to the selected provider's Responses endpoint. The generation container gets a temporary relay token, not your provider key. Neither image contains secrets. The relay is not published on a host port. Docker administrators can inspect the trusted relay environment, just as they can inspect other local secrets.
 
 Alternatively, configure `OPENAI_API_KEY` in the private `.env` file and restart Compose, or set `OPENATLAS_OPENAI_KEY_FILE=/absolute/private/keyfile` for native API and runner processes. Never commit credentials. The **Host configuration** profile uses the private key file before the environment variable, with `OPENATLAS_API_BASE_URL` (default `https://api.openai.com/v1`) as its base URL. A selected saved profile uses its own key and URL. No key file is mounted into the generation container.
@@ -403,3 +415,17 @@ Rebuild the application and generation images when deploying these changes.
 See [graphics evaluation cases](docs/graphics-evaluation.md) for topic-transfer and
 visual-review criteria. Infrastructure tests use fixtures, not paid inference; a
 passing test suite does not certify the quality of a generated exhibit.
+
+### Generation time limit
+
+**Settings → Generation time limit (minutes)** controls each planning, generation, and repair attempt independently. The default is **120 minutes** (previously 30 minutes), configurable from 1 to 1440 minutes (24 hours). Saved settings persist across restarts. New jobs, retries, and builds from saved plans use the current setting; running attempts keep their original limit. After a timeout, increase the limit and use **Continue** when partial output is available, or **Re-run**. `OPENATLAS_JOB_TIMEOUT` sets the fallback in seconds when no saved setting exists; Compose passes it to both app and runner.
+
+### Validation details
+
+Open **Generation inspector → Validating → Activity & logs** to inspect each validation round, including rounds before a repair. Expand a check to see its expected condition, action and selectors, observed feedback, duration, and failure or browser diagnostics. Results are saved as validation runs, so completed checks remain available if a later check fails. The validator stops at the first blocking failure; remaining checks are marked **Not run**. These automated checks cover packaged files, sandboxed rendering, declared interactions, phone overflow, and browser/resource errors—not every interaction or factual claim. Older generations show the summaries that were retained at the time; individual historical results cannot be reconstructed.
+
+### Download generation traces
+
+In **Generation inspector**, use **Download all stage traces** for one ZIP covering the selected attempt, or the stage-specific download for Planning, Implementing, Validating, or Publishing. Exports include saved job inputs, captured prompts and invocations, timestamped stage events, validation rounds, and emitted agent logs. If a build reuses an earlier plan, that plan's retained history is included with its source job ID. ZIP contents use JSON and plain-text logs for inspection without OpenAtlas.
+
+The runner saves running agent logs about every 30 seconds and captures them before container cleanup, independently of the live debug toggle. Each agent log is capped at 10 MiB; metadata identifies complete, in-progress, truncated, and snapshot-only history. A recent log tail is included for incomplete archives. Historical jobs can only export what was previously retained. Known credentials are redacted; authentication caches and raw Docker environment settings are never included. Downloads of live jobs are snapshots of activity captured so far.

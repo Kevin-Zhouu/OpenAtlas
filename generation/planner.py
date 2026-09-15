@@ -90,30 +90,40 @@ async def read_resource(path: str, offset: int = 0) -> str:
 async def main():
     model, instructions, user_input = sys.argv[1:]
     set_tracing_disabled(True)
-    client = AsyncOpenAI(
-        api_key=os.environ["CODEX_API_KEY"], base_url="http://127.0.0.1:9000/v1"
-    )
+    subscription = os.environ.get("OPENATLAS_AUTH_MODE") == "chatgpt"
+    if subscription:
+        from subscription_model import SubscriptionModel
+        inference_model = SubscriptionModel(model)
+    else:
+        client = AsyncOpenAI(
+            api_key=os.environ["CODEX_API_KEY"], base_url="http://127.0.0.1:9000/v1"
+        )
+        inference_model = OpenAIResponsesModel(model=model, openai_client=client)
     agent = Agent(
         name="Notebook planner",
         instructions=instructions,
-        model=OpenAIResponsesModel(model=model, openai_client=client),
+        model=inference_model,
         tools=[list_resources, read_resource],
     )
-    emit("planner.started", model=model)
-    result = Runner.run_streamed(agent, input=user_input, max_turns=40)
-    async for event in result.stream_events():
-        if event.type == "run_item_stream_event":
-            item = event.item
-            if item.type == "message_output_item":
-                emit(
-                    "item.completed",
-                    item={
-                        "type": "agent_message",
-                        "text": ItemHelpers.text_message_output(item),
-                    },
-                )
-            elif item.type in ("tool_call_item", "tool_call_output_item"):
-                emit("planner.activity", name=event.name)
+    emit("planner.started", model=model, authentication="chatgpt" if subscription else "api_key")
+    if subscription:
+        result = await Runner.run(agent, input=user_input, max_turns=40)
+        emit("item.completed", item={"type": "agent_message", "text": result.final_output})
+    else:
+        result = Runner.run_streamed(agent, input=user_input, max_turns=40)
+        async for event in result.stream_events():
+            if event.type == "run_item_stream_event":
+                item = event.item
+                if item.type == "message_output_item":
+                    emit(
+                        "item.completed",
+                        item={
+                            "type": "agent_message",
+                            "text": ItemHelpers.text_message_output(item),
+                        },
+                    )
+                elif item.type in ("tool_call_item", "tool_call_output_item"):
+                    emit("planner.activity", name=event.name)
     required = {str(p.relative_to(ROOT)) for p in ROOT.glob("*/SKILL.md")}
     if not required <= READ:
         raise ValueError("Planner did not read every selected SKILL.md")

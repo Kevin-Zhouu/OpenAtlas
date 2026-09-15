@@ -6,6 +6,7 @@ services:
       - "${OPENATLAS_BIND:-127.0.0.1}:8000:8000"
     environment:
       OPENATLAS_ALLOWED_HOSTS: ${OPENATLAS_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      OPENATLAS_JOB_TIMEOUT: ${OPENATLAS_JOB_TIMEOUT:-7200}
       OPENATLAS_ACCESS_TOKEN: ${OPENATLAS_ACCESS_TOKEN:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENATLAS_API_BASE_URL: ${OPENATLAS_API_BASE_URL:-https://api.openai.com/v1}
@@ -20,7 +21,7 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENATLAS_API_BASE_URL: ${OPENATLAS_API_BASE_URL:-https://api.openai.com/v1}
-      OPENATLAS_JOB_TIMEOUT: ${OPENATLAS_JOB_TIMEOUT:-1800}
+      OPENATLAS_JOB_TIMEOUT: ${OPENATLAS_JOB_TIMEOUT:-7200}
       OPENATLAS_GENERATION_IMAGE: openatlas-generation:local
     volumes:
       - library:/data

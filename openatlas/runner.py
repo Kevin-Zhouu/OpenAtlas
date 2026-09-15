@@ -17,6 +17,8 @@ from .planning import PlannerAdapter
 from .references import stage_references
 from .repository import Repository, uid
 from .skills import SkillCatalog
+from .subscription import SubscriptionStore, SubscriptionWorker
+from .validation_report import recording
 
 log = logging.getLogger("openatlas.runner")
 
@@ -39,6 +41,8 @@ class Runner:
             debug=DebugStore(self.repo.data),
         )
         self.stop = threading.Event()
+        self.subscription = SubscriptionStore(self.repo.data)
+        self.subscription_lock = threading.Lock()
         for execution in (self.executor, self.planner):
             if isinstance(execution, DockerExecutor):
                 execution.cancelled = lambda request: (
@@ -49,14 +53,28 @@ class Runner:
     def process(self, job):
         done = threading.Event()
         connection = None
+        subscription_locked = False
 
         def run_agent(executor, workspace, request, progress):
             # Pin one key/URL pair for planning, building and repairs. A Settings
             # change affects the next job, never an already-started job.
-            nonlocal connection
+            nonlocal connection, subscription_locked
             if isinstance(executor, DockerExecutor):
                 if connection is None:
-                    connection = executor.credentials.connection()
+                    if request.get("inference_auth") == "chatgpt":
+                        progress("Waiting for the subscription session")
+                        while not self.subscription_lock.acquire(timeout=1):
+                            if (
+                                self.stop.is_set()
+                                or self.repo.job(job["id"])["status"] != "running"
+                            ):
+                                raise ValueError(
+                                    "Generation cancelled while waiting for the subscription session"
+                                )
+                        subscription_locked = True
+                        connection = self.subscription.session()
+                    else:
+                        connection = executor.credentials.connection()
                 return executor.run(workspace, request, progress, connection=connection)
             return executor.run(workspace, request, progress)
 
@@ -127,7 +145,8 @@ class Runner:
                     self.repo.stage(job["id"], "validating")
                     progress("Checking the Notebook in a sandboxed browser")
                     try:
-                        manifest = validate(workspace)
+                        with recording(self.repo.data, job["id"], attempt):
+                            manifest = validate(workspace)
                         break
                     except Exception as validation_error:
                         self.store.quarantine(
@@ -167,6 +186,8 @@ class Runner:
         finally:
             done.set()
             heart.join()
+            if subscription_locked:
+                self.subscription_lock.release()
 
     def cleanup_expired(self):
         try:
@@ -186,6 +207,11 @@ class Runner:
             pass
 
     def run(self):
+        threading.Thread(
+            target=SubscriptionWorker(self.subscription).run,
+            args=(self.stop,),
+            daemon=True,
+        ).start()
         threading.Thread(
             target=observe, args=(self.repo.data, self.stop), daemon=True
         ).start()

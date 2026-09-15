@@ -201,3 +201,25 @@ it("shows a failed validation at its recorded stage", async () => {
     "Up next",
   );
 });
+
+it("retains validation failures while implementation repairs are running", async () => {
+ vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,json:async()=>({
+  job:{status:'running',stage:'building',progress:'Repairing browser issues',request:{provider:'codex'}},
+  updated_at:null,containers:[],events:[{stage:'validating',message:'Checking in browser',created_at:new Date().toISOString()}],
+  validation:[{round:1,status:'failed',reason:'Interaction check 1 failed',checks:[{id:'interaction-1',title:'Interaction 1',status:'failed',expected:'Feedback is visible',reason:'Feedback remained hidden'}]}]
+ })}));
+ render(<DebugInspector jobId="test" onClose={()=>{}} />);
+ fireEvent.click(await screen.findByRole('button', {name:/Validating/}));
+ expect(screen.queryByText('Validating hasn’t started yet')).not.toBeInTheDocument();
+ expect(screen.getByText('Round 1')).toBeVisible();
+ expect(screen.getByText('Feedback remained hidden')).toBeVisible();
+});
+
+it('offers downloads for the selected stage and the entire attempt', async () => {
+ vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,json:async()=>({job:{status:'succeeded',stage:'completed',progress:'Ready',request:{provider:'codex'}},updated_at:null,containers:[]})}));
+ render(<DebugInspector jobId="test-job" onClose={()=>{}} />);
+ expect(await screen.findByRole('link',{name:'Download all stage traces'})).toHaveAttribute('href','/api/jobs/test-job/trace');
+ fireEvent.click(screen.getByRole('button',{name:/Validating/}));
+ expect(screen.getByRole('link',{name:'Download validating trace'})).toHaveAttribute('href','/api/jobs/test-job/trace?stage=validating');
+ expect(screen.getByRole('link',{name:'Download validating trace'})).toHaveAttribute('download');
+});

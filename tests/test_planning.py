@@ -246,5 +246,6 @@ def test_inspector_links_reused_planning_and_records_stage_events(system):
     details = client.get('/api/jobs/'+build['id']+'/debug').json()
     assert details['planning_job_id'] == job['id']
     assert [j['id'] for j in details['related_jobs']] == [job['id'], build['id']]
-    assert [e['stage'] for e in details['events']] == ['validating', 'validating']
+    assert [e['stage'] for e in details['events']] == ['validating'] * 3
+    assert [e['message'] for e in details['events']] == ['Started validating', 'Checking keyboard interaction', 'Interaction check failed']
     assert details['events'][-1]['message'] == 'Interaction check failed'

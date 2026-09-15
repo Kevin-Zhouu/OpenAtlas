@@ -87,11 +87,19 @@ class Repository:
         from .models import DEFAULT_MODEL
         from .planning import current_planner_instructions
 
-        saved = json.loads(self.rows("SELECT value FROM settings WHERE id=1")[0]["value"])
+        saved = json.loads(
+            self.rows("SELECT value FROM settings WHERE id=1")[0]["value"]
+        )
         return {
+            "generation_timeout_minutes": max(
+                1, min(1440, (config.TIMEOUT + 59) // 60)
+            ),
+            "inference_auth": "api_key",
             "planner_model": DEFAULT_MODEL,
             **saved,
-            "planner_instructions": current_planner_instructions(saved.get("planner_instructions")),
+            "planner_instructions": current_planner_instructions(
+                saved.get("planner_instructions")
+            ),
         }
 
     def save_settings(self, settings):
@@ -179,7 +187,12 @@ class Repository:
     def progress(self, job_id, message=None):
         with self.engine.begin() as c:
             if message:
-                c.execute(text("INSERT INTO job_events(job_id,stage,message,created_at) SELECT id,stage,:m,:t FROM jobs WHERE id=:id AND status='running'"), {'id': job_id, 'm': message, 't': now()})
+                c.execute(
+                    text(
+                        "INSERT INTO job_events(job_id,stage,message,created_at) SELECT id,stage,:m,:t FROM jobs WHERE id=:id AND status='running'"
+                    ),
+                    {"id": job_id, "m": message, "t": now()},
+                )
             c.execute(
                 text(
                     "UPDATE jobs SET progress=COALESCE(:p,progress),updated_at=:t,lease_until=:l WHERE id=:id AND status='running'"
@@ -189,7 +202,12 @@ class Repository:
 
     def fail(self, job_id, error):
         with self.engine.begin() as c:
-            c.execute(text("INSERT INTO job_events(job_id,stage,message,created_at) SELECT id,stage,:m,:t FROM jobs WHERE id=:id AND status='running'"), {'id': job_id, 'm': error[:2000], 't': now()})
+            c.execute(
+                text(
+                    "INSERT INTO job_events(job_id,stage,message,created_at) SELECT id,stage,:m,:t FROM jobs WHERE id=:id AND status='running'"
+                ),
+                {"id": job_id, "m": error[:2000], "t": now()},
+            )
             c.execute(
                 text(
                     "UPDATE jobs SET status='failed',stage='failed',progress='Generation failed',error=:e,updated_at=:t WHERE id=:id AND status='running'"
@@ -233,6 +251,16 @@ class Repository:
             )
             c.execute(
                 text(
+                    "INSERT INTO job_events(job_id,stage,message,created_at) VALUES (:id,'publishing',:m,:t)"
+                ),
+                {
+                    "id": job["id"],
+                    "m": "Published Notebook version " + version,
+                    "t": now(),
+                },
+            )
+            c.execute(
+                text(
                     "UPDATE jobs SET status='succeeded',stage='completed',progress='Ready to explore',version_id=:v,updated_at=:t WHERE id=:id"
                 ),
                 {"v": version, "t": now(), "id": job["id"]},
@@ -259,6 +287,12 @@ class Repository:
 
     def stage(self, job_id, stage):
         with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "INSERT INTO job_events(job_id,stage,message,created_at) SELECT id,:s,:m,:t FROM jobs WHERE id=:id AND status='running' AND stage != :s"
+                ),
+                {"id": job_id, "s": stage, "m": "Started " + stage, "t": now()},
+            )
             c.execute(
                 text("UPDATE jobs SET stage=:s WHERE id=:id AND status='running'"),
                 {"s": stage, "id": job_id},

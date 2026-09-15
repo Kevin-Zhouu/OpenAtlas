@@ -1,28 +1,31 @@
-from urllib.parse import urlsplit
-import os
 import ipaddress
+import json
+import os
 import secrets
 from typing import Optional
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
-from .reader import reader_document
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
 
 from . import config
+from .agents import DEFAULT_TEACHING_PROMPT, CodexAdapter
 from .artifacts import ArtifactStore, artifact_media_type
-from .phone import PhoneAccess, NetworkTrustedHostMiddleware, network_url
 from .credentials import Credentials
 from .debug import DebugStore, redact
-import json
 from .models import DEFAULT_MODEL, MODELS
-from .repository import Repository
-from .skills import SkillCatalog
-from .agents import CodexAdapter, DEFAULT_TEACHING_PROMPT
-from .skill_editor import SkillEditor
+from .phone import NetworkTrustedHostMiddleware, PhoneAccess, network_url
 from .planning import DEFAULT_PLANNER_INSTRUCTIONS
+from .reader import reader_document
+from .repository import Repository
+from .skill_editor import SkillEditor
+from .skills import SkillCatalog
+from .subscription import SubscriptionStore, auth_secrets
+from .trace_export import STAGES, trace_archive
+from .validation_report import reports as validation_reports
 
 
 class Generation(BaseModel):
@@ -37,6 +40,8 @@ class Generation(BaseModel):
 
 
 class Settings(BaseModel):
+    generation_timeout_minutes: int = Field(default=120, ge=1, le=1440, strict=True)
+    inference_auth: str = Field(default="api_key", pattern=r"^(api_key|chatgpt)$")
     planner_model: str = Field(default=DEFAULT_MODEL, min_length=1, max_length=200, pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$")
     planner_instructions: str = Field(default=DEFAULT_PLANNER_INSTRUCTIONS, min_length=1, max_length=40000)
     teaching_prompt: Optional[str] = Field(default=None, max_length=40000)
@@ -98,6 +103,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     catalog = catalog or SkillCatalog()
     store = store or ArtifactStore(repo.data)
     credentials = credentials or Credentials(repo.data)
+    subscription = SubscriptionStore(repo.data)
     app = FastAPI(title="OpenAtlas", docs_url=None, redoc_url=None)
 
     @app.exception_handler(RequestValidationError)
@@ -274,7 +280,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             raise HTTPException(422, "Unknown provider")
         saved = body.model_dump()
         previous = repo.settings()
-        for field in ('planner_model', 'planner_instructions'):
+        for field in ('planner_model', 'planner_instructions', 'inference_auth', 'generation_timeout_minutes'):
             if field not in body.model_fields_set:
                 saved[field] = previous[field]
         repo.save_settings(saved)
@@ -345,6 +351,23 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     @app.get("/api/inference-profiles")
     def inference_profiles():
         return credentials.profiles()
+
+    @app.get("/api/subscription")
+    def subscription_status():
+        return subscription.status()
+
+    @app.post("/api/subscription/login", status_code=202)
+    def subscription_login():
+        if not subscription.available():
+            raise HTTPException(503, "The OpenAtlas runner is unavailable. Start the runner and try again.")
+        try:
+            return subscription.start()
+        except ValueError as error:
+            raise HTTPException(409, str(error))
+
+    @app.delete("/api/subscription")
+    def subscription_logout():
+        return subscription.sign_out()
 
     @app.post("/api/inference-profiles", status_code=201)
     @app.put("/api/inference-profiles/{profile_id}")
@@ -421,7 +444,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         except ValueError as e:
             raise HTTPException(422, str(e))
         if body.prompt_only and provider != 'codex':
-            raise HTTPException(422, 'Prompt planning requires the Codex provider and an OpenAI key')
+            raise HTTPException(422, 'Prompt planning requires the Codex provider')
         try:
             catalog.snapshot(selected, repo.data / 'skill-inputs')
         except (ValueError, OSError) as error:
@@ -440,6 +463,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 "skills": selected,
                 "skills_enabled": skills_enabled is not False,
                 "provider": provider,
+                "inference_auth": settings["inference_auth"],
+                "generation_timeout_minutes": settings["generation_timeout_minutes"],
                 "model": settings["model"],
                 "teaching_prompt": settings.get("teaching_prompt") or DEFAULT_TEACHING_PROMPT,
                 "base_version": base_version,
@@ -475,6 +500,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         for key in ("revalidate_job", "continue_job", "validation_feedback", "previous_error", "job_id"):
             request.pop(key, None)
         request["retry_of"] = job_id
+        request["inference_auth"] = repo.settings()["inference_auth"]
+        request["generation_timeout_minutes"] = repo.settings()["generation_timeout_minutes"]
         if body.mode == "continue":
             request["continue_job"] = job_id
             request["previous_error"] = (original.get("error") or "")[:2000]
@@ -529,6 +556,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         original = repo.job(attempt['job_id'])
         request = dict(original['request'], build_prompt=revision['content'], prompt_only=False,
                        planning_attempt_id=revision['attempt_id'], prompt_revision_id=revision_id)
+        request['inference_auth'] = repo.settings()['inference_auth']
+        request['generation_timeout_minutes'] = repo.settings()['generation_timeout_minutes']
         for key in ('continue_job', 'revalidate_job', 'retry_of', 'validation_feedback', 'job_id'):
             request.pop(key, None)
         return repo.enqueue(request, original['notebook_id'])
@@ -545,6 +574,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             request.pop(key, None)
         settings = repo.settings()
         request.update(planner_model=settings['planner_model'], planner_instructions=settings['planner_instructions'])
+        request['inference_auth'] = settings['inference_auth']
+        request['generation_timeout_minutes'] = settings['generation_timeout_minutes']
         return repo.enqueue(request, original['notebook_id'])
 
     @app.get("/api/jobs/{job_id}/debug")
@@ -577,7 +608,21 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 planning_job_id = attempts[0]['job_id']
         return json.loads(redact(json.dumps({"job": job, **debug.read(job_id), "generation": metadata,
             "events": repo.rows('SELECT stage,message,created_at FROM job_events WHERE job_id=:id ORDER BY id', id=job_id),
-            "related_jobs": related, "planning_job_id": planning_job_id}), (known_key,)))
+            "related_jobs": related, "planning_job_id": planning_job_id,
+            "validation": validation_reports(repo.data, job)}), [known_key] + auth_secrets(subscription._read().get("auth") or {})))
+
+    @app.get("/api/jobs/{job_id}/trace")
+    def download_trace(job_id: str, stage: Optional[str] = None):
+        if stage is not None and stage not in STAGES:
+            raise HTTPException(422, "Unknown trace stage")
+        snapshot = job_debug(job_id)
+        planning = job_debug(snapshot["planning_job_id"]) if snapshot.get("planning_job_id") and snapshot["planning_job_id"] != job_id else None
+        values = [p.get("api_key", "") for p in credentials._read().get("profiles", [])]
+        values += auth_secrets(subscription._read().get("auth") or {})
+        values.append(os.environ.get("OPENAI_API_KEY", ""))
+        content = trace_archive(repo.data, snapshot, planning, stage, values)
+        filename = f"openatlas-{snapshot['job']['id']}-{stage or 'all-stages'}-trace.zip"
+        return Response(content, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "no-store"})
 
     @app.get("/api/jobs/{job_id}")
     def job(job_id: str):
