@@ -1,0 +1,43 @@
+{
+  "input_reference_url": "https://www.tripo3d.ai/3d-prompts/a-storm-trapped-in-a-cube-2096220264413409648",
+  "reference_page_title": "A storm trapped in a cube — GPT-6 Astra 3D Prompt | Tripo",
+  "demo_video_url": "https://media.tripogrowth.space/media/e8f23aa9-80c1-43da-a974-26d7928effcf.mp4?cors=1",
+  "live_site_url": null,
+  "repository_url": null,
+  "repository_commit": null,
+  "repository_license": null,
+  "discovery_evidence": [
+    {
+      "method": "regular Chrome reference DOM",
+      "artifact": "reference/inspection.json",
+      "url": "https://www.tripo3d.ai/3d-prompts/a-storm-trapped-in-a-cube-2096220264413409648",
+      "at": "2026-09-14T11:50:24.908338+00:00"
+    },
+    {
+      "method": "multimodal review of captured artifact",
+      "artifact": "review.json",
+      "at": "2026-09-14T11:59:05.956536+00:00"
+    },
+    {
+      "method": "focused web search and creator post inspection",
+      "artifact": "discovery-search.json",
+      "at": "2026-09-14T12:07:21.751010+00:00"
+    },
+    {
+      "method": "Original creator post and visible replies read in regular Chrome",
+      "artifact": "reference/original-post.json",
+      "at": "2026-09-14T12:07:21.751024+00:00"
+    }
+  ],
+  "source_identification_confidence": 0.9,
+  "repository_confidence": 0,
+  "source_status": "not-publicly-available",
+  "evaluated_target": "demo-video-only",
+  "notes": [
+    "Video-only evaluation; live, mobile, source and runtime behavior unverified.",
+    "Hero extracted at native recording dimensions; not a live screenshot."
+  ],
+  "original_post_url": "https://x.com/zwb44/status/2096220264413409648",
+  "live_site_confidence": 0,
+  "source_outcome": "source-unavailable"
+}

@@ -1,0 +1,30 @@
+{
+  "at": "2026-09-14T11:46:54.644999+00:00",
+  "reviewer": "Codex current-session multimodal LLM review",
+  "rubric": "/Users/bigsoup/Downloads/openatlas-mvp-llm-judge/EVALUATION_RUBRIC.md",
+  "rubric_sha256": "2f6e6d6d1ecff21b88454d9ee9b08d2385a06a470c368c4c710411fc1b508d35",
+  "reviewed_artifacts": [
+    "reference/keyframes/frame-005.png",
+    "reference/keyframes/frame-007.png",
+    "reference/contact-sheet.jpg",
+    "interaction.md",
+    "reference/keyframes/frame-006.png",
+    "reference/keyframes/frame-008.png",
+    "reference/keyframes/frame-009.png"
+  ],
+  "limitations": [
+    "Demo only; no verified live URL or original repository.",
+    "Hero is an extracted frame, not a live screenshot."
+  ],
+  "curator_handling": "Opinions preserved, not score targets",
+  "evaluation_scope": "demo-video-only",
+  "artifact_sha256": {
+    "reference/keyframes/frame-005.png": "7fde52366c20aa2d0030bad64dc68df780c6eacc3a25215a7ee259ab85e11319",
+    "reference/keyframes/frame-007.png": "2ce6fa8df01c02a6ef2ceb1639780b48325e618e57ce806250f675a2e20ccb34",
+    "reference/contact-sheet.jpg": "b6d2145b937cb959364749618f5bf879d7c914c4fb826d371b3c856123de5f2a",
+    "interaction.md": "2b0726f8779c67b6b30da6568043b117197b03b2f4fc280a466754c7cb145033",
+    "reference/keyframes/frame-006.png": "21c61344eda0f6bcc200d26264521184ab39025fe877ec54e14b412d065b0112",
+    "reference/keyframes/frame-008.png": "8b4c34e4d237f931a64a22ae023062f206843943a9d652b901d530e11a836ede",
+    "reference/keyframes/frame-009.png": "9a7dda071fe93373fe1afc50becd86d704da171373ccaf4468e954ac485017a2"
+  }
+}

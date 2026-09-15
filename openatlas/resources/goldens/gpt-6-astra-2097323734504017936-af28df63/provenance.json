@@ -1,0 +1,43 @@
+{
+  "input_reference_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097323734504017936",
+  "reference_page_title": "Temple of Heaven Hall of Prayer for Good Harvest — TypeScript + Three.js WebGL Project — GPT-6 Astra 3D Prompt | Tripo",
+  "demo_video_url": "https://media.tripogrowth.space/media/01eda954-4f59-4a02-ba94-7d5470fe7de8.mp4?cors=1",
+  "live_site_url": null,
+  "repository_url": null,
+  "repository_commit": null,
+  "repository_license": null,
+  "discovery_evidence": [
+    {
+      "method": "regular Chrome reference DOM",
+      "artifact": "reference/inspection.json",
+      "url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2097323734504017936",
+      "at": "2026-09-14T11:50:14.048087+00:00"
+    },
+    {
+      "method": "multimodal review of captured artifact",
+      "artifact": "review.json",
+      "at": "2026-09-14T11:59:05.883232+00:00"
+    },
+    {
+      "method": "focused web search and creator post inspection",
+      "artifact": "discovery-search.json",
+      "at": "2026-09-14T12:07:21.746034+00:00"
+    },
+    {
+      "method": "Original creator post and visible replies read in regular Chrome",
+      "artifact": "reference/original-post.json",
+      "at": "2026-09-14T12:07:21.746048+00:00"
+    }
+  ],
+  "source_identification_confidence": 0.9,
+  "repository_confidence": 0,
+  "source_status": "not-publicly-available",
+  "evaluated_target": "demo-video-only",
+  "notes": [
+    "Video-only evaluation; live, mobile, source and runtime behavior unverified.",
+    "Hero extracted at native recording dimensions; not a live screenshot."
+  ],
+  "original_post_url": "https://x.com/goan999999/status/2097323734504017936",
+  "live_site_confidence": 0,
+  "source_outcome": "source-unavailable"
+}

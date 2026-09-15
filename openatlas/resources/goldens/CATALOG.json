@@ -1,0 +1,416 @@
+{
+  "origin": "OpenAtlas-dataset/gold_websites/goldens",
+  "snapshot_date": "2026-09-14",
+  "limitations": "Selective study records and contact sheets only. Source code, videos and full-resolution captures are not bundled. Notes may reference omitted files. Scores are provisional evidence, not certified learning outcomes. Public availability is not an asset license. Read provenance and do not copy assets into notebooks without verifying licensing.",
+  "references": [
+    {
+      "id": "a-playful-toddler-toy-world-2096201415051911597-59a51ae2",
+      "title": "A playful toddler toy world \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "a-playful-toddler-toy-world-2096201415051911597-59a51ae2/principles.md",
+          "sha256": "9480b4dbdcd008ed2cb41ff2a5fcd1774069a6eb5710134f35436c797fd08d51"
+        },
+        {
+          "path": "a-playful-toddler-toy-world-2096201415051911597-59a51ae2/interaction.md",
+          "sha256": "58e46d5a40d9a30c8ac83acdb530578b9d48327c71aa7b63f322c760bf8ed48c"
+        },
+        {
+          "path": "a-playful-toddler-toy-world-2096201415051911597-59a51ae2/provenance.json",
+          "sha256": "21c59f8d48eb996a68a249a0e94e365bc6d3d011aab4eb739a1fa70ec578039c"
+        },
+        {
+          "path": "a-playful-toddler-toy-world-2096201415051911597-59a51ae2/evaluation.json",
+          "sha256": "7138d1eec02f718aa2616a1c5463bfb059e1ffaba9cbe147c8a656f39abea5d4"
+        },
+        {
+          "path": "a-playful-toddler-toy-world-2096201415051911597-59a51ae2/review.json",
+          "sha256": "da04a24aacf55377636a4c1d18ebad842396542253b6ab72d427adcd49951238"
+        }
+      ]
+    },
+    {
+      "id": "a-storm-trapped-in-a-cube-2096220264413409648-f2596a9d",
+      "title": "A storm trapped in a cube \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "a-storm-trapped-in-a-cube-2096220264413409648-f2596a9d/principles.md",
+          "sha256": "3ebb19153a52b3fb2d5a32a4986e081398fcb6ab23761537021c27b50ecd4797"
+        },
+        {
+          "path": "a-storm-trapped-in-a-cube-2096220264413409648-f2596a9d/interaction.md",
+          "sha256": "e181bcdd19b39650964b29c2b2a546afe0edf00fc01b26e922ff81a502eef6c4"
+        },
+        {
+          "path": "a-storm-trapped-in-a-cube-2096220264413409648-f2596a9d/provenance.json",
+          "sha256": "33d5efbb040491aa6d192fbb0581988832e73b7dcdf4c4690ee20a17538ba3de"
+        },
+        {
+          "path": "a-storm-trapped-in-a-cube-2096220264413409648-f2596a9d/evaluation.json",
+          "sha256": "d1e581ca61d49a8304420f513ee2046305cbd49966100cc24f465a408a80018e"
+        },
+        {
+          "path": "a-storm-trapped-in-a-cube-2096220264413409648-f2596a9d/review.json",
+          "sha256": "9f92fed95563b8a12cc63e202ace0754a9df449769ab5609efd72ba68b415882"
+        }
+      ]
+    },
+    {
+      "id": "black-hole-formation-in-webgl-2096093614397170104-cbaa5efc",
+      "title": "Black-hole formation in WebGL \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "black-hole-formation-in-webgl-2096093614397170104-cbaa5efc/principles.md",
+          "sha256": "00d2ca20e6fcbee876e5f29c3fe257e2b4f6a1001ff8c4f116771aaf4e330795"
+        },
+        {
+          "path": "black-hole-formation-in-webgl-2096093614397170104-cbaa5efc/interaction.md",
+          "sha256": "2b0726f8779c67b6b30da6568043b117197b03b2f4fc280a466754c7cb145033"
+        },
+        {
+          "path": "black-hole-formation-in-webgl-2096093614397170104-cbaa5efc/provenance.json",
+          "sha256": "621dc454b32ba7c090e97d5d3a23f01feeed30792e5b2f9b46adfd5ae11cf728"
+        },
+        {
+          "path": "black-hole-formation-in-webgl-2096093614397170104-cbaa5efc/evaluation.json",
+          "sha256": "3ce108758db25f59ed97c60ae390e41d9f6e532148a800463fc48f3ba1eec3bd"
+        },
+        {
+          "path": "black-hole-formation-in-webgl-2096093614397170104-cbaa5efc/review.json",
+          "sha256": "68691ae14180a61348dc946f1002a09798c4e2b166e392967f68913c196591c6"
+        }
+      ]
+    },
+    {
+      "id": "chernobyl-atlas-1575d13d",
+      "title": "Chernobyl Atlas \u2014 Interactive RBMK Exhibit",
+      "evidence": "official-live-site",
+      "files": [
+        {
+          "path": "chernobyl-atlas-1575d13d/principles.md",
+          "sha256": "1c31ae4b039fec3dd765e9a1b1260a6a2122c3f9bed035d94584bc7fcd950409"
+        },
+        {
+          "path": "chernobyl-atlas-1575d13d/interaction.md",
+          "sha256": "30ad6e1224e1c35fadd2f86e2981a0b883c09c825befed4e2d6bbe312a88d9b4"
+        },
+        {
+          "path": "chernobyl-atlas-1575d13d/provenance.json",
+          "sha256": "fc656c5ad58eccb5a037a4692cbe1092779805cb111f3305bfb0cdfcbc40c03a"
+        },
+        {
+          "path": "chernobyl-atlas-1575d13d/evaluation.json",
+          "sha256": "16b2503f7845bc7292601dbaf0536fd28e0aa3a946ce69458a8d59794daf37d9"
+        },
+        {
+          "path": "chernobyl-atlas-1575d13d/review.json",
+          "sha256": "6a6deb2df73bdbcc3994ae1a7888e5fd9fb5438599d3df9c3c405d2a46e5a851"
+        },
+        {
+          "path": "chernobyl-atlas-1575d13d/fact-check.json",
+          "sha256": "f7768cdc945aefd5decc1d05a74fb2c92111327d868e0f613dcbafcf1f9d8695"
+        },
+        {
+          "path": "chernobyl-atlas-1575d13d/contact-sheet.jpg",
+          "sha256": "202e6c4eaa9c72dd95e456a75f4fb4a49c9dd3e6947c4670233b082d2d8e4dc0"
+        }
+      ]
+    },
+    {
+      "id": "delivery-network-with-bridge-closures-2096042360513904742-c3a41685",
+      "title": "Delivery network with bridge closures \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "delivery-network-with-bridge-closures-2096042360513904742-c3a41685/principles.md",
+          "sha256": "5a5714129cb69c6f22750fb844ece5f598fb9f92627c9d37b7598870206e8706"
+        },
+        {
+          "path": "delivery-network-with-bridge-closures-2096042360513904742-c3a41685/interaction.md",
+          "sha256": "fc23d233d62bc6c4bd7a2972bdc81e52fa2d21bbf435fd9b1718c2b893596ec9"
+        },
+        {
+          "path": "delivery-network-with-bridge-closures-2096042360513904742-c3a41685/provenance.json",
+          "sha256": "66f2104ab5419a84a9ee828e3af1277c1a1556599109d8d5485ae550010f5162"
+        },
+        {
+          "path": "delivery-network-with-bridge-closures-2096042360513904742-c3a41685/evaluation.json",
+          "sha256": "37aa830707f4257a3c89128a2643053e7a7aa4a18a7c5129f635a9581f89a0ad"
+        },
+        {
+          "path": "delivery-network-with-bridge-closures-2096042360513904742-c3a41685/review.json",
+          "sha256": "546f8375d5da22340988d740fadf4173de5d7d95f64f98427de1c08366ee7f75"
+        }
+      ]
+    },
+    {
+      "id": "gpt-6-astra-2096641728497275011-a8535183",
+      "title": "Mini World 3D exploration game \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": null,
+      "files": [
+        {
+          "path": "gpt-6-astra-2096641728497275011-a8535183/principles.md",
+          "sha256": "ed6545180f231a6033335f78a6d32e7049242a8e6edec81ab9a55ccfbda55554"
+        },
+        {
+          "path": "gpt-6-astra-2096641728497275011-a8535183/interaction.md",
+          "sha256": "e1ba71b3099ca5fa8ab3251282323003ad3e117daa6c2967895ee68108e9242d"
+        },
+        {
+          "path": "gpt-6-astra-2096641728497275011-a8535183/provenance.json",
+          "sha256": "971e4ced60717923aeb10eb7ffeaf1ce22e636954c162478c8bb7ad44e4b404c"
+        }
+      ]
+    },
+    {
+      "id": "gpt-6-astra-2097323734504017936-af28df63",
+      "title": "Temple of Heaven Hall of Prayer for Good Harvest \u2014 TypeScript + Three.js WebGL Project \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "gpt-6-astra-2097323734504017936-af28df63/principles.md",
+          "sha256": "ffb2c82a0e2dfe7218f8ccd81b69474a0fa9d590fac8aa642bde19eac51db87a"
+        },
+        {
+          "path": "gpt-6-astra-2097323734504017936-af28df63/interaction.md",
+          "sha256": "c81100e56bdf33439f50add581601abc9e4c2325da62fd7432717d1b80b7d268"
+        },
+        {
+          "path": "gpt-6-astra-2097323734504017936-af28df63/provenance.json",
+          "sha256": "04150696a2f0266fba012dc3a862a6ef2cdb5075f77d0beb26b0679414abe3f7"
+        },
+        {
+          "path": "gpt-6-astra-2097323734504017936-af28df63/evaluation.json",
+          "sha256": "4253a262a47c872d0c4dc5a6686ef0de1a4f930945cb209e2fd6d400d26f10be"
+        },
+        {
+          "path": "gpt-6-astra-2097323734504017936-af28df63/review.json",
+          "sha256": "cdc0902c79debf5c92427ccc92808c5871bcf9e3e6633159356f9d7efdd9fedd"
+        }
+      ]
+    },
+    {
+      "id": "gpt-6-astra-2098105648106078541-84d8e4f3",
+      "title": "Interactive 3D atlas of the human head and brain \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "local-build",
+      "files": [
+        {
+          "path": "gpt-6-astra-2098105648106078541-84d8e4f3/principles.md",
+          "sha256": "6a17b4dfc52e68a8765471e810fe69e499957eb5cf1bdb93e58d490479d7d488"
+        },
+        {
+          "path": "gpt-6-astra-2098105648106078541-84d8e4f3/interaction.md",
+          "sha256": "0babaa18a8ed4a60a7e1d0ed7a42952b8d84c7f5bc67b8136a039ef016340c5e"
+        },
+        {
+          "path": "gpt-6-astra-2098105648106078541-84d8e4f3/provenance.json",
+          "sha256": "68e41bda89eb13f50f729a4efbdbd73dbaafacb0d32e0496ec84a3f11d6b7f79"
+        },
+        {
+          "path": "gpt-6-astra-2098105648106078541-84d8e4f3/evaluation.json",
+          "sha256": "a8733cd241f2ace29a18c76f8562b09bf9a5bd4c124149e081cc99c49a1dd8a0"
+        },
+        {
+          "path": "gpt-6-astra-2098105648106078541-84d8e4f3/review.json",
+          "sha256": "e8574a8838860d49cdfca850d938f2ed909fb34c0f0c452df2f6d33519201918"
+        },
+        {
+          "path": "gpt-6-astra-2098105648106078541-84d8e4f3/contact-sheet.jpg",
+          "sha256": "c20fa6cc4fac7cea454686df239323eaf529fa7797978263c66c634424b360ab"
+        }
+      ]
+    },
+    {
+      "id": "gpt-6-astra-2098403061463224543-a0b650d6",
+      "title": "Temple Miniature Diorama Scene \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "gpt-6-astra-2098403061463224543-a0b650d6/principles.md",
+          "sha256": "988c8c2c1107120daf367f31e476a627951a7e962bbfd0c083f7432864c5d48e"
+        },
+        {
+          "path": "gpt-6-astra-2098403061463224543-a0b650d6/interaction.md",
+          "sha256": "a9cfab542e37cfec41c542c48a7706f37d86f1229dc733a7f108e43de4a7f477"
+        },
+        {
+          "path": "gpt-6-astra-2098403061463224543-a0b650d6/provenance.json",
+          "sha256": "b0e44e798094e4f16197714b64f45c70f6084751148fe8fd0a9418920ea421b5"
+        },
+        {
+          "path": "gpt-6-astra-2098403061463224543-a0b650d6/evaluation.json",
+          "sha256": "18d5481576e06c71c9e9ec5c33e92b638c9b9665b1769952b048a04945894365"
+        },
+        {
+          "path": "gpt-6-astra-2098403061463224543-a0b650d6/review.json",
+          "sha256": "73357c1c343b604494d7bfc1369adf6400a56bda4657660cb68b6ddf56cb90e4"
+        }
+      ]
+    },
+    {
+      "id": "gpt-6-astra-efeb4dd1",
+      "title": "Astra Prompts: 3D Examples for Blender & Three.js | Tripo",
+      "evidence": null,
+      "files": [
+        {
+          "path": "gpt-6-astra-efeb4dd1/principles.md",
+          "sha256": "2c39e360d6fed8ea4f6f8bf2b403058a3bb8ba490f7c0cd40a15e8ca089115f4"
+        },
+        {
+          "path": "gpt-6-astra-efeb4dd1/interaction.md",
+          "sha256": "c44333098826392acca51148527090345bae9dc61b251b108dce36a36650bcde"
+        },
+        {
+          "path": "gpt-6-astra-efeb4dd1/provenance.json",
+          "sha256": "46b9973e5f1872f7c0f37756a70b71fb972b284a9cbe99db599dd20cc5b54745"
+        }
+      ]
+    },
+    {
+      "id": "human-atlas-seven-c8fbf0bc",
+      "title": "Human Atlas",
+      "evidence": "official-live-site",
+      "files": [
+        {
+          "path": "human-atlas-seven-c8fbf0bc/principles.md",
+          "sha256": "edac4e44dd3c90c9fcf688952579046219429276991408bd2af4596718a14875"
+        },
+        {
+          "path": "human-atlas-seven-c8fbf0bc/interaction.md",
+          "sha256": "1633f8140fdcc973464e397e63f49dbe25b55a2210219facd64c5178407e556b"
+        },
+        {
+          "path": "human-atlas-seven-c8fbf0bc/provenance.json",
+          "sha256": "a3b9568f61a9d3ee9e1bf9a57072417faa12cd67276a79784633857da8708286"
+        },
+        {
+          "path": "human-atlas-seven-c8fbf0bc/evaluation.json",
+          "sha256": "001836de95be7c975b763ee5f3d7d026c4838b6456d7d71e2e760b5f6fd0cfb5"
+        },
+        {
+          "path": "human-atlas-seven-c8fbf0bc/review.json",
+          "sha256": "eed28bb67c97c985e04996e8c7b7f6b1998541894b4d473d6888c2ea26418cc9"
+        },
+        {
+          "path": "human-atlas-seven-c8fbf0bc/contact-sheet.jpg",
+          "sha256": "0e6a7406551bf1e802a4a40514565aae3dcbd430889d57387b942dee130195e2"
+        }
+      ]
+    },
+    {
+      "id": "interactive-hyperloop-demo-2096250748099068377-2c715ec3",
+      "title": "Interactive Hyperloop demo \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "interactive-hyperloop-demo-2096250748099068377-2c715ec3/principles.md",
+          "sha256": "7cddcf5d17fb6db8fdf553f098ac31f03dcc37587c9b947d2e271d203608069f"
+        },
+        {
+          "path": "interactive-hyperloop-demo-2096250748099068377-2c715ec3/interaction.md",
+          "sha256": "8ce586319e02b4b90a9c55e10afaba4b6afac88ff66d366a8a0bfb0f1777adef"
+        },
+        {
+          "path": "interactive-hyperloop-demo-2096250748099068377-2c715ec3/provenance.json",
+          "sha256": "698afa4cfcafa4d06be9d873dda87802376781fac131aee16d664089c364afe7"
+        },
+        {
+          "path": "interactive-hyperloop-demo-2096250748099068377-2c715ec3/evaluation.json",
+          "sha256": "46ae36d286e62600959fa71cacb830b82c0d801aabc9d7e11aa9229e31ebdde4"
+        },
+        {
+          "path": "interactive-hyperloop-demo-2096250748099068377-2c715ec3/review.json",
+          "sha256": "75e9f5c439287458736774fb93054ef2f9b54aa951cd28fa5bc89b3a488fa32c"
+        }
+      ]
+    },
+    {
+      "id": "interactive-three-js-galaxy-homepage-2095806515579879457-fa80f4e8",
+      "title": "Interactive Three.js galaxy homepage \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "official-live-site",
+      "files": [
+        {
+          "path": "interactive-three-js-galaxy-homepage-2095806515579879457-fa80f4e8/principles.md",
+          "sha256": "b903343b856b46899134c43c477c4739880b623c39404cbdf39d64c98613559c"
+        },
+        {
+          "path": "interactive-three-js-galaxy-homepage-2095806515579879457-fa80f4e8/interaction.md",
+          "sha256": "86028473ab782de75257cddd033b362e7895d6cbcb2765b5cba70ca2a0f2c2ed"
+        },
+        {
+          "path": "interactive-three-js-galaxy-homepage-2095806515579879457-fa80f4e8/provenance.json",
+          "sha256": "204c52333c1d8989bcac56f36440d06e83efaef8bfcb03a30855a9fecd793ca3"
+        },
+        {
+          "path": "interactive-three-js-galaxy-homepage-2095806515579879457-fa80f4e8/evaluation.json",
+          "sha256": "9860008584509cd2703124c93e27a2b1dcabd28e7258d037ebea29511be7b55d"
+        },
+        {
+          "path": "interactive-three-js-galaxy-homepage-2095806515579879457-fa80f4e8/review.json",
+          "sha256": "b13aeb5bcf6ad2d9a9d425cb58ac270204012091f7e153837b5bdbacb453a922"
+        },
+        {
+          "path": "interactive-three-js-galaxy-homepage-2095806515579879457-fa80f4e8/contact-sheet.jpg",
+          "sha256": "a9e482dafa596b88fef2196e73f612cdd842aae58d50038cf969abf3a6034798"
+        }
+      ]
+    },
+    {
+      "id": "orbital-solar-system-explorer-2096339041679442428-8034819f",
+      "title": "Orbital solar-system explorer \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "orbital-solar-system-explorer-2096339041679442428-8034819f/principles.md",
+          "sha256": "bb1bd8f26890943902a75320530171b0c588de4f3739f50879eb6d39209ec650"
+        },
+        {
+          "path": "orbital-solar-system-explorer-2096339041679442428-8034819f/interaction.md",
+          "sha256": "a29e8b2dc800be601bda6e0192ecca448985fc947e418e38fa1ba5b59d98e89d"
+        },
+        {
+          "path": "orbital-solar-system-explorer-2096339041679442428-8034819f/provenance.json",
+          "sha256": "9a6289531008faefa59608c867ecfdf136ab49c51b89d129ecd4aebdb28c7032"
+        },
+        {
+          "path": "orbital-solar-system-explorer-2096339041679442428-8034819f/evaluation.json",
+          "sha256": "afd658c85b984cefb62302cf041735da58ffe431e5eb23f6229ae16f01277c0d"
+        },
+        {
+          "path": "orbital-solar-system-explorer-2096339041679442428-8034819f/review.json",
+          "sha256": "77ddcfcd559f555d6d54ed87ca7e8695831e54194bbd2dc8486de844fd2e5d22"
+        }
+      ]
+    },
+    {
+      "id": "personal-3d-portfolio-with-a-speaking-globe-2096023793772998704-a2ba5515",
+      "title": "Personal 3D portfolio with a speaking globe \u2014 GPT-6 Astra 3D Prompt | Tripo",
+      "evidence": "demo-video-only",
+      "files": [
+        {
+          "path": "personal-3d-portfolio-with-a-speaking-globe-2096023793772998704-a2ba5515/principles.md",
+          "sha256": "4e079416f780d748f872bab69bd0a55de4c3bf88bf54d88cd4480d4d49cccfe7"
+        },
+        {
+          "path": "personal-3d-portfolio-with-a-speaking-globe-2096023793772998704-a2ba5515/interaction.md",
+          "sha256": "2ef94f5bffb820a23a07c54e704530af82f63712946b0f829124ab1ace891b6d"
+        },
+        {
+          "path": "personal-3d-portfolio-with-a-speaking-globe-2096023793772998704-a2ba5515/provenance.json",
+          "sha256": "85fe6bff5ae6904da7749dc034d4fcbcae2d105d5902b8fc7ecb502060fd52bc"
+        },
+        {
+          "path": "personal-3d-portfolio-with-a-speaking-globe-2096023793772998704-a2ba5515/evaluation.json",
+          "sha256": "2cf95057e1bf050708efb04026e0cb4962272e2f4f942707fcef3eeffb2e82a9"
+        },
+        {
+          "path": "personal-3d-portfolio-with-a-speaking-globe-2096023793772998704-a2ba5515/review.json",
+          "sha256": "45d72b31dd152b635dec9080386ba509584f890c26bb2286e448eaeb6076ea41"
+        }
+      ]
+    }
+  ]
+}

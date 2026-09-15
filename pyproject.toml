@@ -11,7 +11,7 @@ test = ["pytest>=8,<9"]
 [tool.setuptools.packages.find]
 include = ["openatlas*"]
 [tool.setuptools.package-data]
-openatlas = ["migrations/*.sql"]
+openatlas = ["migrations/*.sql", "resources/*.md", "resources/goldens/*.json", "resources/goldens/*/*.md", "resources/goldens/*/*.json", "resources/goldens/*/*.jpg"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

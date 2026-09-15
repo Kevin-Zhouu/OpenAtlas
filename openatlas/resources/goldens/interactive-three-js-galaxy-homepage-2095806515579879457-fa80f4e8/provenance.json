@@ -1,0 +1,44 @@
+{
+  "input_reference_url": "https://www.tripo3d.ai/3d-prompts/interactive-three-js-galaxy-homepage-2095806515579879457",
+  "reference_page_title": "Interactive Three.js galaxy homepage — GPT-6 Astra 3D Prompt | Tripo",
+  "demo_video_url": "https://media.tripogrowth.space/media/22e664cb-4772-46cb-a92c-28661cf28a0f.mp4?cors=1",
+  "live_site_url": "https://openai.com/index/gpt-6-astra/",
+  "repository_url": null,
+  "repository_commit": null,
+  "repository_license": null,
+  "discovery_evidence": [
+    {
+      "method": "regular Chrome reference DOM",
+      "artifact": "reference/inspection.json",
+      "url": "https://www.tripo3d.ai/3d-prompts/interactive-three-js-galaxy-homepage-2095806515579879457",
+      "at": "2026-09-14T11:50:29.145051+00:00"
+    },
+    {
+      "method": "Creator post attributes galaxy hero to OpenAI launch; official search result and visually matching live hero",
+      "artifact": "reference/original-post.json",
+      "url": "https://openai.com/index/gpt-6-astra/",
+      "at": "2026-09-14T12:05:25.106439+00:00"
+    },
+    {
+      "method": "multimodal review of captured artifact",
+      "artifact": "review.json",
+      "at": "2026-09-14T12:05:25.107931+00:00"
+    },
+    {
+      "method": "Original creator post and visible replies read in regular Chrome",
+      "artifact": "reference/original-post.json",
+      "at": "2026-09-14T12:07:21.758682+00:00"
+    }
+  ],
+  "source_identification_confidence": 1,
+  "repository_confidence": 0,
+  "source_status": "not-publicly-available",
+  "evaluated_target": "official-live-site",
+  "notes": [
+    "Evaluation scope is the referenced galaxy hero, not the entire launch article.",
+    "Original code repository not found."
+  ],
+  "original_post_url": "https://x.com/threejsresource/status/2095806515579879457",
+  "live_site_confidence": 0.98,
+  "source_outcome": "source-unavailable"
+}

@@ -17,8 +17,8 @@ beforeEach(() => {
     json: async () =>
       url.endsWith("/settings")
         ? { provider: "demo", concurrency: 2, model: "gpt-6-astra" }
-        : url.endsWith("/credentials")
-          ? { configured: false, source: "none" }
+        : url.endsWith("/inference-profiles")
+          ? { active_id: "host", profiles: [{ id: "host", name: "Host configuration", base_url: "https://api.openai.com/v1", configured: false, source: "none" }] }
           : url.endsWith("/models")
             ? [{ id: "gpt-6-astra", name: "GPT-6 Astra", default: true }]
             : url.endsWith("/skills")
@@ -84,7 +84,7 @@ it("shows empty library and explicit demo mode", async () => {
   expect(screen.getByText(/Demo mode/)).toBeInTheDocument();
   fireEvent.click(screen.getByLabelText("Settings"));
   expect(screen.getByRole("dialog")).toBeInTheDocument();
-  await screen.findByText("No API key configured");
+  await screen.findByText(/No host API key configured/);
   expect(screen.getByLabelText("Concurrent generations")).toHaveValue(2);
 });
 it("displays persisted failure details in generation history", async () => {

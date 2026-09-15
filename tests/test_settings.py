@@ -24,7 +24,7 @@ def test_credentials_are_write_only_persistent_and_shared(tmp_path, monkeypatch)
     assert Credentials(tmp_path).openai_key() == key
     assert Runner(repo).executor.credentials.openai_key() == key
     if os.name != "nt":
-        assert Credentials(tmp_path).path.stat().st_mode & 0o777 == 0o600
+        assert Credentials(tmp_path).profiles_path.stat().st_mode & 0o777 == 0o600
     assert client.get("/private/openai-key").status_code == 404
     assert client.delete("/api/credentials").json()["configured"] is False
     assert not Credentials(tmp_path).path.exists()
@@ -32,7 +32,7 @@ def test_credentials_are_write_only_persistent_and_shared(tmp_path, monkeypatch)
 
 def test_credentials_validation_and_origin_boundary(tmp_path):
     client = TestClient(create_app(Repository(tmp_path)), base_url="http://localhost")
-    invalid = "private-invalid-key"
+    invalid = "private invalid key"
     response = client.put("/api/credentials", json={"api_key": invalid})
     assert response.status_code == 422
     assert invalid not in response.text
@@ -77,3 +77,18 @@ def test_astra_default_and_model_selection_persist(tmp_path):
     assert Repository(tmp_path).settings()["model"] == "gpt-5.6-sol"
     job = client.post("/api/jobs", json={"prompt": "Teach me binary search"}).json()
     assert job["request"]["model"] == "gpt-5.6-sol"
+
+
+def test_stock_planner_upgrade_preserves_custom_and_snapshot(tmp_path):
+    from pathlib import Path
+
+    from openatlas.planning import DEFAULT_PLANNER_INSTRUCTIONS
+
+    repo = Repository(tmp_path)
+    saved = repo.settings()
+    saved["planner_instructions"] = (Path(__file__).parent / "fixtures/legacy-planner-instructions.txt").read_text()
+    repo.save_settings(saved)
+    assert Repository(tmp_path).settings()["planner_instructions"] == DEFAULT_PLANNER_INSTRUCTIONS
+    saved["planner_instructions"] = "Use a custom visual direction and respect my topic."
+    repo.save_settings(saved)
+    assert Repository(tmp_path).settings()["planner_instructions"] == saved["planner_instructions"]

@@ -1,0 +1,32 @@
+{
+  "input_reference_url": "https://human-atlas-seven.vercel.app/?utm_source=chatgpt.com",
+  "reference_page_title": "Human Atlas",
+  "demo_video_url": null,
+  "live_site_url": "https://human-atlas-seven.vercel.app/",
+  "repository_url": "https://github.com/ashemag/human-atlas",
+  "repository_commit": "1c38bf35c254a891200d3cedecfd57abebe83d8d",
+  "repository_license": "Application code MIT; anatomical data CC BY 4.0",
+  "discovery_evidence": [
+    {
+      "method": "Head atlas README attribution points to repository; repository README explicitly links exact input live URL",
+      "artifact": "source/README.md",
+      "url": "https://github.com/ashemag/human-atlas",
+      "at": "2026-09-14T11:44:53.054853+00:00"
+    },
+    {
+      "method": "multimodal review of captured artifact",
+      "artifact": "review.json",
+      "at": "2026-09-14T11:48:36.035869+00:00"
+    }
+  ],
+  "source_identification_confidence": 1,
+  "repository_confidence": 1,
+  "source_status": "public-repository",
+  "evaluated_target": "official-live-site",
+  "notes": [
+    "Anatomy correctness not independently audited.",
+    "Mobile source panel inspected; full mobile exploration not verified."
+  ],
+  "live_site_confidence": 1,
+  "source_outcome": "source-available"
+}

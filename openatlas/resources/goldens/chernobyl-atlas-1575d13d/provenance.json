@@ -1,0 +1,27 @@
+{
+  "input_reference_url": "https://chernobyl-atlas.soupz11.chatgpt.site/",
+  "reference_page_title": "Chernobyl Atlas — Interactive RBMK Exhibit",
+  "demo_video_url": null,
+  "live_site_url": "https://chernobyl-atlas.soupz11.chatgpt.site/",
+  "repository_url": null,
+  "repository_commit": null,
+  "repository_license": null,
+  "discovery_evidence": [
+    {
+      "method": "multimodal review of captured artifact",
+      "artifact": "review.json",
+      "at": "2026-09-14T12:05:25.081727+00:00"
+    }
+  ],
+  "source_identification_confidence": 1,
+  "repository_confidence": 0,
+  "source_status": "not-publicly-available",
+  "evaluated_target": "official-live-site",
+  "notes": [
+    "Normal authenticated browser access was necessary; unattended fresh browser capture may stop at sign-in.",
+    "Source unavailable; broad circuit checked, detailed geometry not independently validated."
+  ],
+  "access_mode": "normal signed-in browser",
+  "live_site_confidence": 1,
+  "source_outcome": "source-unavailable"
+}

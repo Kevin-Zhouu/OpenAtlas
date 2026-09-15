@@ -1,0 +1,98 @@
+{
+  "summary": {
+    "topic": "Network connectivity and delivery routing",
+    "learning_goal": "Observe how closing bridges changes reachable delivery destinations and routes.",
+    "primary_visualization": "Isometric town split by a river, two bridges, moving vehicles and a status panel.",
+    "primary_interaction": "Recorded bridge closures produce blocked deliveries; reopening restores reachability."
+  },
+  "correctness_clarity": {
+    "score": 7.4,
+    "strengths": [
+      "Bridge status, map labels and unreachable counters agree in the captured disconnected state."
+    ],
+    "weaknesses": [
+      "Routing optimality and the author-reported logic checks were not independently verified."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 8.3,
+    "strengths": [
+      "The two-bridge scenario exposes a concrete cause/effect relationship between connectivity and deliveries."
+    ],
+    "weaknesses": [
+      "There is little explicit synthesis of the graph-theory concept or prediction guidance."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 8.6,
+    "strengths": [
+      "An isometric overview shows alternate crossings while close views show route segments."
+    ],
+    "weaknesses": [
+      "Very small route and destination labels need a close camera view."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 8.8,
+    "strengths": [
+      "The sequence includes closure, disconnection and recovery with changed counts and routes."
+    ],
+    "weaknesses": [
+      "Only an automated demo was obtained; response latency and free learner exploration are untested."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8.4,
+    "strengths": [
+      "Bridge controls, fleet selection and dispatch log sit alongside the map they describe."
+    ],
+    "weaknesses": [
+      "The side panel is information-dense and mobile behavior is unknown."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 7.94,
+  "experience_score": 8.62,
+  "overall_score": 8.28,
+  "openatlas_relevance": 9.2,
+  "top_strengths": [
+    "The two-bridge scenario exposes a concrete cause/effect relationship between connectivity and deliveries.",
+    "An isometric overview shows alternate crossings while close views show route segments.",
+    "Bridge controls, fleet selection and dispatch log sit alongside the map they describe."
+  ],
+  "top_weaknesses": [
+    "Routing optimality and the author-reported logic checks were not independently verified.",
+    "There is little explicit synthesis of the graph-theory concept or prediction guidance.",
+    "Only an automated demo was obtained; response latency and free learner exploration are untested."
+  ],
+  "principles_to_learn": [
+    "Let a learner remove a connection and observe which destinations fail.",
+    "Show topology, route changes and outcome counters together.",
+    "Make an intervention reversible so recovery can be compared.",
+    "Support both network overview and local route inspection."
+  ],
+  "things_not_to_copy": [
+    "Do not claim shortest-path correctness without testing the algorithm.",
+    "Do not overwhelm the learner with a dispatch log before explaining the core connectivity problem."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for network intervention, simulation, overview and detail. Live behavior remains unverified."
+}

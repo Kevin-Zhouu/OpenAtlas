@@ -21,15 +21,17 @@ docker compose --profile build build generation-image
 cp .env.example .env
 ```
 
-Open **Settings** in the web UI, enter your **OpenAI API key**, choose **Codex** as the generation provider, and choose a model from the dropdown. **GPT-6 Astra** (`gpt-6-astra`) is the default. Save settings, enter a learning request, and press **Generate Notebook**. Model availability depends on your OpenAI API account; saving a key checks its format, not account access. Demo mode never uses inference.
+Open **Settings** in the web UI, choose **Codex** as the generation provider, and select **Add a new provider…** under **API provider profile**. Enter a name, API base URL, and API key. For OpenAI, use `https://api.openai.com/v1`. Enter a supported Codex model ID or choose a suggestion; set the planner model in the **Planner** tab. **GPT-6 Astra** (`gpt-6-astra`) is the default. Save settings, enter a learning request, and press **Generate Notebook**. Model availability depends on the selected API provider; saving a profile validates its format, not account access. Demo mode never uses inference.
 
-Settings lets you replace or remove a saved key. Leaving the password field blank keeps the configured key; saved keys are never returned to the browser. Keys persist across restarts in `private/openai-key` inside the data volume, outside SQLite and Notebook artifacts. The file uses restricted permissions, not encryption; protect the host and volume backups.
+Settings remembers named provider profiles, including multiple keys for the same API URL. Select a saved profile and **Save settings** to switch; the other profiles and keys remain available. Leave the password field blank when editing to keep that profile's saved key. **Delete provider profile** removes only that profile; deleting the active one restores **Host configuration**. Keys are never returned to the browser. Profiles persist across restarts in `private/inference-profiles.json` inside the data volume, outside SQLite and Notebook artifacts. Existing `private/openai-key` installations appear as an OpenAI profile and migrate on the first edit. The file uses restricted permissions, not encryption; protect the host and volume backups.
+
+Third-party providers must support the **Responses API**, streaming, tool calls, and Bearer API-key authentication. Enter the base path (for example, `https://api.example.com/gateway/v1`), without `/responses`, credentials, query parameters, or a fragment. Chat Completions-only endpoints are not supported. HTTP endpoints are accepted for local/LAN servers; use HTTPS for remote providers. With Docker Desktop, a server on this computer is reachable as `http://host.docker.internal:PORT/v1`, not `localhost` (the server must listen on an interface Docker can reach). Profile switching applies when the next job starts, including retries. Each running job keeps one key/URL pair through planning, building and repairs. Models remain separate settings, so update both model IDs when the new provider uses different names.
 
 Codex CLI is pinned in `generation/Dockerfile`. It runs `codex exec` non-interactively inside a fresh non-root Docker container, with approval bypass only because Docker is the external sandbox. It can edit source, build, run Chromium/Playwright, and repair failures. It is instructed explicitly to read the selected skills. This is not a single model response saved as HTML. A failed publication check gives Codex one repair attempt using the existing source and concrete validation feedback. Final generation errors are persisted and displayed in **Generation history**; real failures never fall back to demo.
 
-The trusted API and runner can access the provider key. A separate disposable credential relay forwards job-authorized requests to OpenAI's Responses endpoint. The generation container gets a temporary relay token, not your provider key. Neither image contains secrets. The relay is not published on a host port. Docker administrators can inspect the trusted relay environment, just as they can inspect other local secrets.
+The trusted API and runner can access the provider key. A separate disposable credential relay forwards job-authorized requests to the selected provider's Responses endpoint. The generation container gets a temporary relay token, not your provider key. Neither image contains secrets. The relay is not published on a host port. Docker administrators can inspect the trusted relay environment, just as they can inspect other local secrets.
 
-Alternatively, configure `OPENAI_API_KEY` in the private `.env` file and restart Compose, or set `OPENATLAS_OPENAI_KEY_FILE=/absolute/private/keyfile` for native API and runner processes. Never commit credentials. Precedence is: key saved in Settings, private key file, environment variable. Removing a saved key restores any host-configured fallback. No key file is mounted into the generation container.
+Alternatively, configure `OPENAI_API_KEY` in the private `.env` file and restart Compose, or set `OPENATLAS_OPENAI_KEY_FILE=/absolute/private/keyfile` for native API and runner processes. Never commit credentials. The **Host configuration** profile uses the private key file before the environment variable, with `OPENATLAS_API_BASE_URL` (default `https://api.openai.com/v1`) as its base URL. A selected saved profile uses its own key and URL. No key file is mounted into the generation container.
 
 ## Native development (macOS, Linux, Windows)
 
@@ -300,7 +302,7 @@ snapshots live in the application's `skill-inputs` directory; they are copied on
 to disposable workspaces and excluded from published source and artifacts.
 The inspector retains per-stage container details, exact invocation instructions,
 observable agent messages, tool/resource reads and bounded live logs. No hidden
-reasoning or SDK cloud traces are requested. The planner has read-only skill tools;
+reasoning or SDK cloud traces are requested. The planner has read-only skill and golden-reference text tools;
 external research is explicitly assigned to Codex.
 
 Cancel an active job from its inspector. Cancelled and lease-expired jobs enter a
@@ -357,3 +359,47 @@ OPENATLAS_DOCKER_TEST=1 .venv/bin/python -m pytest tests/test_blender.py tests/t
 The Blender integration test uses the real MCP protocol to inspect and edit a
 scene, save native source, and export GLB under the production container limits.
 It also checks Codex accepts the MCP configuration. No inference credits are used.
+
+
+### Graphics planning and golden references
+
+The planner's [default brief instructions](openatlas/resources/planner-instructions.md)
+make substantial interactive 3D the default for subjects that benefit from spatial
+exploration, with an educational rationale for 2D or simpler alternatives. Explicit
+learner requirements take precedence. Complexity is revealed progressively through
+inspection, component separation and linked explanations.
+
+A portable study subset of `OpenAtlas-dataset/gold_websites/goldens` is checked in at
+`openatlas/resources/goldens`. Its `CATALOG.json` lists all 15 reference records,
+evidence types and file hashes. It includes principles, interaction notes,
+provenance, evaluations, reviews, factual caveats and available contact sheets.
+It excludes source snapshots, videos and full-resolution captures. Links in the
+original notes may point to omitted evidence; neither agent may claim to have
+inspected that evidence. Scores include provisional demo reviews and are not
+certified learning outcomes or a license to reuse artwork.
+
+The worker verifies and stages this package into `/workspace/references/goldens`
+for **both** planning and building, even with no skills selected or when building an
+edited saved brief. The normal Docker input archive transfers these files; there
+is no dataset host bind mount or required absolute host path. The application
+Docker image and Python package include the study subset. Missing or changed files
+are omitted and identified in the staged catalog and planning inputs.
+
+The planner discovers references with `list_resources`, reads records with
+`read_resource`, and must read the catalog when supplied. Its saved Markdown brief
+must identify inspected records, adopted qualities, topic relevance, evidence limits
+and concrete acceptance checks. OpenAtlas appends an actual text-read ledger with
+paths, offsets and character counts; it does not certify the model's prose claims.
+The planner cannot view images or browse live sites. The builder can inspect the
+packaged contact sheets and must capture **and view** its own representative renders,
+test scene outcomes, and record comparison results and gaps in `source/DESIGN.md`.
+These requirements supplement, rather than replace, sandbox publication checks.
+
+Existing settings using the previous exact stock planner instructions pick up the
+new default. Customized instructions and historical planning snapshots remain intact;
+use Settings → Planner → restore default to replace a customization intentionally.
+Rebuild the application and generation images when deploying these changes.
+
+See [graphics evaluation cases](docs/graphics-evaluation.md) for topic-transfer and
+visual-review criteria. Infrastructure tests use fixtures, not paid inference; a
+passing test suite does not certify the quality of a generated exhibit.

@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "topic": "Temple of Heaven architectural form",
+    "learning_goal": "Inspect a three-tiered hall and its stacked architectural components.",
+    "primary_visualization": "Circular hall on stepped terraces, with roofs and columns in exploded layers.",
+    "primary_interaction": "Demo changes viewpoint, separates vertical layers, and reassembles the hall."
+  },
+  "correctness_clarity": {
+    "score": 6.5,
+    "strengths": [
+      "The named hall and stacked circular roof/terrace form are presented consistently."
+    ],
+    "weaknesses": [
+      "Exact dimensions and historical text have not been independently checked."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 5.8,
+    "strengths": [
+      "Vertical separation exposes a structural hierarchy otherwise hidden by the roofs."
+    ],
+    "weaknesses": [
+      "Small text and unlabelled separated pieces limit explanation of what each layer does."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 8.1,
+    "strengths": [
+      "Layer spacing preserves the central axis during disassembly."
+    ],
+    "weaknesses": [
+      "Decorative trees compete with the lower building in some camera views."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 6.2,
+    "strengths": [
+      "The demo shows distinct assembled, exploded and closer inspection states."
+    ],
+    "weaknesses": [
+      "Physical setup and control responsiveness cannot be verified from the video."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8.3,
+    "strengths": [
+      "A compact bottom control bar preserves most of the viewport for architecture."
+    ],
+    "weaknesses": [
+      "Secondary labels have low contrast; mobile behavior is unknown."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 6.08,
+  "experience_score": 7.4,
+  "overall_score": 6.74,
+  "openatlas_relevance": 8.0,
+  "top_strengths": [
+    "Vertical separation exposes a structural hierarchy otherwise hidden by the roofs.",
+    "Layer spacing preserves the central axis during disassembly.",
+    "A compact bottom control bar preserves most of the viewport for architecture."
+  ],
+  "top_weaknesses": [
+    "Exact dimensions and historical text have not been independently checked.",
+    "Small text and unlabelled separated pieces limit explanation of what each layer does.",
+    "Physical setup and control responsiveness cannot be verified from the video."
+  ],
+  "principles_to_learn": [
+    "Explode buildings along their construction axis.",
+    "Retain a recognizable assembled view as an anchor.",
+    "Label the purpose of each revealed layer beside the 3D object."
+  ],
+  "things_not_to_copy": [
+    "Do not infer historic accuracy from procedural detail.",
+    "Do not let decorative landscaping obscure the structure being taught."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for exploded view, camera inspection. Live behavior remains unverified."
+}

@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "topic": "A miniature playroom and character activities",
+    "learning_goal": "Present a warm toy-room scene with selectable activities; no explicit subject lesson is shown.",
+    "primary_visualization": "Open isometric room with play mat, slide, furniture and a moving child character.",
+    "primary_interaction": "Demo rotates the room, follows character activity and opens an activity panel."
+  },
+  "correctness_clarity": {
+    "score": 4.5,
+    "strengths": [
+      "Room objects and activity locations are visually recognizable."
+    ],
+    "weaknesses": [
+      "No explicit factual lesson or developmental validity is evidenced."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 2.8,
+    "strengths": [
+      "Different toy areas offer a potential spatial context for activity-based learning."
+    ],
+    "weaknesses": [
+      "Character play and changing activities are not tied to explanation, prediction or a learning goal."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 7.8,
+    "strengths": [
+      "Open walls and elevated camera keep floor objects and large play equipment visible."
+    ],
+    "weaknesses": [
+      "Furniture and toys are attractive but primarily illustrative."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 5.8,
+    "strengths": [
+      "The activity panel and character positions change across the recording."
+    ],
+    "weaknesses": [
+      "The character also moves autonomously; not every movement can be attributed to a user action."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8.6,
+    "strengths": [
+      "Warm restrained palette and compact peripheral controls create a coherent miniature scene."
+    ],
+    "weaknesses": [
+      "Small controls and pale text are harder to distinguish; mobile behavior is unknown."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 3.48,
+  "experience_score": 7.24,
+  "overall_score": 5.36,
+  "openatlas_relevance": 6.8,
+  "top_strengths": [
+    "Different toy areas offer a potential spatial context for activity-based learning.",
+    "Open walls and elevated camera keep floor objects and large play equipment visible.",
+    "Warm restrained palette and compact peripheral controls create a coherent miniature scene."
+  ],
+  "top_weaknesses": [
+    "No explicit factual lesson or developmental validity is evidenced.",
+    "Character play and changing activities are not tied to explanation, prediction or a learning goal.",
+    "The character also moves autonomously; not every movement can be attributed to a user action."
+  ],
+  "principles_to_learn": [
+    "Use open-sided isometric rooms to expose spatial activity zones.",
+    "Place contextual labels near the active object.",
+    "Hide secondary activity choices until requested."
+  ],
+  "things_not_to_copy": [
+    "Do not treat cute animation as evidence of child learning.",
+    "Do not attribute autonomous motion to meaningful user control."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for isometric room, contextual activity, progressive disclosure. Live behavior remains unverified."
+}

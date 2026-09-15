@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "topic": "Assembly of a stylized temple diorama",
+    "learning_goal": "Communicate a workflow for assembling generated 3D assets; no temple-history lesson is shown.",
+    "primary_visualization": "Isometric temple, garden and base shown assembled and separated.",
+    "primary_interaction": "Recorded orbit and exploded assembly; user control is not established."
+  },
+  "correctness_clarity": {
+    "score": 5,
+    "strengths": [
+      "Separated pieces make the composition of the scene clear."
+    ],
+    "weaknesses": [
+      "No architectural or historical correctness can be verified from a stylized generic temple."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 2.5,
+    "strengths": [
+      "Assembly sequence exposes part-to-whole relationships."
+    ],
+    "weaknesses": [
+      "Captioned asset-workflow demonstration teaches little about temples themselves."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 7.5,
+    "strengths": [
+      "Consistent isometric framing and differentiated roofs, garden and base."
+    ],
+    "weaknesses": [
+      "Separation reveals asset groups, not clearly labeled architectural functions."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 2,
+    "strengths": [
+      "The recording contains an assembly state change."
+    ],
+    "weaknesses": [
+      "No interactive controls or learner-triggered response is shown."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8,
+    "strengths": [
+      "Plain background and centered object keep the model visually dominant."
+    ],
+    "weaknesses": [
+      "This is a rendered demonstration with captions; complete website navigation and mobile design are absent."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 3.5,
+  "experience_score": 5.45,
+  "overall_score": 4.48,
+  "openatlas_relevance": 6.8,
+  "top_strengths": [
+    "Assembly sequence exposes part-to-whole relationships.",
+    "Consistent isometric framing and differentiated roofs, garden and base.",
+    "Plain background and centered object keep the model visually dominant."
+  ],
+  "top_weaknesses": [
+    "No architectural or historical correctness can be verified from a stylized generic temple.",
+    "Captioned asset-workflow demonstration teaches little about temples themselves.",
+    "No interactive controls or learner-triggered response is shown."
+  ],
+  "principles_to_learn": [
+    "Separate authored asset groups along interpretable directions.",
+    "Keep object scale and stage stable while showing assembly.",
+    "Explain which parts belong to which production step."
+  ],
+  "things_not_to_copy": [
+    "Do not award temple-history teaching credit for an asset demonstration.",
+    "Do not claim a prerecorded explosion is direct manipulation."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for assembly demonstration. Live behavior remains unverified."
+}

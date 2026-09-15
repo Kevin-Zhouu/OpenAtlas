@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "topic": "Solar-system objects and simplified flight planning",
+    "learning_goal": "Inspect planetary bodies and compare their displayed properties within a system view.",
+    "primary_visualization": "Solar-system overview and textured close views of Earth, Moon and Saturn.",
+    "primary_interaction": "Demo selects bodies and transitions the camera while updating property panels."
+  },
+  "correctness_clarity": {
+    "score": 6.8,
+    "strengths": [
+      "Named bodies have corresponding property panels, including radius and orbital period."
+    ],
+    "weaknesses": [
+      "Displayed orbital and flight values are not independently validated; scales appear illustrative."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 6.5,
+    "strengths": [
+      "Overview-to-body navigation provides a route between system context and individual objects."
+    ],
+    "weaknesses": [
+      "The recording does not demonstrate flight-plan consequences or explain the model assumptions in depth."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 8.5,
+    "strengths": [
+      "Textured body views and orbit paths make object identity and location legible."
+    ],
+    "weaknesses": [
+      "Relative distances and size cannot be inferred as physically to scale."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 7.2,
+    "strengths": [
+      "Selection changes the active object, camera framing and data together."
+    ],
+    "weaknesses": [
+      "The trip-planning control is visible but no completed plan change is shown."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8.5,
+    "strengths": [
+      "Persistent navigation and property layout keep the view organized."
+    ],
+    "weaknesses": [
+      "Three-column layout carries substantial small text; mobile behavior is unknown."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 6.62,
+  "experience_score": 7.98,
+  "overall_score": 7.3,
+  "openatlas_relevance": 8.1,
+  "top_strengths": [
+    "Overview-to-body navigation provides a route between system context and individual objects.",
+    "Textured body views and orbit paths make object identity and location legible.",
+    "Persistent navigation and property layout keep the view organized."
+  ],
+  "top_weaknesses": [
+    "Displayed orbital and flight values are not independently validated; scales appear illustrative.",
+    "The recording does not demonstrate flight-plan consequences or explain the model assumptions in depth.",
+    "The trip-planning control is visible but no completed plan change is shown."
+  ],
+  "principles_to_learn": [
+    "Link selected objects, camera and property panels.",
+    "Keep an overview route available while zoomed into one object.",
+    "Make simulation scale and simplification explicit."
+  ],
+  "things_not_to_copy": [
+    "Do not turn approximate travel estimates into unqualified scientific facts.",
+    "Do not award untested trip-planning controls full interaction credit."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for object selection, linked views, camera transition. Live behavior remains unverified."
+}

@@ -1,0 +1,30 @@
+{
+  "at": "2026-09-14T12:05:25.107419+00:00",
+  "reviewer": "Codex current-session multimodal LLM review",
+  "rubric": "/Users/bigsoup/Downloads/openatlas-mvp-llm-judge/EVALUATION_RUBRIC.md",
+  "rubric_sha256": "2f6e6d6d1ecff21b88454d9ee9b08d2385a06a470c368c4c710411fc1b508d35",
+  "reviewed_artifacts": [
+    "hero.png",
+    "interaction.md",
+    "interaction-3.png",
+    "interaction-1.png",
+    "trace.json",
+    "interaction-2.png",
+    "mobile.png"
+  ],
+  "limitations": [
+    "Evaluation scope is the referenced galaxy hero, not the entire launch article.",
+    "Original code repository not found."
+  ],
+  "curator_handling": "Opinions preserved, not score targets",
+  "evaluation_scope": "official-live-site",
+  "artifact_sha256": {
+    "hero.png": "a99c6d486b4d9063a61118f15ddf46db9113c681df72d592474386d22176e37c",
+    "interaction.md": "86028473ab782de75257cddd033b362e7895d6cbcb2765b5cba70ca2a0f2c2ed",
+    "interaction-3.png": "54c47b53879cb52177fa829b393815e7813159b642d7057e4674115ba77313cc",
+    "interaction-1.png": "816324baf2f831afd85351003c9d1ba0e991ae19bb4db0f27d6579d297a8ecdd",
+    "trace.json": "14993fa77aaaaa1d0ce26d1b8de0a468fea006040426c3479ebf3e8403bcc2fc",
+    "interaction-2.png": "a2e26ec16b6b3eb1c7c424c0beb5b448b9ad97d43d3aafe0855b10edaf46bca5",
+    "mobile.png": "dcaf1bd6df145139f75334b4a99bb37875cf81f6e3cda07522365ad276c5d513"
+  }
+}

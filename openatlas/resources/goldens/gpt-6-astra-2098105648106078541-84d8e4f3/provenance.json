@@ -1,0 +1,51 @@
+{
+  "input_reference_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098105648106078541",
+  "reference_page_title": "Interactive 3D atlas of the human head and brain — GPT-6 Astra 3D Prompt | Tripo",
+  "demo_video_url": "https://media.tripogrowth.space/media/a78adc17-b7ec-4a08-b673-8c02458c2aff.mp4?cors=1",
+  "live_site_url": "https://bubblik525.github.io/head/human-head-anatomy.html",
+  "repository_url": "https://github.com/bubblik525/head",
+  "repository_commit": "0cbf1ea87114fbc542349042a6d818c8c603da5c",
+  "repository_license": "Original application code: no reuse licence granted; adapted geometry CC BY-SA 4.0; Three.js MIT",
+  "discovery_evidence": [
+    {
+      "method": "explicit showcase source link",
+      "artifact": "reference/inspection.json",
+      "url": "https://github.com/bubblik525/head",
+      "at": "2026-09-14T11:44:47.508904+00:00"
+    },
+    {
+      "method": "multimodal review of captured artifact",
+      "artifact": "review.json",
+      "at": "2026-09-14T11:48:36.096412+00:00"
+    },
+    {
+      "method": "regular Chrome reference DOM",
+      "artifact": "reference/inspection.json",
+      "url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2098105648106078541",
+      "at": "2026-09-14T11:50:14.046025+00:00"
+    },
+    {
+      "method": "Original creator reply explicitly links live demo and matching repository",
+      "artifact": "reference/original-post.json",
+      "url": "https://bubblik525.github.io/head/human-head-anatomy.html",
+      "at": "2026-09-14T11:55:31.046400+00:00"
+    },
+    {
+      "method": "Original creator post and visible replies read in regular Chrome",
+      "artifact": "reference/original-post.json",
+      "at": "2026-09-14T12:07:21.740854+00:00"
+    }
+  ],
+  "source_identification_confidence": 1,
+  "repository_confidence": 1,
+  "source_status": "public-repository",
+  "evaluated_target": "local-build",
+  "notes": [
+    "Original app code has no additional reuse licence; see attribution.",
+    "Some controls and detailed anatomical correctness remain unverified.",
+    "live-verification.json confirms live standalone byte identity with repository HEAD."
+  ],
+  "original_post_url": "https://x.com/k1rallik/status/2098105648106078541",
+  "live_site_confidence": 1,
+  "source_outcome": "source-available"
+}

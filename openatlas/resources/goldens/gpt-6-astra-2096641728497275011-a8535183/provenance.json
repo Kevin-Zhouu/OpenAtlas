@@ -1,0 +1,37 @@
+{
+  "input_reference_url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096641728497275011",
+  "reference_page_title": "Mini World 3D exploration game — GPT-6 Astra 3D Prompt | Tripo",
+  "demo_video_url": null,
+  "live_site_url": null,
+  "repository_url": null,
+  "repository_commit": null,
+  "repository_license": null,
+  "discovery_evidence": [
+    {
+      "method": "regular Chrome reference DOM",
+      "artifact": "reference/inspection.json",
+      "url": "https://www.tripo3d.ai/3d-prompts/gpt-6-astra-2096641728497275011",
+      "at": "2026-09-14T11:50:14.045931+00:00"
+    },
+    {
+      "method": "focused web search and creator post inspection",
+      "artifact": "discovery-search.json",
+      "at": "2026-09-14T12:07:21.742956+00:00"
+    },
+    {
+      "method": "Original creator post and visible replies read in regular Chrome",
+      "artifact": "reference/original-post.json",
+      "at": "2026-09-14T12:07:21.742969+00:00"
+    }
+  ],
+  "source_identification_confidence": 0.9,
+  "repository_confidence": 0,
+  "source_status": "not-publicly-available",
+  "evaluated_target": null,
+  "notes": [
+    "Visual-only review; not a scored golden. Hero derived from reference/still-1.jpg."
+  ],
+  "original_post_url": "https://x.com/weijianzhang_/status/2096641728497275011",
+  "live_site_confidence": 0,
+  "source_outcome": "source-unavailable"
+}

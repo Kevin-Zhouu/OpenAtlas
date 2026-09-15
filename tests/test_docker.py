@@ -10,7 +10,27 @@ from openatlas.artifacts import validate
 from openatlas.debug import DebugStore
 from openatlas.demo import generate
 from openatlas.execution import DockerExecutor
+from openatlas.references import stage_references
 from openatlas.skills import SkillCatalog
+
+
+@pytest.mark.skipif(os.getenv('OPENATLAS_DOCKER_TEST') != '1', reason='Requires built planner image')
+def test_planner_stream_error_reports_actionable_cause(tmp_path):
+    from pathlib import Path
+
+    class Credential:
+        def connection(self):
+            return {'api_key': 'test-not-a-real-key', 'base_url': 'https://api.openai.com/v1'}
+
+    class Adapter:
+        def command(self, request):
+            return ['/opt/planner/bin/python', '/workspace/error_test.py']
+
+    (tmp_path / 'error_test.py').write_text(
+        (Path(__file__).parent / 'fixtures/planner_error.py').read_text())
+    request = {'job_id': str(uuid4()), 'execution_stage': 'planning', 'skills': []}
+    with pytest.raises(ValueError, match='APIError: You have no credits remaining'):
+        DockerExecutor(Credential(), adapter=Adapter()).run(tmp_path, request, lambda _: None)
 
 
 @pytest.mark.skipif(
@@ -21,15 +41,15 @@ def test_disposable_docker_roundtrip(tmp_path):
     import docker
 
     class FakeCredential:
-        def openai_key(self):
-            return "test-credential-not-for-inference"
+        def connection(self):
+            return {"api_key": "test-credential-not-for-inference", "base_url": "https://api.openai.com/v1"}
 
     class FileEditingAgent:
         def command(self, request):
             return [
                 "python3",
                 "-c",
-                "import os, pathlib, subprocess; assert os.getuid()!=0; assert 'OPENAI_API_KEY' not in os.environ; assert not pathlib.Path('/var/run/docker.sock').exists(); p=pathlib.Path('/workspace/source/index.html'); p.write_text(p.read_text().replace('Remember the work.','Remember the previous work.')); subprocess.run(['python3','source/build.py'],check=True)",
+                "import os, pathlib, subprocess; assert os.getuid()!=0; assert pathlib.Path('/workspace/references/goldens/CATALOG.json').is_file(); assert pathlib.Path('/workspace/references/goldens/chernobyl-atlas-1575d13d/contact-sheet.jpg').is_file(); assert 'OPENAI_API_KEY' not in os.environ; assert not pathlib.Path('/var/run/docker.sock').exists(); p=pathlib.Path('/workspace/source/index.html'); p.write_text(p.read_text().replace('Remember the work.','Remember the previous work.')); subprocess.run(['python3','source/build.py'],check=True)",
             ]
 
     request = {
@@ -37,6 +57,7 @@ def test_disposable_docker_roundtrip(tmp_path):
         "job_id": str(uuid4()),
         "skills": SkillCatalog().resolve(["builtin:visual-explainer"]),
     }
+    stage_references(tmp_path)
     generate(tmp_path, request, lambda _: None)
     shutil.rmtree(tmp_path / "dist")
     (tmp_path / "dist").mkdir()
@@ -64,8 +85,9 @@ def test_disposable_docker_roundtrip(tmp_path):
 def test_real_agents_sdk_planner_stream_and_isolation(tmp_path):
     from pathlib import Path
     from openatlas.planning import PlannerAdapter
+    stage_references(tmp_path)
     class Credential:
-        def openai_key(self): return 'test-not-a-real-key'
+        def connection(self): return {'api_key': 'test-not-a-real-key', 'base_url': 'https://api.openai.com/v1'}
     class FixtureAdapter(PlannerAdapter):
         def command(self, request):
             return ['/opt/planner/bin/python', '/workspace/sdk_test.py']
@@ -78,6 +100,7 @@ def test_real_agents_sdk_planner_stream_and_isolation(tmp_path):
     debug = DebugStore(tmp_path/'debug')
     result = DockerExecutor(Credential(), adapter=FixtureAdapter(), debug=debug).run(tmp_path, request, lambda _: None)
     assert 'token boundaries' in result
+    assert 'references/goldens/chernobyl-atlas-1575d13d/principles.md — offset 0' in result
     snapshots = debug.read(request['job_id'])['containers']
     assert len(snapshots) == 2 and all(c['status'] == 'removed' for c in snapshots)
     agent = next(c for c in snapshots if c['role'] == 'agent')
@@ -90,7 +113,7 @@ def test_real_agents_sdk_planner_stream_and_isolation(tmp_path):
 def test_planner_failure_and_cancellation_remove_containers(tmp_path, cancel):
     import docker
     class Credential:
-        def openai_key(self): return 'test-not-a-real-key'
+        def connection(self): return {'api_key': 'test-not-a-real-key', 'base_url': 'https://api.openai.com/v1'}
     class Adapter:
         def command(self, request):
             return ['python3', '-c', 'import time; time.sleep(30)' if cancel else 'raise SystemExit(1)']

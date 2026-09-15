@@ -1,0 +1,35 @@
+{
+  "at": "2026-09-14T12:05:25.080599+00:00",
+  "reviewer": "Codex current-session multimodal LLM review",
+  "rubric": "/Users/bigsoup/Downloads/openatlas-mvp-llm-judge/EVALUATION_RUBRIC.md",
+  "rubric_sha256": "2f6e6d6d1ecff21b88454d9ee9b08d2385a06a470c368c4c710411fc1b508d35",
+  "reviewed_artifacts": [
+    "interaction-6.png",
+    "fact-check.json",
+    "interaction-1.png",
+    "interaction-2.png",
+    "interaction-4.png",
+    "hero.png",
+    "interaction-5.png",
+    "trace.json",
+    "mobile.png"
+  ],
+  "limitations": [
+    "Normal authenticated browser access was necessary; unattended fresh browser capture may stop at sign-in.",
+    "Source unavailable; broad circuit checked, detailed geometry not independently validated."
+  ],
+  "curator_handling": "Opinions preserved, not score targets",
+  "evaluation_scope": "official-live-site",
+  "artifact_sha256": {
+    "interaction-6.png": "fda33446153d71b639cb6793b4a53bb28ce178ff45f8c7dd8a1ff60d94d1a093",
+    "fact-check.json": "f7768cdc945aefd5decc1d05a74fb2c92111327d868e0f613dcbafcf1f9d8695",
+    "interaction-1.png": "3d851117a39bb2b68ef2796bf7a96c202f6b1d4f15e4a878d3f1dd0008524011",
+    "interaction-2.png": "cef8186577e9ea0315375fee20ba5dd7be06fe30bf588642ad21daafb0a870c0",
+    "interaction-4.png": "9abe31345a1cd5013cc502267a3d89b0a6e07f9129fe206d0d8b74eafa5e755a",
+    "hero.png": "1c66989401ce86658c2978a63dc8920e3de8be7eaa62006ccc24282a0611624e",
+    "interaction-5.png": "9465bd1eca138face3678576f13db8fb3759498c430afd8e8080fb0419f5e5e6",
+    "trace.json": "09b092a56c19990a44433259bb579440842fcdb7be877436fb0791565c548416",
+    "mobile.png": "f1f910da7a1f6fbaf253e3d107a516c50892cf9d6dafef2f0b03064d1d53566a"
+  },
+  "audit_note": "Final audit corrected reset-action context; observed result and scores unchanged."
+}

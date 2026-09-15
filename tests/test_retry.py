@@ -67,7 +67,7 @@ def test_failed_docker_generation_retains_partial_source(tmp_path):
     from uuid import uuid4
     from openatlas.execution import DockerExecutor
     class Credential:
-        def openai_key(self): return 'test-no-inference'
+        def connection(self): return {'api_key': 'test-no-inference', 'base_url': 'https://api.openai.com/v1'}
     class FailingAgent:
         def command(self, request):
             return ['sh','-c','mkdir -p source/node_modules; echo partial > source/lesson.txt; echo ignored > source/node_modules/dependency; exit 1']

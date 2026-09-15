@@ -85,14 +85,13 @@ class Repository:
 
     def settings(self):
         from .models import DEFAULT_MODEL
-        from .planning import DEFAULT_PLANNER_INSTRUCTIONS
+        from .planning import current_planner_instructions
 
+        saved = json.loads(self.rows("SELECT value FROM settings WHERE id=1")[0]["value"])
         return {
             "planner_model": DEFAULT_MODEL,
-            "planner_instructions": DEFAULT_PLANNER_INSTRUCTIONS,
-            **json.loads(
-                self.rows("SELECT value FROM settings WHERE id=1")[0]["value"]
-            ),
+            **saved,
+            "planner_instructions": current_planner_instructions(saved.get("planner_instructions")),
         }
 
     def save_settings(self, settings):

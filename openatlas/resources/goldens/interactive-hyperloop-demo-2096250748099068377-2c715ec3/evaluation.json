@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "topic": "A conceptual Hyperloop capsule in a test track",
+    "learning_goal": "Show capsule movement and its relation to tube infrastructure.",
+    "primary_visualization": "Long capsule and track with a selectable surrounding tube and live speed readout.",
+    "primary_interaction": "Demo starts a run, changes camera, changes time factor and tube visibility."
+  },
+  "correctness_clarity": {
+    "score": 6.4,
+    "strengths": [
+      "The panel explicitly calls the trip data a demonstration rather than real operating performance."
+    ],
+    "weaknesses": [
+      "Speed and position calculations were not independently checked."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 5.7,
+    "strengths": [
+      "Tube visibility exposes the relationship between vehicle and enclosing infrastructure."
+    ],
+    "weaknesses": [
+      "The recording provides little explanation of levitation, propulsion, pressure or energy use."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 7.6,
+    "strengths": [
+      "Longitudinal framing makes capsule, track and support structure readable."
+    ],
+    "weaknesses": [
+      "Pale tube and pale background reduce separation of nested surfaces."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 7.4,
+    "strengths": [
+      "Recorded control changes coincide with camera shifts, elapsed-time changes and visible tube state."
+    ],
+    "weaknesses": [
+      "The apparent high-speed values do not prove a physically meaningful model; live response remains untested."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 7.7,
+    "strengths": [
+      "Large title, dominant capsule and aligned data panel give a clear product hierarchy."
+    ],
+    "weaknesses": [
+      "Low contrast is partly due to the recording, so original-page legibility is uncertain."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 5.98,
+  "experience_score": 7.55,
+  "overall_score": 6.77,
+  "openatlas_relevance": 7.4,
+  "top_strengths": [
+    "Tube visibility exposes the relationship between vehicle and enclosing infrastructure.",
+    "Longitudinal framing makes capsule, track and support structure readable.",
+    "Large title, dominant capsule and aligned data panel give a clear product hierarchy."
+  ],
+  "top_weaknesses": [
+    "Speed and position calculations were not independently checked.",
+    "The recording provides little explanation of levitation, propulsion, pressure or energy use.",
+    "The apparent high-speed values do not prove a physically meaningful model; live response remains untested."
+  ],
+  "principles_to_learn": [
+    "Expose enclosing structures with controlled visibility.",
+    "Keep motion readouts adjacent to the moving object.",
+    "Separate time scaling from claims about physical speed."
+  ],
+  "things_not_to_copy": [
+    "Do not confuse an animated test track with validated engineering.",
+    "Do not sacrifice nested-surface contrast for an all-white aesthetic."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for simulation playback, visibility control, camera tracking. Live behavior remains unverified."
+}

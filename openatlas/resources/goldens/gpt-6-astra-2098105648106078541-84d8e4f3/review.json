@@ -1,0 +1,37 @@
+{
+  "at": "2026-09-14T11:48:36.095733+00:00",
+  "reviewer": "Codex current-session multimodal LLM review",
+  "rubric": "/Users/bigsoup/Downloads/openatlas-mvp-llm-judge/EVALUATION_RUBRIC.md",
+  "rubric_sha256": "2f6e6d6d1ecff21b88454d9ee9b08d2385a06a470c368c4c710411fc1b508d35",
+  "reviewed_artifacts": [
+    "interaction-1.png",
+    "interaction-6.png",
+    "source/README.md",
+    "interaction-2.png",
+    "interaction.md",
+    "interaction-5.png",
+    "trace.json",
+    "interaction-3.png",
+    "hero.png",
+    "mobile.png"
+  ],
+  "limitations": [
+    "Original app code has no additional reuse licence; see attribution.",
+    "Some controls and detailed anatomical correctness remain unverified.",
+    "Official creator-linked live standalone is byte-identical to repository HEAD artifact; primary evaluation remains the tested local build."
+  ],
+  "curator_handling": "Opinions preserved, not score targets",
+  "evaluation_scope": "local-build",
+  "artifact_sha256": {
+    "interaction-1.png": "7f1e3a1164347310d07b7e3fc9dca780361b0454ce446aff1b3ba0ae5bf6338e",
+    "interaction-6.png": "1b7c4cfae95e6444a497aa9177979d42384498c91b5980521cd307dcf744fe4b",
+    "source/README.md": "74b2d35f66767914539d363e4b001900e2a3b4953fd9c235c39e8a7cbb23303b",
+    "interaction-2.png": "fc6f99b7f62eb22c211e557d3bc77665d3b4c5dab5f5920ad819e8a329f08f34",
+    "interaction.md": "0babaa18a8ed4a60a7e1d0ed7a42952b8d84c7f5bc67b8136a039ef016340c5e",
+    "interaction-5.png": "fc04605735f87fb0129472da0095e9e00a60a574f0b84249ddb775557bd82a9f",
+    "trace.json": "1c964987862471fa67bc0f8f9796ad5b9c6b13c9998eae075d9a4b688d0fb6e9",
+    "interaction-3.png": "5f1bbd6c3981dd9cab4a7d1c6faf98883603ffb8f1de042eb3bdeb5e1fdbf83f",
+    "hero.png": "c10cd399d1b8c4f3ea0a8d5c4207966c96d8cbcfa4eed7d0e333b8c981d1c5ee",
+    "mobile.png": "c951439fced5ed75580ffb829f0a079925f03eb8c7471ea8486780e0b561db8d"
+  }
+}

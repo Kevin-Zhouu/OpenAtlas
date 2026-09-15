@@ -19,6 +19,8 @@ class Planner:
     def run(self, workspace, request, progress):
         self.calls += 1
         assert request["execution_stage"] == "planning"
+        assert (workspace / "references/goldens/CATALOG.json").is_file()
+        assert request["golden_references"]["status"] == "available"
         progress("Reading selected skills")
         return BRIEF
 
@@ -50,6 +52,7 @@ def test_prompt_only_edit_build_reuse_and_restart(system):
     assert saved["request"]["build_prompt"] == BRIEF
     plans = Repository(repo.data).plan_records(job["notebook_id"])
     assert plans[0]["inputs"]["learner_background"] == "Python programmer"
+    assert plans[0]["inputs"]["golden_references"]["catalog_sha256"]
     first = plans[0]["revisions"][0]
     edited = client.post(
         "/api/prompts/" + first["id"] + "/edit",
@@ -61,6 +64,7 @@ def test_prompt_only_edit_build_reuse_and_restart(system):
 
     class BrokenBuilder:
         def run(self, workspace, request, progress):
+            assert (workspace / "references/goldens/CATALOG.json").is_file()
             assert request["prompt_revision_id"] == edited["id"]
             assert (
                 repo.job(request["job_id"])["request"]["build_prompt"]

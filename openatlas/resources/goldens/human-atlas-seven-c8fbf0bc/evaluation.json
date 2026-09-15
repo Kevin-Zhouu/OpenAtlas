@@ -1,0 +1,102 @@
+{
+  "summary": {
+    "topic": "Adult male reference anatomy",
+    "learning_goal": "Inspect anatomical systems and spatial relationships, with 2,234 modeled pieces.",
+    "primary_visualization": "Full-body 3D model plus an exploded part inventory.",
+    "primary_interaction": "Choose an anatomical system and change the assembled-to-exploded slider."
+  },
+  "correctness_clarity": {
+    "score": 7.5,
+    "strengths": [
+      "Source panel identifies the adult male reference, mesh-versus-concept distinction and illustrative system colors."
+    ],
+    "weaknesses": [
+      "No independent anatomy audit; general context does not explain each structure or biological function."
+    ],
+    "evidence": [
+      "interaction-6.png",
+      "source/README.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 6.7,
+    "strengths": [
+      "Skeleton filtering and reversible explosion reveal parts hidden by surrounding tissue."
+    ],
+    "weaknesses": [
+      "The full inventory is cognitively dense and lacks a guided explanatory sequence; filtering Heart leaves it small in the original body framing."
+    ],
+    "evidence": [
+      "interaction-1.png",
+      "interaction-2.png",
+      "interaction-4.png"
+    ]
+  },
+  "visualization_quality": {
+    "score": 8.4,
+    "strengths": [
+      "Full-body tissues and isolated skeleton share an aligned coordinate frame; exploded layout separates 296 bone pieces."
+    ],
+    "weaknesses": [
+      "Tiny structures become difficult to identify at inventory scale; Heart filtering leaves substantial unused viewport."
+    ],
+    "evidence": [
+      "hero.png",
+      "interaction-2.png",
+      "interaction-4.png"
+    ]
+  },
+  "interaction_quality": {
+    "score": 8.0,
+    "strengths": [
+      "System selection changes the visible count and geometry; slider End changes 0% assembly to 100% inventory and Reset reverses it."
+    ],
+    "weaknesses": [
+      "Some controls require further inspection to understand; search, direct picking and focus were not exercised in this run."
+    ],
+    "evidence": [
+      "trace.json",
+      "interaction-2.png",
+      "interaction-5.png"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8.1,
+    "strengths": [
+      "The light stage, restrained system panel and bottom slider keep the body prominent."
+    ],
+    "weaknesses": [
+      "Initial geometry loading required an explicit readiness wait; the mobile capture covers the source panel rather than the full exploration workflow."
+    ],
+    "evidence": [
+      "hero.png",
+      "mobile.png",
+      "interaction.md"
+    ]
+  },
+  "education_score": 7.02,
+  "experience_score": 8.15,
+  "overall_score": 7.59,
+  "openatlas_relevance": 8.5,
+  "top_strengths": [
+    "Selective system reveal",
+    "Reversible spatial-to-inventory transition",
+    "Clear source and scope disclosure"
+  ],
+  "top_weaknesses": [
+    "Limited functional explanation",
+    "Dense full inventory",
+    "Small-object framing after system filtering"
+  ],
+  "principles_to_learn": [
+    "Pair visibility filters with the spatial representation.",
+    "Preserve the assembled coordinate frame as the reference state.",
+    "Filter before exploding to limit visual overload.",
+    "Include source and model scope within the product."
+  ],
+  "things_not_to_copy": [
+    "Do not assume a 2,234-part catalogue teaches physiological function.",
+    "Do not leave a small selected system tiny in a full-body camera frame."
+  ],
+  "golden_recommendation": "Use for system filtering, exploded view, camera presets. Use principles with the documented limitations."
+}

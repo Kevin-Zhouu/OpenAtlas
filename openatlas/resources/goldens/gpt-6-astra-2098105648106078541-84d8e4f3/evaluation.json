@@ -1,0 +1,102 @@
+{
+  "summary": {
+    "topic": "Head and brain anatomy",
+    "learning_goal": "Explore relationships among head systems, brain regions and individual anatomical structures.",
+    "primary_visualization": "708 aligned anatomical objects, hierarchical scope and paginated exploded views.",
+    "primary_interaction": "Open a system, explode into labeled parts, and compare a cutaway with the assembled head."
+  },
+  "correctness_clarity": {
+    "score": 8.0,
+    "strengths": [
+      "Original versus illustrative positions are labeled, and display settings state that open clipping surfaces are not medical scans."
+    ],
+    "weaknesses": [
+      "Factual anatomy is not independently audited; mesh hierarchy is editorial and functional explanations are sparse."
+    ],
+    "evidence": [
+      "interaction-1.png",
+      "interaction-6.png",
+      "source/README.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 7.8,
+    "strengths": [
+      "Brain scope narrows 708 objects to 247; the 24-part page exposes named structures without showing everything at once."
+    ],
+    "weaknesses": [
+      "Guided tour emphasizes layers and labels rather than why structures function; explosion normalizes sizes and changes spatial relations."
+    ],
+    "evidence": [
+      "interaction-1.png",
+      "interaction-2.png",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 8.8,
+    "strengths": [
+      "Detailed brain topology, contextual labels and a skull cutaway expose depth relationships."
+    ],
+    "weaknesses": [
+      "Open cut surfaces and normalized part sizes require careful interpretation; a dense label inventory still needs zoom."
+    ],
+    "evidence": [
+      "interaction-2.png",
+      "interaction-5.png"
+    ]
+  },
+  "interaction_quality": {
+    "score": 8.8,
+    "strengths": [
+      "Hierarchy selection, reversible explosion and cutaway all caused visible geometry changes; the assembled brain returns from the inventory."
+    ],
+    "weaknesses": [
+      "Controls are numerous; material and section-plane choices were exposed but not individually tested."
+    ],
+    "evidence": [
+      "trace.json",
+      "interaction-2.png",
+      "interaction-3.png",
+      "interaction-5.png"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8.2,
+    "strengths": [
+      "Large centered anatomy and edge controls maintain a coherent stage across scope changes."
+    ],
+    "weaknesses": [
+      "On the captured 390×844 state the open Visualization panel covers much of the model; labels are small."
+    ],
+    "evidence": [
+      "hero.png",
+      "mobile.png"
+    ]
+  },
+  "education_score": 7.88,
+  "experience_score": 8.62,
+  "overall_score": 8.25,
+  "openatlas_relevance": 9.0,
+  "top_strengths": [
+    "Progressive anatomical scope",
+    "Paginated named parts",
+    "Cutaway reveals occluded relationships"
+  ],
+  "top_weaknesses": [
+    "Limited explanation of function",
+    "Illustrative explosion alters relative scale",
+    "Dense mobile controls"
+  ],
+  "principles_to_learn": [
+    "Use a hierarchy to let the learner choose the level of detail.",
+    "Page large part inventories and retain a breadcrumb to the whole.",
+    "Explain what a cutaway does and does not represent.",
+    "Offer a reversible transition between contextual and isolated views."
+  ],
+  "things_not_to_copy": [
+    "Do not imply exploded objects retain true spacing or scale.",
+    "Do not copy the control density to a novice lesson."
+  ],
+  "golden_recommendation": "Use for hierarchical dissection, exploded view, cutaway. Use principles with the documented limitations."
+}

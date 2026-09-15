@@ -1,0 +1,98 @@
+{
+  "summary": {
+    "topic": "Promotional galaxy-shaped star field",
+    "learning_goal": "Create a launch identity; the galaxy itself does not teach an astronomy concept.",
+    "primary_visualization": "Luminous spiral/star field forming a six-like composition between GPT and Astra labels.",
+    "primary_interaction": "Arrow keys rotate the star field; page navigation reveals launch-article content."
+  },
+  "correctness_clarity": {
+    "score": 4.5,
+    "strengths": [
+      "Promotional labels clearly identify the intended branding."
+    ],
+    "weaknesses": [
+      "The evaluated hero has no scientific labels or explanatory astronomy claims to verify; this is low educational clarity, not evidence of factual falsehood."
+    ],
+    "evidence": [
+      "hero.png",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 1.5,
+    "strengths": [
+      "The surrounding article provides product context."
+    ],
+    "weaknesses": [
+      "The star field itself does not explain a concept, show a causal relationship or support scientific exploration."
+    ],
+    "evidence": [
+      "hero.png",
+      "interaction-3.png"
+    ]
+  },
+  "visualization_quality": {
+    "score": 4.8,
+    "strengths": [
+      "Particle depth and luminous arms form a coherent, legible spatial composition."
+    ],
+    "weaknesses": [
+      "The galaxy functions as decoration and branding rather than a concept-revealing representation."
+    ],
+    "evidence": [
+      "hero.png",
+      "interaction-1.png"
+    ]
+  },
+  "interaction_quality": {
+    "score": 3.2,
+    "strengths": [
+      "Keyboard controls visibly rotate the star field in opposite directions."
+    ],
+    "weaknesses": [
+      "Rotation changes appearance without a learning consequence; no parameter or information-linked selection was observed."
+    ],
+    "evidence": [
+      "trace.json",
+      "interaction-1.png",
+      "interaction-2.png"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 8.7,
+    "strengths": [
+      "The dominant star field, sparse type and restrained navigation create a polished visual identity."
+    ],
+    "weaknesses": [
+      "Motion and bright particles can compete with foreground content; narrow mobile view offers little explanatory space."
+    ],
+    "evidence": [
+      "hero.png",
+      "mobile.png"
+    ]
+  },
+  "education_score": 2.7,
+  "experience_score": 5.33,
+  "overall_score": 4.02,
+  "openatlas_relevance": 5.5,
+  "top_strengths": [
+    "Strong visual hierarchy",
+    "Keyboard-accessible star-field affordance",
+    "Consistent spatial branding"
+  ],
+  "top_weaknesses": [
+    "No direct teaching within the hero",
+    "Decorative rather than causal interaction",
+    "Limited transfer beyond visual composition"
+  ],
+  "principles_to_learn": [
+    "Use sparse chrome around a dominant visual object.",
+    "Provide keyboard equivalents for pointer-based motion.",
+    "Tie a future educational particle view to explanatory labels and meaningful parameters."
+  ],
+  "things_not_to_copy": [
+    "Do not copy decorative WebGL into a lesson and call it educational.",
+    "Do not score visual spectacle as conceptual visualization quality."
+  ],
+  "golden_recommendation": "Use for decorative camera rotation. Use principles with the documented limitations."
+}

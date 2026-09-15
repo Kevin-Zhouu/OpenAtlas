@@ -25,6 +25,9 @@ class Provider(http.server.BaseHTTPRequestHandler):
             ('read_resource', {'path': 'local--fixture/SKILL.md', 'offset': 0}),
             ('read_resource', {'path': 'local--fixture/notes.md', 'offset': 0}),
             ('read_resource', {'path': '../../etc/passwd', 'offset': 0}),
+            ('read_resource', {'path': 'references/goldens/CATALOG.json', 'offset': 0}),
+            ('read_resource', {'path': 'references/goldens/chernobyl-atlas-1575d13d/principles.md', 'offset': 0}),
+            ('read_resource', {'path': 'references/../../etc/passwd', 'offset': 0}),
         ]
         index = len(CALLS) - 1
         if index < len(calls):
@@ -45,9 +48,10 @@ real_client = planner.AsyncOpenAI
 planner.AsyncOpenAI = lambda **kwargs: real_client(api_key=kwargs['api_key'], base_url='http://127.0.0.1:9001/v1')
 sys.argv = ['planner', 'fixture-model', 'Read all skills and relevant resources; return a creative brief.', 'Explain LLM inference with 3D GPU work']
 asyncio.run(planner.main())
-assert len(CALLS) == 5
+assert len(CALLS) == 8
 inputs = json.dumps(CALLS[-1]['input'])
 assert 'fixture supporting notes' in inputs
+assert 'Make visibility, cuts and disassembly reversible' in inputs
 assert 'Resource outside selected skills' in inputs
 assert 'root:x:' not in inputs
 server.shutdown()

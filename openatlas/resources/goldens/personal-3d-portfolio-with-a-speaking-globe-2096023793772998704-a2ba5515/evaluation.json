@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "topic": "A speaker portfolio mapped onto a globe",
+    "learning_goal": "Communicate career and talk locations; transferable to geographic storytelling rather than a lesson in the talk subjects.",
+    "primary_visualization": "Editorial portrait section followed by a globe with venue miniatures and adjacent talk descriptions.",
+    "primary_interaction": "Demo scrolls between sections and changes active location/talk while the globe reorients."
+  },
+  "correctness_clarity": {
+    "score": 5.5,
+    "strengths": [
+      "Talk title and city labels align within a consistent information panel."
+    ],
+    "weaknesses": [
+      "Talk dates and career claims are not independently verified."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 3.6,
+    "strengths": [
+      "A location-linked story can help connect events to a geographic context."
+    ],
+    "weaknesses": [
+      "The portfolio names technical talks but does not teach their content."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 8.3,
+    "strengths": [
+      "Globe orientation and small venue scenes connect the event to a place."
+    ],
+    "weaknesses": [
+      "A stage miniature on a globe is an illustrative metaphor, not a geographically scaled depiction."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 7.0,
+    "strengths": [
+      "Selected locations and descriptions change across Durham, Barcelona, Amsterdam and Taipei."
+    ],
+    "weaknesses": [
+      "Scroll/click triggers cannot all be separated from edits in the recording; no live response tested."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 9.0,
+    "strengths": [
+      "Editorial typography, generous spacing and coherent section transitions provide strong visual hierarchy."
+    ],
+    "weaknesses": [
+      "Some event-filter text is very small; mobile and keyboard navigation are unverified."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 4.36,
+  "experience_score": 7.99,
+  "overall_score": 6.18,
+  "openatlas_relevance": 8.3,
+  "top_strengths": [
+    "A location-linked story can help connect events to a geographic context.",
+    "Globe orientation and small venue scenes connect the event to a place.",
+    "Editorial typography, generous spacing and coherent section transitions provide strong visual hierarchy."
+  ],
+  "top_weaknesses": [
+    "Talk dates and career claims are not independently verified.",
+    "The portfolio names technical talks but does not teach their content.",
+    "Scroll/click triggers cannot all be separated from edits in the recording; no live response tested."
+  ],
+  "principles_to_learn": [
+    "Keep location and narrative synchronized in linked views.",
+    "Transition from identity to context to detailed events with consistent typography.",
+    "Use progressive disclosure to keep extensive event data secondary to the active story."
+  ],
+  "things_not_to_copy": [
+    "Do not confuse listing educational talks with teaching their subjects.",
+    "Do not copy a decorative avatar into every educational notebook."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for scrollytelling, linked globe and text, progressive disclosure. Live behavior remains unverified."
+}

@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "topic": "Weather intensity and an ocean scene",
+    "learning_goal": "Show changes in wind, waves and rainfall as one intensity control increases.",
+    "primary_visualization": "Transparent ocean cube with a boat, wave surface, cloud layer, rain and lightning.",
+    "primary_interaction": "Demo raises an intensity dial from calm to violent while conditions and numeric readouts change."
+  },
+  "correctness_clarity": {
+    "score": 5.5,
+    "strengths": [
+      "Wind, wave height and rainfall readouts are explicitly identified as simulated conditions."
+    ],
+    "weaknesses": [
+      "No physical relationship among the three weather quantities is explained or validated."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "teaching_quality": {
+    "score": 6.2,
+    "strengths": [
+      "One changing control is paired with conspicuous changes in sea state and rain."
+    ],
+    "weaknesses": [
+      "A single bundled intensity value hides independent causes and cannot teach meteorology alone."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "visualization_quality": {
+    "score": 9.0,
+    "strengths": [
+      "A confined volume makes above-water weather and surface motion visible together."
+    ],
+    "weaknesses": [
+      "Transparent cube boundaries are an artistic container, not a physical atmospheric boundary."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "interaction_quality": {
+    "score": 8.5,
+    "strengths": [
+      "The sequence shows calm at 0%, rising intensity, 100% storm and a later reduction."
+    ],
+    "weaknesses": [
+      "Actual dial latency, repeatability and independent parameter control were not tested."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 9.1,
+    "strengths": [
+      "A single dominant cube and isolated dial make the main control easy to identify."
+    ],
+    "weaknesses": [
+      "Small secondary readouts and dark copy may have accessibility problems; mobile unverified."
+    ],
+    "evidence": [
+      "reference/contact-sheet.jpg",
+      "interaction.md"
+    ]
+  },
+  "education_score": 5.92,
+  "experience_score": 8.83,
+  "overall_score": 7.38,
+  "openatlas_relevance": 8.8,
+  "top_strengths": [
+    "One changing control is paired with conspicuous changes in sea state and rain.",
+    "A confined volume makes above-water weather and surface motion visible together.",
+    "A single dominant cube and isolated dial make the main control easy to identify."
+  ],
+  "top_weaknesses": [
+    "No physical relationship among the three weather quantities is explained or validated.",
+    "A single bundled intensity value hides independent causes and cannot teach meteorology alone.",
+    "Actual dial latency, repeatability and independent parameter control were not tested."
+  ],
+  "principles_to_learn": [
+    "Make the changed parameter and visible consequence share a viewport.",
+    "Use a bounded scene to keep several coupled effects readable.",
+    "Expose independent causes after an intuitive introductory control."
+  ],
+  "things_not_to_copy": [
+    "Do not copy an arbitrary weather-intensity mapping as scientific law.",
+    "Do not equate spectacular fluid rendering with a teaching explanation."
+  ],
+  "golden_recommendation": "Provisional demo reference. Use for parameter control, coupled visual feedback. Live behavior remains unverified."
+}

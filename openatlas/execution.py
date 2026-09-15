@@ -87,11 +87,12 @@ class DockerExecutor:
         self.debug = debug
         self.checkpoint_store = checkpoint_store
 
-    def run(self, workspace, request, progress):
+    def run(self, workspace, request, progress, connection=None):
         if self.cancelled(request):
             raise ValueError("Generation cancelled before dispatch")
         client = self.client or docker.from_env()
-        key = self.credentials.openai_key()
+        connection = connection or self.credentials.connection()
+        key = connection["api_key"]
         token = secrets.token_urlsafe(32)
         broker = container = None
         planning = request.get("execution_stage") == "planning"
@@ -117,7 +118,8 @@ class DockerExecutor:
             )
             broker = client.containers.run(
                 command=["python3", "/opt/broker.py"],
-                environment={"OPENAI_API_KEY": key, "RELAY_TOKEN": token},
+                environment={"OPENAI_API_KEY": key, "RELAY_TOKEN": token,
+                             "INFERENCE_BASE_URL": connection["base_url"]},
                 network_mode="bridge",
                 tmpfs={"/tmp": "rw,noexec,nosuid,size=32m"},
                 **common,

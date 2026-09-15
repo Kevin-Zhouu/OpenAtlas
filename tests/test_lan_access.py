@@ -45,6 +45,7 @@ def test_lan_requires_auth(tmp_path, monkeypatch):
 
 
 def test_setup_preserves_key_on_restart_and_only_restarts_app(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup, 'start_monitor', lambda host=None: None)
     monkeypatch.setattr(setup, 'PRIVATE', tmp_path)
     monkeypatch.setattr(setup, 'OVERRIDE', tmp_path / 'compose.json')
     monkeypatch.setattr(setup.subprocess, 'check_output', lambda *a, **k: json.dumps({'services': {'app': {
@@ -54,7 +55,8 @@ def test_setup_preserves_key_on_restart_and_only_restarts_app(tmp_path, monkeypa
     setup.main('enable', '192.168.1.9')
     setup.main('enable', '192.168.1.10')
     config = json.loads(setup.OVERRIDE.read_text())['services']['app']
-    assert config['ports'] == ['192.168.1.10:8000:8001']
+    assert config['ports'] == ['127.0.0.1:8001:8001']
+    assert config['environment']['OPENATLAS_LAN_STATE'] == '/run/openatlas-lan/status.json'
     assert config['environment']['OPENATLAS_ACCESS_TOKEN'] == 'saved-token'
     assert all(c[-4:] == ['up', '-d', '--no-build', 'app'] for c in commands)
     setup.main('disable')
@@ -62,6 +64,7 @@ def test_setup_preserves_key_on_restart_and_only_restarts_app(tmp_path, monkeypa
 
 
 def test_failed_binding_restores_localhost(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup, 'start_monitor', lambda host=None: None)
     monkeypatch.setattr(setup, 'PRIVATE', tmp_path)
     monkeypatch.setattr(setup, 'OVERRIDE', tmp_path / 'compose.json')
     monkeypatch.setattr(setup.subprocess, 'check_output', lambda *a, **k: json.dumps({'services': {'app': {'ports': [{'host_ip': '127.0.0.1'}]}}}))
@@ -119,3 +122,108 @@ def test_desktop_ui_controls_phone_access_without_local_token(tmp_path, monkeypa
     assert restarted.put('/api/phone', json={'enabled':False}).status_code == 200
     assert phone.get('/api/notebooks').status_code == 403
     assert desktop.get('/api/notebooks').status_code == 200
+
+
+def test_network_change_updates_url_hosts_and_retains_consent(tmp_path, monkeypatch):
+    import time
+    status = tmp_path / 'network.json'
+    def network(url):
+        status.write_text(json.dumps({'url': url, 'updated_at': time.time()}))
+    monkeypatch.setenv('OPENATLAS_LAN_STATE', str(status))
+    monkeypatch.setenv('OPENATLAS_DESKTOP_PORT', '8000')
+    monkeypatch.setenv('OPENATLAS_ACCESS_TOKEN', 'network-test-token')
+    monkeypatch.setenv('OPENATLAS_ALLOWED_HOSTS', 'localhost,127.0.0.1')
+    monkeypatch.delenv('OPENATLAS_LAN_URL', raising=False)
+    app = create_app(Repository(tmp_path / 'data'))
+    desktop = TestClient(app, base_url='http://localhost:8000')
+    async def phone_socket(scope, receive, send):
+        await app(dict(scope, server=('0.0.0.0', 8001)), receive, send)
+    phone = TestClient(phone_socket, base_url='http://192.168.1.9:8000')
+    network('http://192.168.1.9:8000')
+    first = desktop.put('/api/phone', json={'enabled': True}).json()
+    assert phone.post('/api/session', json={'token': 'network-test-token'}).status_code == 200
+    assert phone.get('/api/notebooks').status_code == 200
+    network('http://10.1.2.3:8000')
+    changed = desktop.get('/api/phone').json()
+    assert changed['pairing_url'] == first['pairing_url'].replace('192.168.1.9', '10.1.2.3')
+    assert phone.get('/api/notebooks').status_code == 400  # Old Host is no longer trusted.
+    fresh = TestClient(phone_socket, base_url='http://10.1.2.3:8000')
+    assert fresh.get('/api/notebooks').status_code == 401
+    assert fresh.post('/api/session', json={'token': 'network-test-token'}).status_code == 200
+    assert fresh.put('/api/phone', json={'enabled': False}).status_code == 403
+    assert fresh.get('/api/notebooks', headers={'Host': 'evil.example'}).status_code == 400
+    network('')
+    offline = desktop.get('/api/phone').json()
+    assert not offline['available'] and not offline['pairing_url']
+    assert fresh.get('/api/notebooks').status_code == 503
+    network('http://10.1.2.3:8000')
+    assert desktop.get('/api/phone').json() == changed  # No app recreation or re-enabling.
+    status.write_text(json.dumps({'url': changed['url'], 'updated_at': time.time() - 30}))
+    assert not desktop.get('/api/phone').json()['pairing_url']
+    # Delayed discovery heartbeat must not revoke a valid phone session.
+    assert fresh.get('/api/notebooks').status_code == 200
+    assert desktop.put('/api/phone', json={'enabled': False}).status_code == 200
+    off = fresh.get('/api/notebooks')
+    assert off.status_code == 403 and 'Phone access is off' in off.json()['detail']
+
+
+def test_network_monitor_rebinds_and_retries_without_compose(tmp_path):
+    from scripts.network_monitor import NetworkMonitor
+    class FakeRelay:
+        def __init__(self, address):
+            self.address = address
+            self.closed = False
+        def serve_forever(self): pass
+        def close(self): self.closed = True
+    relays = []
+    def factory(address):
+        if address[0] == '192.168.1.20' and not relays[-1].closed:
+            raise AssertionError('Old listener must close before rebinding')
+        relay = FakeRelay(address)
+        relays.append(relay)
+        return relay
+    host = ['192.168.1.9']
+    monitor = NetworkMonitor(tmp_path / 'status.json', lambda: host[0], factory)
+    monitor.refresh()
+    monitor.refresh()
+    assert len(relays) == 1
+    host[0] = '192.168.1.20'
+    monitor.refresh()
+    assert relays[0].closed and len(relays) == 2
+    host[0] = ''
+    monitor.refresh()
+    assert relays[1].closed and json.loads(monitor.status.read_text())['url'] == ''
+    host[0] = '192.168.1.9'
+    attempts = []
+    def retry(address):
+        attempts.append(address)
+        if len(attempts) == 1: raise OSError('adapter not ready')
+        return factory(address)
+    monitor.factory = retry
+    monitor.refresh()
+    assert json.loads(monitor.status.read_text())['url'] == ''
+    monitor.refresh()
+    assert json.loads(monitor.status.read_text())['url'] == 'http://192.168.1.9:8000'
+    monitor.close()
+
+
+def test_host_relay_forwards_to_phone_socket_and_closes_connections():
+    import socket
+    import socketserver
+    import threading
+    from scripts.network_monitor import Relay
+    class Echo(socketserver.BaseRequestHandler):
+        def handle(self):
+            self.request.sendall(self.request.recv(1024))
+    upstream = socketserver.TCPServer(('127.0.0.1', 0), Echo)
+    threading.Thread(target=upstream.serve_forever, daemon=True).start()
+    relay = Relay(('127.0.0.1', 0), upstream.server_address)
+    threading.Thread(target=relay.serve_forever, daemon=True).start()
+    try:
+        with socket.create_connection(relay.server_address, timeout=2) as client:
+            client.sendall(b'phone socket')
+            assert client.recv(1024) == b'phone socket'
+    finally:
+        relay.close()
+        upstream.shutdown()
+        upstream.server_close()

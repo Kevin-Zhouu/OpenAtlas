@@ -5,15 +5,15 @@ import secrets
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from .reader import reader_document
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import config
 from .artifacts import ArtifactStore, artifact_media_type
-from .phone import PhoneAccess
+from .phone import PhoneAccess, NetworkTrustedHostMiddleware, network_url
 from .credentials import Credentials
 from .debug import DebugStore, redact
 import json
@@ -37,7 +37,7 @@ class Generation(BaseModel):
 
 
 class Settings(BaseModel):
-    planner_model: str = Field(default=DEFAULT_MODEL, min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9._-]+$")
+    planner_model: str = Field(default=DEFAULT_MODEL, min_length=1, max_length=200, pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$")
     planner_instructions: str = Field(default=DEFAULT_PLANNER_INSTRUCTIONS, min_length=1, max_length=40000)
     teaching_prompt: Optional[str] = Field(default=None, max_length=40000)
     provider: str = "demo"
@@ -45,8 +45,8 @@ class Settings(BaseModel):
     model: str = Field(
         default=DEFAULT_MODEL,
         min_length=1,
-        max_length=100,
-        pattern=r"^[a-zA-Z0-9._-]+$",
+        max_length=200,
+        pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$",
     )
 
 
@@ -69,6 +69,17 @@ class CredentialUpdate(BaseModel):
     api_key: SecretStr
 
 
+class InferenceProfile(BaseModel):
+    name: str
+    base_url: str
+    api_key: Optional[SecretStr] = None
+    activate: bool = False
+
+
+class ProfileSelection(BaseModel):
+    profile_id: str
+
+
 class RetryJob(BaseModel):
     mode: str = Field(default="continue", pattern=r"^(continue|rerun)$")
 
@@ -88,8 +99,19 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     store = store or ArtifactStore(repo.data)
     credentials = credentials or Credentials(repo.data)
     app = FastAPI(title="OpenAtlas", docs_url=None, redoc_url=None)
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_input(request: Request, error: RequestValidationError):
+        # Pydantic's default response can echo the entire submitted body (and
+        # API key) when a required profile field is missing.
+        return JSONResponse(status_code=422, content={"detail": [
+            {key: item[key] for key in ("loc", "msg", "type")}
+            for item in error.errors()
+        ]})
+
     app.add_middleware(
-        TrustedHostMiddleware,
+        NetworkTrustedHostMiddleware,
+        state_path=os.getenv("OPENATLAS_LAN_STATE", ""),
         allowed_hosts=os.getenv("OPENATLAS_ALLOWED_HOSTS", "localhost,127.0.0.1").split(
             ","
         ),
@@ -118,6 +140,13 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             raise ValueError("Wi-Fi access requires a private IPv4 HTTP URL and an access token")
 
     desktop_port = os.getenv("OPENATLAS_DESKTOP_PORT", "")
+    network_state = os.getenv("OPENATLAS_LAN_STATE", "")
+    if network_state and (not access_token or not desktop_port):
+        raise ValueError("Dynamic Wi-Fi access requires an access token and desktop socket")
+
+    def current_lan_url():
+        return network_url(network_state) if network_state else lan_url
+
     phone = PhoneAccess(repo.data, access_token)
 
     def desktop_request(request):
@@ -140,8 +169,17 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         local = desktop_request(request)
         sharing = phone.read() if desktop_port else None
         # A disabled LAN listener serves no application data or artifacts.
-        if desktop_port and not local and (not sharing["enabled"] or not lan_url):
+        if desktop_port and not local and not sharing["enabled"]:
             return JSONResponse({"detail": "Phone access is off. Enable it in Settings on the host computer."}, status_code=403)
+        # A heartbeat controls discovery, not the owner's sharing consent. A live
+        # relay can still deliver authenticated requests after a delayed update.
+        if desktop_port and not local and not (
+            network_url(network_state, require_fresh=False) if network_state else lan_url
+        ):
+            return JSONResponse(
+                {"detail": "Phone connection is temporarily unavailable. Reconnect to the same Wi-Fi and try again."},
+                status_code=503, headers={"Retry-After": "3", "Cache-Control": "no-store"},
+            )
         if path.startswith("/api/"):
             # Local access is implicit authority: opaque generated frames and
             # cross-site pages must not use it, including on read endpoints.
@@ -202,6 +240,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         return {"ok": True}
 
     def phone_details(request):
+        lan_url = current_lan_url()
         state = phone.read() if desktop_port else {"enabled": bool(lan_url), "token": access_token}
         enabled = bool(lan_url and state["enabled"])
         return {"enabled": enabled, "available": bool(lan_url and desktop_port),
@@ -216,8 +255,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     def update_phone(body: PhoneUpdate, request: Request):
         if not desktop_request(request):
             raise HTTPException(403, "Manage phone access on the host computer")
-        if not lan_url:
-            raise HTTPException(409, "No Wi-Fi adapter is available. Reconnect the host to Wi-Fi and restart OpenAtlas.")
+        if body.enabled and not current_lan_url():
+            raise HTTPException(409, "No Wi-Fi adapter is available. Reconnect the host; the phone link will update automatically.")
         phone.update(body.enabled, body.rotate)
         return phone_details(request)
 
@@ -302,6 +341,36 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     def remove_credential():
         credentials.remove()
         return credentials.status()
+
+    @app.get("/api/inference-profiles")
+    def inference_profiles():
+        return credentials.profiles()
+
+    @app.post("/api/inference-profiles", status_code=201)
+    @app.put("/api/inference-profiles/{profile_id}")
+    def save_inference_profile(body: InferenceProfile, profile_id: Optional[str] = None):
+        try:
+            return credentials.save_profile(
+                body.name, body.base_url,
+                body.api_key.get_secret_value() if body.api_key is not None else None,
+                profile_id=profile_id, activate=body.activate,
+            )
+        except ValueError as error:
+            raise HTTPException(422, str(error))
+
+    @app.put("/api/inference-profile-selection")
+    def select_inference_profile(body: ProfileSelection):
+        try:
+            return credentials.activate(body.profile_id)
+        except ValueError as error:
+            raise HTTPException(422, str(error))
+
+    @app.delete("/api/inference-profiles/{profile_id}")
+    def delete_inference_profile(profile_id: str):
+        try:
+            return credentials.delete_profile(profile_id)
+        except ValueError as error:
+            raise HTTPException(422, str(error))
 
     @app.get("/api/skills")
     def skills():

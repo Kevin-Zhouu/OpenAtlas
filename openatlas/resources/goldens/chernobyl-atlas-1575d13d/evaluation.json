@@ -1,0 +1,103 @@
+{
+  "summary": {
+    "topic": "RBMK architecture and steam-cycle relationships",
+    "learning_goal": "Reveal reactor components and trace direct-cycle steam and separate cooling water.",
+    "primary_visualization": "Three coordinated views: power block, simplified steam circuit, and reactor in motion.",
+    "primary_interaction": "Disassemble the plant, change explanatory view, pause motion and cut through layers."
+  },
+  "correctness_clarity": {
+    "score": 8.3,
+    "strengths": [
+      "The source dialog discloses simplified proportions, channel counts, paired loops and open cut surfaces.",
+      "The broad direct-cycle relationship agrees with the cited official plant description."
+    ],
+    "weaknesses": [
+      "Exact model geometry and detailed component claims were not audited."
+    ],
+    "evidence": [
+      "interaction-6.png",
+      "fact-check.json"
+    ]
+  },
+  "teaching_quality": {
+    "score": 7.8,
+    "strengths": [
+      "Architecture, thermodynamics and operation are separated into clear explanatory views with consistent labels."
+    ],
+    "weaknesses": [
+      "Short captions identify components but provide limited explanations of their roles; there is no learner-controlled thermodynamic experiment."
+    ],
+    "evidence": [
+      "interaction-1.png",
+      "interaction-2.png",
+      "interaction-4.png"
+    ]
+  },
+  "visualization_quality": {
+    "score": 8.4,
+    "strengths": [
+      "Disassembly exposes layered shielding and graphite; circuit colors distinguish water and steam."
+    ],
+    "weaknesses": [
+      "The upper page and panel leave some important geometry below the initial 900px viewport; section-cut endpoints can remove too much context."
+    ],
+    "evidence": [
+      "hero.png",
+      "interaction-1.png",
+      "interaction-5.png"
+    ]
+  },
+  "interaction_quality": {
+    "score": 8.1,
+    "strengths": [
+      "Disassembly, tab changes, pause status and section cutting produced distinct observed states."
+    ],
+    "weaknesses": [
+      "Playback and clipping change inspection, not reactor physics; not every visibility switch was tested."
+    ],
+    "evidence": [
+      "trace.json",
+      "interaction-1.png",
+      "interaction-5.png"
+    ]
+  },
+  "uiux_visual_design": {
+    "score": 7.8,
+    "strengths": [
+      "Consistent grid, restrained colors and grouped controls give a coherent exhibit identity."
+    ],
+    "weaknesses": [
+      "Desktop content extends below the initial viewport and secondary labels are small; mobile controls require additional scrolling."
+    ],
+    "evidence": [
+      "hero.png",
+      "mobile.png",
+      "interaction-2.png"
+    ]
+  },
+  "education_score": 8.0,
+  "experience_score": 8.1,
+  "overall_score": 8.05,
+  "openatlas_relevance": 8.9,
+  "top_strengths": [
+    "Separate structure and flow explanations",
+    "Reversible visual inspection controls",
+    "Explicit simplification and source disclosure"
+  ],
+  "top_weaknesses": [
+    "Sparse component-function explanation",
+    "Some geometry lies below the initial fold",
+    "No quantitative cause/effect experiment"
+  ],
+  "principles_to_learn": [
+    "Use separate views for spatial structure and flow relationships.",
+    "Maintain consistent labels and color meaning across modes.",
+    "State simplifications next to the visualization and link primary sources.",
+    "Allow learners to pause and expose hidden layers."
+  ],
+  "things_not_to_copy": [
+    "Do not imply that animated flow speed is physical operating speed.",
+    "Do not make a conceptual model appear to be an exact engineering replica."
+  ],
+  "golden_recommendation": "Use for exploded view, linked explanatory modes, flow playback, section cut. Use principles with the documented limitations."
+}

@@ -1,0 +1,27 @@
+{
+  "input_reference_url": "https://www.tripo3d.ai/3d-prompts/models/gpt-6-astra",
+  "reference_page_title": "Astra Prompts: 3D Examples for Blender & Three.js | Tripo",
+  "demo_video_url": null,
+  "live_site_url": null,
+  "repository_url": null,
+  "repository_commit": null,
+  "repository_license": null,
+  "discovery_evidence": [
+    {
+      "method": "regular Chrome reference DOM",
+      "artifact": "reference/inspection.json",
+      "url": "https://www.tripo3d.ai/3d-prompts/models/gpt-6-astra",
+      "at": "2026-09-14T11:50:14.045559+00:00"
+    }
+  ],
+  "source_identification_confidence": 0,
+  "repository_confidence": 0,
+  "source_status": "not-applicable",
+  "evaluated_target": null,
+  "notes": [
+    "Tracked collection URL; no evaluated project target."
+  ],
+  "original_post_url": null,
+  "live_site_confidence": 0,
+  "source_outcome": "not-applicable"
+}

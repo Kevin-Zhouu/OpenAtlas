@@ -3,12 +3,12 @@ import argparse
 import ipaddress
 import json
 import os
-from pathlib import Path
 import secrets
 import socket
 import subprocess
 import sys
 import webbrowser
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE = ROOT / '.lan'
@@ -31,18 +31,41 @@ def detect_host():
 
 
 def configuration(host, token):
-    host = validate_host(host)
+    if host:
+        validate_host(host)
     return {'services': {'app': {
-        # Compose merges this with the existing loopback mapping.
-        'ports': [f'{host}:8000:8001'],
+        # Only the authenticated phone socket is forwarded by the host relay.
+        'ports': ['127.0.0.1:8001:8001'],
+        'volumes': [f'{PRIVATE / "network"}:/run/openatlas-lan:ro'],
         'environment': {
-            'OPENATLAS_ALLOWED_HOSTS': 'localhost,127.0.0.1,' + host,
+            'OPENATLAS_ALLOWED_HOSTS': 'localhost,127.0.0.1',
             'OPENATLAS_ACCESS_TOKEN': token,
-            'OPENATLAS_LAN_URL': f'http://{host}:8000',
+            'OPENATLAS_LAN_URL': '',
+            'OPENATLAS_LAN_STATE': '/run/openatlas-lan/status.json',
             'OPENATLAS_PUBLIC_ORIGIN': '',
             'OPENATLAS_DESKTOP_PORT': '8000',
         },
     }}}
+
+
+def stop_monitor():
+    directory = PRIVATE / 'network'
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / 'control.json').write_text('{}')
+    (directory / 'status.json').write_text('{}')
+
+
+def start_monitor(host=None):
+    directory = PRIVATE / 'network'
+    directory.mkdir(parents=True, exist_ok=True)
+    run_id = secrets.token_hex(16)
+    (directory / 'control.json').write_text(json.dumps({'run_id': run_id}))
+    command = [sys.executable, str(ROOT / 'scripts/network_monitor.py'), str(directory), run_id]
+    if host:
+        command += ['--host', host]
+    options = {'creationflags': subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS} if os.name == 'nt' else {'start_new_session': True}
+    subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, **options)
 
 
 def compose(enabled=True):
@@ -54,18 +77,20 @@ def compose(enabled=True):
 
 def main(action, host=None):
     if action in ('open', 'status'):
-        env = json.loads(OVERRIDE.read_text())['services']['app']['environment']
         if action == 'open':
             webbrowser.open('http://localhost:8000/')
         else:
-            print('Configured phone URL: ' + env['OPENATLAS_LAN_URL'])
+            state = PRIVATE / 'network/status.json'
+            url = json.loads(state.read_text()).get('url', '') if state.exists() else ''
+            print('Current phone URL: ' + (url or 'Waiting for a private network'))
             print('Run enable to apply this configuration; open to sign in on this computer.')
         return
     if action == 'disable':
+        stop_monitor()
         compose(False)
         print('Wi-Fi access disabled. OpenAtlas remains at http://localhost:8000.')
         return
-    host = validate_host(host) if host else detect_host()
+    host = validate_host(host) if host else None
     resolved = json.loads(subprocess.check_output(
         ['docker', 'compose', '-f', str(ROOT / 'compose.yaml'), 'config', '--format', 'json'],
         cwd=ROOT, text=True, stderr=subprocess.PIPE))
@@ -76,6 +101,7 @@ def main(action, host=None):
     token = (old['services']['app']['environment']['OPENATLAS_ACCESS_TOKEN'] if old else
              app.get('environment', {}).get('OPENATLAS_ACCESS_TOKEN') or secrets.token_urlsafe(32))
     PRIVATE.mkdir(mode=0o700, exist_ok=True)
+    stop_monitor()
     with open(OVERRIDE, 'w', opener=lambda name, flags: os.open(name, flags, 0o600)) as stream:
         json.dump(configuration(host, token), stream, indent=2)
     OVERRIDE.chmod(0o600)
@@ -84,8 +110,9 @@ def main(action, host=None):
     except subprocess.CalledProcessError:
         # Restore working localhost access if Docker cannot publish this adapter.
         compose(False)
-        raise ValueError('Docker could not bind the Wi-Fi address; localhost has been restored. On Colima, enable --network-host-addresses (see docs/lan-access.md).')
-    print(f'Phone URL: http://{host}:8000')
+        raise ValueError('Docker could not prepare the phone socket; localhost has been restored. Check that local port 8001 is available.')
+    start_monitor(host)
+    print('Phone access will follow your current private network automatically.')
     print('Open http://localhost:8000 → Settings → Open on your phone → Enable phone access.')
 
 

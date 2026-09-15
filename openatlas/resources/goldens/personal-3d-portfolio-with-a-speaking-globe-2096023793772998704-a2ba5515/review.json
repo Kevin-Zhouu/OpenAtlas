@@ -1,0 +1,20 @@
+{
+  "at": "2026-09-14T11:59:06.025166+00:00",
+  "reviewer": "Codex current-session multimodal LLM review",
+  "rubric": "/Users/bigsoup/Downloads/openatlas-mvp-llm-judge/EVALUATION_RUBRIC.md",
+  "rubric_sha256": "2f6e6d6d1ecff21b88454d9ee9b08d2385a06a470c368c4c710411fc1b508d35",
+  "reviewed_artifacts": [
+    "reference/contact-sheet.jpg",
+    "interaction.md"
+  ],
+  "limitations": [
+    "Video-only evaluation; live, mobile, source and runtime behavior unverified.",
+    "Hero extracted at native recording dimensions; not a live screenshot."
+  ],
+  "curator_handling": "Opinions preserved, not score targets",
+  "evaluation_scope": "demo-video-only",
+  "artifact_sha256": {
+    "reference/contact-sheet.jpg": "8016b8cff4446b8f6352a8b6b464eca3165c2e116ec98086f1763e0ae8753b89",
+    "interaction.md": "2ef94f5bffb820a23a07c54e704530af82f63712946b0f829124ab1ace891b6d"
+  }
+}

@@ -10,7 +10,15 @@ export type Settings = {
   planner_instructions?: string;
   teaching_prompt?: string | null;
 };
-type CredentialStatus = { configured: boolean; source: string };
+type Profile = {
+  id: string;
+  name: string;
+  base_url: string;
+  configured: boolean;
+  source: string;
+};
+type Profiles = { active_id: string; profiles: Profile[] };
+const defaultBaseUrl = "https://api.openai.com/v1";
 type Model = { id: string; name: string; default?: boolean };
 
 type Props = {
@@ -57,7 +65,25 @@ export function SettingsDialog({
   const [tab, setTab] = useState("general");
   const [draft, setDraft] = useState(settings);
   const [key, setKey] = useState("");
-  const [status, setStatus] = useState<CredentialStatus | null>(null);
+  const [profiles, setProfiles] = useState<Profiles | null>(null);
+  const [profileId, setProfileId] = useState("host");
+  const [profileName, setProfileName] = useState("");
+  const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
+  const selectedProfile = profiles?.profiles.find((p) => p.id === profileId);
+
+  function chooseProfile(id: string, data = profiles) {
+    const profile = data?.profiles.find((p) => p.id === id);
+    setProfileId(id);
+    setProfileName(profile?.name || "");
+    setBaseUrl(profile?.base_url || defaultBaseUrl);
+    setKey("");
+    setError("");
+  }
+
+  function acceptProfiles(data: Profiles) {
+    setProfiles(data);
+    chooseProfile(data.active_id, data);
+  }
   const [models, setModels] = useState<Model[]>([
     { id: "gpt-6-astra", name: "GPT-6 Astra", default: true },
   ]);
@@ -66,12 +92,12 @@ export function SettingsDialog({
   useEffect(() => {
     let active = true;
     Promise.all([
-      request<CredentialStatus>("credentials"),
+      request<Profiles>("inference-profiles"),
       request<Model[]>("models"),
     ])
       .then(([credentials, choices]) => {
         if (active) {
-          setStatus(credentials);
+          acceptProfiles(credentials);
           setModels(choices);
         }
       })
@@ -88,13 +114,28 @@ export function SettingsDialog({
     setBusy(true);
     setError("");
     try {
-      if (key.trim()) {
-        setStatus(
-          await request<CredentialStatus>("credentials", "PUT", {
-            api_key: key.trim(),
-          }),
-        );
-        setKey("");
+      if (!profiles) throw new Error("Provider profiles have not loaded yet.");
+      if (profileId === "host") {
+        if (profiles.active_id !== "host") {
+          acceptProfiles(await request<Profiles>("inference-profile-selection", "PUT", {
+            profile_id: "host",
+          }));
+        }
+      } else {
+        const changed = profileId === "new" || key.trim() ||
+          profileName !== selectedProfile?.name || baseUrl !== selectedProfile?.base_url;
+        if (changed) {
+          acceptProfiles(await request<Profiles>(
+            profileId === "new" ? "inference-profiles" : `inference-profiles/${profileId}`,
+            profileId === "new" ? "POST" : "PUT",
+            { name: profileName.trim(), base_url: baseUrl.trim(),
+              ...(key.trim() ? { api_key: key.trim() } : {}), activate: true },
+          ));
+        } else if (profiles.active_id !== profileId) {
+          acceptProfiles(await request<Profiles>("inference-profile-selection", "PUT", {
+            profile_id: profileId,
+          }));
+        }
       }
       onSaved(await request<Settings>("settings", "PUT", draft));
     } catch (e) {
@@ -104,14 +145,13 @@ export function SettingsDialog({
     }
   }
 
-  async function removeKey() {
+  async function removeProfile() {
     setBusy(true);
     setError("");
     try {
-      setStatus(await request<CredentialStatus>("credentials", "DELETE"));
-      setKey("");
+      acceptProfiles(await request<Profiles>(`inference-profiles/${profileId}`, "DELETE"));
     } catch {
-      setError("Could not remove the saved key. Please try again.");
+      setError("Could not delete the provider profile. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -217,69 +257,77 @@ export function SettingsDialog({
                 </option>
               </select>
             </label>
-            <label>
-              OpenAI API key
-              <input
-                type="password"
-                autoComplete="new-password"
-                spellCheck={false}
-                autoCapitalize="none"
-                value={key}
-                onChange={(e) => setKey(e.target.value)}
-                placeholder={
-                  status?.configured
-                    ? "Leave blank to keep the configured key"
-                    : "sk-…"
-                }
-                maxLength={512}
-              />
-            </label>
-            <div className="credential-status" role="status">
-              {status === null
-                ? "Checking key status…"
-                : status.configured
-                  ? status.source === "saved"
-                    ? "API key saved locally"
-                    : "API key configured by the host"
-                  : "No API key configured"}
-              {status?.source === "saved" && (
-                <button
-                  type="button"
-                  className="quiet"
-                  disabled={busy}
-                  onClick={removeKey}
-                >
-                  Remove saved key
-                </button>
-              )}
-            </div>
-            <p className="hint">
-              Your key stays on this OpenAtlas host, separate from your
-              Notebooks. A saved key replaces the host-configured key for new
-              generations.
-            </p>
+            <fieldset disabled={busy || !profiles} className="inference-profiles">
+              <legend>Inference API</legend>
+              <label>
+                API provider profile
+                <select value={profileId} onChange={(e) => chooseProfile(e.target.value)}>
+                  {!profiles && <option value="host">Loading providers…</option>}
+                  {profiles?.profiles.map((profile) => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.name}{profile.id === profiles.active_id ? " (active)" : ""}
+                    </option>
+                  ))}
+                  <option value="new">Add a new provider…</option>
+                </select>
+              </label>
+              {profileId !== "host" ? <>
+                <label>
+                  Provider name
+                  <input value={profileName} maxLength={80} required={tab === "general"}
+                    placeholder="e.g. My API provider"
+                    onChange={(e) => setProfileName(e.target.value)} />
+                </label>
+                <label>
+                  API base URL
+                  <input type="url" value={baseUrl} maxLength={2048} required={tab === "general"}
+                    spellCheck={false} autoCapitalize="none"
+                    placeholder={defaultBaseUrl}
+                    onChange={(e) => setBaseUrl(e.target.value)} />
+                </label>
+                <label>
+                  API key
+                  <input type="password" autoComplete="new-password" spellCheck={false}
+                    autoCapitalize="none" value={key} maxLength={4096}
+                    required={profileId === "new" && tab === "general"}
+                    onChange={(e) => setKey(e.target.value)}
+                    placeholder={selectedProfile?.configured
+                      ? "Leave blank to keep this profile’s saved key" : "Enter your provider’s API key"} />
+                </label>
+                <div className="credential-status" role="status">
+                  {selectedProfile?.configured ? "API key saved locally" : "A key is required for a new provider"}
+                  {selectedProfile?.source === "saved" && (
+                    <button type="button" className="quiet" onClick={removeProfile}>
+                      Delete provider profile
+                    </button>
+                  )}
+                </div>
+              </> : <p role="status" className="hint">
+                {selectedProfile?.configured ? "API key configured by the host" : "No host API key configured"}
+                {selectedProfile && <> · {selectedProfile.base_url}</>}
+              </p>}
+              <p className="hint">
+                Save settings to use the selected profile. Switching keeps your other saved
+                providers and keys. Keys stay on this host and are never shown again.
+                Deleting the active profile restores the host configuration.
+              </p>
+              <p className="hint">
+                Use a Responses-compatible API base URL, such as https://api.example.com/v1.
+                Both Codex and the planner use this provider. For a server on this computer,
+                use host.docker.internal instead of localhost.
+              </p>
+            </fieldset>
             <label>
               Codex model
-              <select
-                value={draft.model}
-                onChange={(e) => setDraft({ ...draft, model: e.target.value })}
-              >
-                {models.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name}
-                    {model.default ? " (default)" : ""}
-                  </option>
-                ))}
-                {!models.some((model) => model.id === draft.model) && (
-                  <option value={draft.model}>
-                    {draft.model} (saved selection)
-                  </option>
-                )}
-              </select>
+              <input list="codex-model-options" value={draft.model} required maxLength={200}
+                onChange={(e) => setDraft({ ...draft, model: e.target.value })} />
             </label>
+            <datalist id="codex-model-options">
+              {models.map((model) => <option key={model.id} value={model.id}>{model.name}</option>)}
+            </datalist>
             <p className="hint">
-              GPT-6 Astra is the default. Available models depend on your OpenAI
-              account. Demo mode uses no API key or model inference.
+              Enter a model ID supported by your provider, or choose a suggestion.
+              Set the planner’s model in the Planner tab. Demo mode uses no inference.
             </p>
             <label>
               Concurrent generations
@@ -295,7 +343,7 @@ export function SettingsDialog({
               />
             </label>
           </div>
-          <button className="primary" disabled={busy || editorDirty}>
+          <button className="primary" disabled={busy || editorDirty || !profiles}>
             {busy ? "Saving…" : "Save settings"}
           </button>
         </form>

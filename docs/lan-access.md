@@ -16,9 +16,9 @@ The QR is generated locally; no external QR service receives it.
 After the normal Docker Compose build/install, launch **OpenAtlas.command** on
 macOS or **OpenAtlas.cmd** on Windows. On Linux, or from any terminal, use
 `python3 scripts/start.py` (`python` on Windows). This detects the host adapter,
-prepares Docker's LAN port mapping, and opens the desktop UI. Phone access starts
+prepares a loopback-only phone socket and a background host relay, and opens the desktop UI. Phone access starts
 off until enabled in Settings. The launcher can also accept `--host <private-ip>`
-when a VPN or multiple adapters make automatic detection ambiguous.
+when a VPN or multiple adapters make automatic detection ambiguous. This pins the relay to that address; omit `--host` to follow network changes automatically.
 
 The underlying Docker mapping must exist before a browser can accept incoming
 phone connections; it is prepared at application startup, not by granting Docker
@@ -27,9 +27,19 @@ use the desktop launcher for UI-controlled phone sharing. Only the app service
 is recreated by the launcher; generation workers are not restarted. Docker must
 already be running and the application image built.
 
-The phone link remains the same across restarts while the host IP and token stay
-the same. If DHCP changes the address, restart with the launcher and scan the new
-QR. An optional DHCP reservation in your router can keep the IP stable.
+The host relay checks the current private address every two seconds and rebinds
+when it changes. Settings refreshes the URL and locally generated QR every three
+seconds, and on focus or reconnection. No app or worker restart is needed for
+network changes. Scan the current code after switching networks. The token and
+sharing preference remain unchanged. During disconnection, binding failure, or a
+stale relay heartbeat, the link is unavailable rather than advertising an old IP.
+A delayed heartbeat does not revoke existing authenticated phone sessions. Only
+disabling sharing produces “Phone access is off”; an unavailable relay address
+produces a temporary-connection response.
+The detached relay survives closing the launcher; `lan_access.py disable` stops it.
+
+To install this update on an older installation, rebuild the app image once and
+run the desktop launcher once. Subsequent network changes are automatic.
 
 ## Network and privacy
 
@@ -44,24 +54,20 @@ If the phone cannot connect, avoid isolated guest Wi-Fi, check both devices are
 on the same network, and allow TCP port 8000 on the host's private-network firewall.
 No router port forwarding is necessary.
 
-## Colima on macOS
+## Host relay
 
-Colima must recognize host adapter addresses. If startup reports `cannot assign
-requested address`, localhost is restored. Once, while all Docker work is idle:
-
-```sh
-colima stop
-colima start --network-host-addresses
-```
-
-Then reopen OpenAtlas. This Colima setting persists. Docker Desktop and native
-Linux Docker do not need this Colima-specific step. macOS/Windows/Linux launchers
-are provided; Windows and Linux have not been physically tested in this change.
+The relay runs on macOS, Windows or Linux with Python's standard library. It binds
+only the detected RFC1918 address on port 8000 and forwards raw connections to
+`127.0.0.1:8001`. Docker no longer needs to bind a changing Wi-Fi address, including
+on Colima. Keep local port 8001 free. The relay publishes a non-secret status file
+in `.lan/network`, mounted read-only into the application. The API accepts only a
+fresh private address from that file. The status directory contains no pairing token.
 
 ## Socket boundary
 
 One FastAPI/Uvicorn process accepts two internal sockets. Docker maps host
-`127.0.0.1:8000` to the desktop socket and `<private-ip>:8000` to the phone socket.
+`127.0.0.1:8000` to the desktop socket and `127.0.0.1:8001` to the phone socket.
+The host relay maps `<current-private-ip>:8000` to the latter.
 Both use the same user-facing port, UI, API, database, and artifact server. The
 accepted socket, not client-supplied Host or forwarded headers, identifies desktop
 access. Cross-origin desktop API access is rejected. Never publish the desktop

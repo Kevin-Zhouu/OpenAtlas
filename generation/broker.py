@@ -1,16 +1,24 @@
 """Trusted, job-scoped provider relay. Runs in a separate container without mounts."""
 
 import http.server
-import os
 import json
+import os
 import re
 import urllib.error
 import urllib.request
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, new_url):
+        # Never forward a provider key to a redirect target.
+        return None
+
+
 def report_model(label, value):
     # Whitelist a model identifier only; never log response text or credentials.
-    if isinstance(value, str) and re.fullmatch(r"[a-zA-Z0-9._-]{1,120}", value):
+    if isinstance(value, str) and re.fullmatch(
+        r"[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}", value
+    ):
         print(json.dumps({"type": "model_verification", label: value}), flush=True)
 
 
@@ -66,7 +74,10 @@ class Relay(http.server.BaseHTTPRequestHandler):
             self.send_error(400, "Invalid request JSON")
             return
         request = urllib.request.Request(
-            "https://api.openai.com" + self.path,
+            os.environ.get("INFERENCE_BASE_URL", "https://api.openai.com/v1").rstrip(
+                "/"
+            )
+            + self.path[len("/v1") :],
             data=body,
             headers={
                 "Authorization": "Bearer " + os.environ["OPENAI_API_KEY"],
@@ -76,7 +87,9 @@ class Relay(http.server.BaseHTTPRequestHandler):
             method="POST",
         )
         try:
-            response = urllib.request.urlopen(request, timeout=300)
+            response = urllib.request.build_opener(NoRedirect()).open(
+                request, timeout=300
+            )
         except urllib.error.HTTPError as e:
             response = e
         except Exception:
@@ -88,6 +101,9 @@ class Relay(http.server.BaseHTTPRequestHandler):
                 "Content-Type", response.headers.get("Content-Type", "application/json")
             )
             self.send_header("Connection", "close")
+            for name in ("x-request-id", "retry-after"):
+                if response.headers.get(name):
+                    self.send_header(name, response.headers[name])
             self.end_headers()
             observer = ModelObserver()
             while True:
@@ -95,8 +111,11 @@ class Relay(http.server.BaseHTTPRequestHandler):
                 if not chunk:
                     break
                 observer.feed(chunk)
-                self.wfile.write(chunk)
-                self.wfile.flush()
+                try:
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError):
+                    break
         self.close_connection = True
 
 

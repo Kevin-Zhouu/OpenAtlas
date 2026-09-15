@@ -14,6 +14,7 @@ from .debug import DebugStore, observe
 from .demo import generate
 from .execution import DockerExecutor
 from .planning import PlannerAdapter
+from .references import stage_references
 from .repository import Repository, uid
 from .skills import SkillCatalog
 
@@ -47,6 +48,17 @@ class Runner:
 
     def process(self, job):
         done = threading.Event()
+        connection = None
+
+        def run_agent(executor, workspace, request, progress):
+            # Pin one key/URL pair for planning, building and repairs. A Settings
+            # change affects the next job, never an already-started job.
+            nonlocal connection
+            if isinstance(executor, DockerExecutor):
+                if connection is None:
+                    connection = executor.credentials.connection()
+                return executor.run(workspace, request, progress, connection=connection)
+            return executor.run(workspace, request, progress)
 
         def heartbeat():
             while not done.wait(10):
@@ -62,6 +74,7 @@ class Runner:
                 request = dict(job["request"], job_id=job["id"])
                 recovery = request.get("revalidate_job")
                 if not recovery:
+                    request["golden_references"] = stage_references(workspace)
                     if request.get("skill_snapshots"):
                         self.catalog.stage_snapshots(
                             request["skills"],
@@ -77,7 +90,8 @@ class Runner:
                 ):
                     self.repo.stage(job["id"], "planning")
                     attempt = self.repo.start_plan(job["id"], request)
-                    content = self.planner.run(
+                    content = run_agent(
+                        self.planner,
                         workspace,
                         dict(request, execution_stage="planning"),
                         lambda message: self.repo.progress(job["id"], message),
@@ -108,7 +122,7 @@ class Runner:
                 elif request["provider"] == "demo":
                     generate(workspace, request, progress)
                 else:
-                    self.executor.run(workspace, request, progress)
+                    run_agent(self.executor, workspace, request, progress)
                 for attempt in range(2):
                     self.repo.stage(job["id"], "validating")
                     progress("Checking the Notebook in a sandboxed browser")
@@ -126,7 +140,7 @@ class Runner:
                             "Repairing issues found by the Notebook browser checks"
                         )
                         self.repo.stage(job["id"], "building")
-                        self.executor.run(workspace, request, progress)
+                        run_agent(self.executor, workspace, request, progress)
                 manifest["demo"] = request["provider"] == "demo"
                 manifest["target_reading_minutes"] = request.get("reading_minutes", 20)
                 manifest["planning_attempt_id"] = request.get("planning_attempt_id")

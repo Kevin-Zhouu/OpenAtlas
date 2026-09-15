@@ -39,8 +39,8 @@ def test_real_blender_mcp_export_and_cleanup(tmp_path):
     from openatlas.execution import DockerExecutor
 
     class Credential:
-        def openai_key(self):
-            return "test-not-a-real-key"
+        def connection(self):
+            return {"api_key": "test-not-a-real-key", "base_url": "https://api.openai.com/v1"}
 
     class Adapter:
         def command(self, request):
