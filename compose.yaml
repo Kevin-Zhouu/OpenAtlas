@@ -23,6 +23,8 @@ services:
       OPENATLAS_API_BASE_URL: ${OPENATLAS_API_BASE_URL:-https://api.openai.com/v1}
       OPENATLAS_JOB_TIMEOUT: ${OPENATLAS_JOB_TIMEOUT:-7200}
       OPENATLAS_GENERATION_IMAGE: openatlas-generation:local
+      OPENATLAS_GENERATION_MEMORY: ${OPENATLAS_GENERATION_MEMORY:-4g}
+      OPENATLAS_GENERATION_CPUS: ${OPENATLAS_GENERATION_CPUS:-4}
     volumes:
       - library:/data
       - ${OPENATLAS_SKILLS_DIR:-./skills}:/skills:ro

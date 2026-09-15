@@ -21,8 +21,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends blender xvfb xa
 # Debian recommends (rather than requires) NumPy; GLB export and screenshots need it.
 RUN apt-get update && apt-get install -y --no-install-recommends python3-numpy && rm -rf /var/lib/apt/lists/*
 ENV BLENDER_MCP_DISABLE_TELEMETRY=1 LIBGL_ALWAYS_SOFTWARE=1
+COPY generation/browser/package*.json /opt/browser-mcp/
+RUN cd /opt/browser-mcp && npm ci --ignore-scripts && ./node_modules/.bin/playwright install --with-deps chromium && chmod -R a+rX /opt/browsers
+COPY generation/browser/launch.cjs /opt/browser-mcp/launch.cjs
+COPY generation/browser/image-response.cjs /opt/browser-mcp/image-response.cjs
+COPY generation/quality-schema.json generation/review_probe.py /opt/
+COPY generation/runtime /opt/openatlas-runtime
 COPY generation/blender_startup.py generation/blender_mcp.py generation/blender_server.py /opt/
 COPY generation/broker.py generation/planner.py generation/subscription_model.py generation/subscription_login.py /opt/
+RUN apt-get update && apt-get install -y --no-install-recommends curl ripgrep unzip file procps python-is-python3 && rm -rf /var/lib/apt/lists/*
 USER node
 WORKDIR /workspace
 CMD ["sleep", "infinity"]

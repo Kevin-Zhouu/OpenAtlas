@@ -1,0 +1,109 @@
+{
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "revise",
+        "blocked"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "requirement": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "observed": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "blocker",
+              "suggestion"
+            ]
+          },
+          "change_reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement",
+          "passed",
+          "observed",
+          "evidence",
+          "severity",
+          "change_reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "screenshots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "phone",
+              "intermediate",
+              "focused",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "path",
+          "purpose"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "motion": {
+      "type": "object",
+      "properties": {
+        "applicable": {
+          "type": "boolean"
+        },
+        "normal_motion_tested": {
+          "type": "boolean"
+        },
+        "observations": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "applicable",
+        "normal_motion_tested",
+        "observations"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "verdict",
+    "summary",
+    "criteria",
+    "screenshots",
+    "motion"
+  ],
+  "additionalProperties": false
+}

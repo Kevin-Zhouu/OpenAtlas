@@ -8,6 +8,7 @@ export type ValidationRound = {
   checks: {
     id: string; title: string; status: string; expected: string; reason?: string;
     duration_ms?: number; before_text?: string; after_text?: string; observed?: string;
+    before_visible?: boolean; after_visible?: boolean;
     diagnostics?: string[]; definition?: Record<string, unknown>;
   }[];
 };
@@ -29,10 +30,12 @@ export function ValidationDetails({ rounds }: { rounds: ValidationRound[] }) {
           </summary>
           <dl>
             <dt>Expected</dt><dd>{check.expected}</dd>
-            {check.definition && Object.entries(check.definition).map(([key, value]) => <div className="validation-definition" key={key}><dt>{({selector:'Control selector', expect_selector:'Feedback selector', action:'Action', value:'Input value', expect_text:'Expected text'} as Record<string,string>)[key] || key}</dt><dd><code>{typeof value === 'string' ? value : JSON.stringify(value)}</code></dd></div>)}
+            {check.definition && Object.entries(check.definition).map(([key, value]) => <div className="validation-definition" key={key}><dt>{({selector:'Control selector', expect_selector:'Feedback selector', action:'Action', value:'Input value', expect_text:'Expected text', expect_visible:'Expected visibility'} as Record<string,string>)[key] || key}</dt><dd><code>{typeof value === 'string' ? value : JSON.stringify(value)}</code></dd></div>)}
             {check.observed && <><dt>Observed</dt><dd>{check.observed}</dd></>}
             {check.before_text !== undefined && <><dt>Text before action</dt><dd className="validation-evidence">{check.before_text || '(empty or not visible)'}</dd></>}
             {check.after_text !== undefined && <><dt>Text after action</dt><dd className="validation-evidence">{check.after_text || '(empty or not visible)'}</dd></>}
+            {check.before_visible !== undefined && <><dt>Visibility before action</dt><dd>{check.before_visible ? 'Visible' : 'Hidden'}</dd></>}
+            {check.after_visible !== undefined && <><dt>Visibility after action</dt><dd>{check.after_visible ? 'Visible' : 'Hidden'}</dd></>}
             <dt>Result</dt><dd className="validation-evidence">{check.reason || (check.status === 'not_run' ? (round.status === 'running' ? 'Waiting for earlier checks.' : 'Not reached because validation stopped before this check.') : check.status === 'running' ? 'Check is in progress.' : 'No additional evidence recorded.')}</dd>
             {!!check.diagnostics?.length && <><dt>Browser diagnostics</dt><dd className="validation-evidence">{check.diagnostics.join('\n')}</dd></>}
           </dl>

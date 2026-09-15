@@ -53,6 +53,7 @@ class ValidationReport:
                     "action",
                     "value",
                     "expect_text",
+                    "expect_visible",
                 )
                 if field in definition
             }

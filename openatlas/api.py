@@ -42,8 +42,15 @@ class Generation(BaseModel):
 class Settings(BaseModel):
     generation_timeout_minutes: int = Field(default=120, ge=1, le=1440, strict=True)
     inference_auth: str = Field(default="api_key", pattern=r"^(api_key|chatgpt)$")
-    planner_model: str = Field(default=DEFAULT_MODEL, min_length=1, max_length=200, pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$")
-    planner_instructions: str = Field(default=DEFAULT_PLANNER_INSTRUCTIONS, min_length=1, max_length=40000)
+    planner_model: str = Field(
+        default=DEFAULT_MODEL,
+        min_length=1,
+        max_length=200,
+        pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$",
+    )
+    planner_instructions: str = Field(
+        default=DEFAULT_PLANNER_INSTRUCTIONS, min_length=1, max_length=40000
+    )
     teaching_prompt: Optional[str] = Field(default=None, max_length=40000)
     provider: str = "demo"
     concurrency: int = Field(default=2, ge=1, le=8)
@@ -110,10 +117,15 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     async def invalid_input(request: Request, error: RequestValidationError):
         # Pydantic's default response can echo the entire submitted body (and
         # API key) when a required profile field is missing.
-        return JSONResponse(status_code=422, content={"detail": [
-            {key: item[key] for key in ("loc", "msg", "type")}
-            for item in error.errors()
-        ]})
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": [
+                    {key: item[key] for key in ("loc", "msg", "type")}
+                    for item in error.errors()
+                ]
+            },
+        )
 
     app.add_middleware(
         NetworkTrustedHostMiddleware,
@@ -126,8 +138,13 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     public_origin = os.getenv("OPENATLAS_PUBLIC_ORIGIN", "").rstrip("/")
     remote = urlsplit(public_origin)
     if public_origin and (
-        remote.scheme != "https" or not remote.hostname or remote.path
-        or remote.query or remote.fragment or remote.username or remote.password
+        remote.scheme != "https"
+        or not remote.hostname
+        or remote.path
+        or remote.query
+        or remote.fragment
+        or remote.username
+        or remote.password
         or not access_token
     ):
         raise ValueError("Remote access requires an HTTPS origin and an access token")
@@ -137,18 +154,32 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         lan = urlsplit(lan_url)
         try:
             address = ipaddress.IPv4Address(lan.hostname)
-            valid = any(address in ipaddress.ip_network(net) for net in
-                        ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+            valid = any(
+                address in ipaddress.ip_network(net)
+                for net in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+            )
         except (ValueError, TypeError):
             valid = False
-        if (not valid or lan.scheme != "http" or lan.path or lan.query
-                or lan.fragment or lan.username or lan.password or not access_token):
-            raise ValueError("Wi-Fi access requires a private IPv4 HTTP URL and an access token")
+        if (
+            not valid
+            or lan.scheme != "http"
+            or lan.path
+            or lan.query
+            or lan.fragment
+            or lan.username
+            or lan.password
+            or not access_token
+        ):
+            raise ValueError(
+                "Wi-Fi access requires a private IPv4 HTTP URL and an access token"
+            )
 
     desktop_port = os.getenv("OPENATLAS_DESKTOP_PORT", "")
     network_state = os.getenv("OPENATLAS_LAN_STATE", "")
     if network_state and (not access_token or not desktop_port):
-        raise ValueError("Dynamic Wi-Fi access requires an access token and desktop socket")
+        raise ValueError(
+            "Dynamic Wi-Fi access requires an access token and desktop socket"
+        )
 
     def current_lan_url():
         return network_url(network_state) if network_state else lan_url
@@ -159,8 +190,12 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         # The host launcher maps this socket exclusively to host loopback.
         # Host and forwarded client headers alone are never sufficient.
         server = request.scope.get("server")
-        return bool(desktop_port and server and str(server[1]) == desktop_port
-                    and request.url.hostname in ("localhost", "127.0.0.1", "::1"))
+        return bool(
+            desktop_port
+            and server
+            and str(server[1]) == desktop_port
+            and request.url.hostname in ("localhost", "127.0.0.1", "::1")
+        )
 
     def browser_origin(request):
         # Serve terminates HTTPS before forwarding to the loopback HTTP port.
@@ -176,23 +211,44 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         sharing = phone.read() if desktop_port else None
         # A disabled LAN listener serves no application data or artifacts.
         if desktop_port and not local and not sharing["enabled"]:
-            return JSONResponse({"detail": "Phone access is off. Enable it in Settings on the host computer."}, status_code=403)
+            return JSONResponse(
+                {
+                    "detail": "Phone access is off. Enable it in Settings on the host computer."
+                },
+                status_code=403,
+            )
         # A heartbeat controls discovery, not the owner's sharing consent. A live
         # relay can still deliver authenticated requests after a delayed update.
-        if desktop_port and not local and not (
-            network_url(network_state, require_fresh=False) if network_state else lan_url
+        if (
+            desktop_port
+            and not local
+            and not (
+                network_url(network_state, require_fresh=False)
+                if network_state
+                else lan_url
+            )
         ):
             return JSONResponse(
-                {"detail": "Phone connection is temporarily unavailable. Reconnect to the same Wi-Fi and try again."},
-                status_code=503, headers={"Retry-After": "3", "Cache-Control": "no-store"},
+                {
+                    "detail": "Phone connection is temporarily unavailable. Reconnect to the same Wi-Fi and try again."
+                },
+                status_code=503,
+                headers={"Retry-After": "3", "Cache-Control": "no-store"},
             )
         if path.startswith("/api/"):
             # Local access is implicit authority: opaque generated frames and
             # cross-site pages must not use it, including on read endpoints.
-            if local and (request.headers.get("sec-fetch-site") == "cross-site"
-                          or (request.headers.get("origin") is not None
-                              and request.headers["origin"] != browser_origin(request))):
-                return JSONResponse({"detail": "Cross-origin desktop access is not allowed"}, status_code=403)
+            if local and (
+                request.headers.get("sec-fetch-site") == "cross-site"
+                or (
+                    request.headers.get("origin") is not None
+                    and request.headers["origin"] != browser_origin(request)
+                )
+            ):
+                return JSONResponse(
+                    {"detail": "Cross-origin desktop access is not allowed"},
+                    status_code=403,
+                )
             if request.method not in ("GET", "HEAD", "OPTIONS"):
                 origin = request.headers.get("origin")
                 if origin and origin != browser_origin(request):
@@ -209,7 +265,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 and (desktop_port or access_token)
                 and path != "/api/session"
                 and not secrets.compare_digest(
-                    request.cookies.get("openatlas_session", ""), sharing["token"] if sharing else access_token
+                    request.cookies.get("openatlas_session", ""),
+                    sharing["token"] if sharing else access_token,
                 )
             ):
                 return JSONResponse(
@@ -220,12 +277,14 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         if path.startswith("/artifacts/"):
-            base = (
-                browser_origin(request) + "/".join(path.split("/")[:4]) + "/"
-            )
+            base = browser_origin(request) + "/".join(path.split("/")[:4]) + "/"
             response.headers["Content-Security-Policy"] = config.artifact_csp(base)
             response.headers["Access-Control-Allow-Origin"] = "*"
-            response.headers["Cache-Control"] = "no-store" if "reader" in request.query_params else "public,max-age=31536000,immutable"
+            response.headers["Cache-Control"] = (
+                "no-store"
+                if "reader" in request.query_params
+                else "public,max-age=31536000,immutable"
+            )
         else:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
@@ -239,19 +298,33 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         if not session_token or not secrets.compare_digest(body.token, session_token):
             raise HTTPException(403, "Invalid access token")
         response.set_cookie(
-            "openatlas_session", session_token, httponly=True, samesite="strict",
+            "openatlas_session",
+            session_token,
+            httponly=True,
+            samesite="strict",
             secure=browser_origin(request).startswith("https://"),
-            max_age=30 * 24 * 60 * 60, path="/"
+            max_age=30 * 24 * 60 * 60,
+            path="/",
         )
         return {"ok": True}
 
     def phone_details(request):
         lan_url = current_lan_url()
-        state = phone.read() if desktop_port else {"enabled": bool(lan_url), "token": access_token}
+        state = (
+            phone.read()
+            if desktop_port
+            else {"enabled": bool(lan_url), "token": access_token}
+        )
         enabled = bool(lan_url and state["enabled"])
-        return {"enabled": enabled, "available": bool(lan_url and desktop_port),
-                "desktop": desktop_request(request), "url": lan_url,
-                "pairing_url": lan_url + "/#access_token=" + state["token"] if enabled else ""}
+        return {
+            "enabled": enabled,
+            "available": bool(lan_url and desktop_port),
+            "desktop": desktop_request(request),
+            "url": lan_url,
+            "pairing_url": lan_url + "/#access_token=" + state["token"]
+            if enabled
+            else "",
+        }
 
     @app.get("/api/phone")
     def phone_access(request: Request):
@@ -262,7 +335,10 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         if not desktop_request(request):
             raise HTTPException(403, "Manage phone access on the host computer")
         if body.enabled and not current_lan_url():
-            raise HTTPException(409, "No Wi-Fi adapter is available. Reconnect the host; the phone link will update automatically.")
+            raise HTTPException(
+                409,
+                "No Wi-Fi adapter is available. Reconnect the host; the phone link will update automatically.",
+            )
         phone.update(body.enabled, body.rotate)
         return phone_details(request)
 
@@ -280,7 +356,12 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             raise HTTPException(422, "Unknown provider")
         saved = body.model_dump()
         previous = repo.settings()
-        for field in ('planner_model', 'planner_instructions', 'inference_auth', 'generation_timeout_minutes'):
+        for field in (
+            "planner_model",
+            "planner_instructions",
+            "inference_auth",
+            "generation_timeout_minutes",
+        ):
             if field not in body.model_fields_set:
                 saved[field] = previous[field]
         repo.save_settings(saved)
@@ -288,11 +369,24 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
 
     @app.get("/api/prompt")
     def prompt_defaults():
-        return {"default": DEFAULT_TEACHING_PROMPT, "planner_default": DEFAULT_PLANNER_INSTRUCTIONS}
+        return {
+            "default": DEFAULT_TEACHING_PROMPT,
+            "planner_default": DEFAULT_PLANNER_INSTRUCTIONS,
+        }
 
     @app.post("/api/prompt/preview")
     def prompt_preview(body: PromptEdit):
-        return {"prompt": CodexAdapter().prompt({"prompt": "[The learner’s topic]", "instructions": "[Additional instructions]", "skills": [], "teaching_prompt": body.content, "reading_minutes": 20})}
+        return {
+            "prompt": CodexAdapter().prompt(
+                {
+                    "prompt": "[The learner’s topic]",
+                    "instructions": "[Additional instructions]",
+                    "skills": [],
+                    "teaching_prompt": body.content,
+                    "reading_minutes": 20,
+                }
+            )
+        }
 
     @app.get("/api/skill-files")
     def skill_files(skill_id: str, path: Optional[str] = None):
@@ -304,7 +398,9 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     @app.put("/api/skill-files")
     def save_skill_file(body: SkillFile):
         try:
-            return SkillEditor(catalog).save(body.skill_id, body.path, body.content, body.revision)
+            return SkillEditor(catalog).save(
+                body.skill_id, body.path, body.content, body.revision
+            )
         except (ValueError, OSError) as e:
             raise HTTPException(422, str(e))
 
@@ -359,7 +455,10 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     @app.post("/api/subscription/login", status_code=202)
     def subscription_login():
         if not subscription.available():
-            raise HTTPException(503, "The OpenAtlas runner is unavailable. Start the runner and try again.")
+            raise HTTPException(
+                503,
+                "The OpenAtlas runner is unavailable. Start the runner and try again.",
+            )
         try:
             return subscription.start()
         except ValueError as error:
@@ -371,12 +470,16 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
 
     @app.post("/api/inference-profiles", status_code=201)
     @app.put("/api/inference-profiles/{profile_id}")
-    def save_inference_profile(body: InferenceProfile, profile_id: Optional[str] = None):
+    def save_inference_profile(
+        body: InferenceProfile, profile_id: Optional[str] = None
+    ):
         try:
             return credentials.save_profile(
-                body.name, body.base_url,
+                body.name,
+                body.base_url,
                 body.api_key.get_secret_value() if body.api_key is not None else None,
-                profile_id=profile_id, activate=body.activate,
+                profile_id=profile_id,
+                activate=body.activate,
             )
         except ValueError as error:
             raise HTTPException(422, str(error))
@@ -430,7 +533,10 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 raise HTTPException(404, "Published Notebook not found")
             base_version = existing["latest_version"]
             version = next(v for v in existing["versions"] if v["id"] == base_version)
-            existing_context = {'title': existing['title'], 'description': version['manifest'].get('description', '')}
+            existing_context = {
+                "title": existing["title"],
+                "description": version["manifest"].get("description", ""),
+            }
             if skills_enabled is None:
                 skills_enabled = bool(version["provenance"])
             if reading_minutes is None:
@@ -443,10 +549,10 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             selected = catalog.resolve(ids or []) if skills_enabled is not False else []
         except ValueError as e:
             raise HTTPException(422, str(e))
-        if body.prompt_only and provider != 'codex':
-            raise HTTPException(422, 'Prompt planning requires the Codex provider')
+        if body.prompt_only and provider != "codex":
+            raise HTTPException(422, "Prompt planning requires the Codex provider")
         try:
-            catalog.snapshot(selected, repo.data / 'skill-inputs')
+            catalog.snapshot(selected, repo.data / "skill-inputs")
         except (ValueError, OSError) as error:
             raise HTTPException(422, str(error))
         return repo.enqueue(
@@ -455,10 +561,10 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 "learner_background": body.learner_background,
                 "existing_notebook": existing_context,
                 "prompt_only": body.prompt_only,
-                "planning_enabled": provider == 'codex',
+                "planning_enabled": provider == "codex",
                 "skill_snapshots": True,
-                "planner_model": settings['planner_model'],
-                "planner_instructions": settings['planner_instructions'],
+                "planner_model": settings["planner_model"],
+                "planner_instructions": settings["planner_instructions"],
                 "instructions": body.instructions,
                 "skills": selected,
                 "skills_enabled": skills_enabled is not False,
@@ -466,7 +572,8 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
                 "inference_auth": settings["inference_auth"],
                 "generation_timeout_minutes": settings["generation_timeout_minutes"],
                 "model": settings["model"],
-                "teaching_prompt": settings.get("teaching_prompt") or DEFAULT_TEACHING_PROMPT,
+                "teaching_prompt": settings.get("teaching_prompt")
+                or DEFAULT_TEACHING_PROMPT,
                 "base_version": base_version,
                 "reading_minutes": reading_minutes
                 if reading_minutes is not None
@@ -485,7 +592,14 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
 
     @app.get("/api/jobs")
     def jobs():
-        return [dict(job, can_continue=job["status"] == "failed" and store.checkpoint_path(job["id"]) is not None) for job in repo.list_jobs()]
+        return [
+            dict(
+                job,
+                can_continue=job["status"] == "failed"
+                and store.checkpoint_path(job["id"]) is not None,
+            )
+            for job in repo.list_jobs()
+        ]
 
     @app.post("/api/jobs/{job_id}/retry", status_code=202)
     def retry_job(job_id: str, body: RetryJob):
@@ -495,13 +609,25 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         if original["status"] != "failed":
             raise HTTPException(409, "Only failed jobs can be retried")
         if body.mode == "continue" and store.checkpoint_path(job_id) is None:
-            raise HTTPException(409, "No saved workspace remains. Use Re-run to start a fresh attempt.")
+            raise HTTPException(
+                409, "No saved workspace remains. Use Re-run to start a fresh attempt."
+            )
         request = dict(original["request"])
-        for key in ("revalidate_job", "continue_job", "validation_feedback", "previous_error", "job_id"):
+        for key in (
+            "revalidate_job",
+            "continue_job",
+            "validation_feedback",
+            "previous_error",
+            "job_id",
+        ):
             request.pop(key, None)
         request["retry_of"] = job_id
         request["inference_auth"] = repo.settings()["inference_auth"]
-        request["generation_timeout_minutes"] = repo.settings()["generation_timeout_minutes"]
+        request["generation_timeout_minutes"] = repo.settings()[
+            "generation_timeout_minutes"
+        ]
+        if body.mode == "rerun":
+            request.pop("experience_review_state", None)
         if body.mode == "continue":
             request["continue_job"] = job_id
             request["previous_error"] = (original.get("error") or "")[:2000]
@@ -515,6 +641,11 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         original = repo.job(job_id)
         if not original:
             raise HTTPException(404, "Generation not found")
+        if original["request"].get("experience_review_required"):
+            raise HTTPException(
+                409,
+                "This Notebook requires independent experience review. Use Continue to complete the full publication checks.",
+            )
         if original["status"] != "failed" or store.recovery_path(job_id) is None:
             raise HTTPException(
                 409, "Only failed jobs with retained artifacts can be rechecked"
@@ -526,7 +657,7 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     @app.post("/api/jobs/{job_id}/cancel")
     def cancel_job(job_id: str):
         if not repo.job(job_id):
-            raise HTTPException(404, 'Generation not found')
+            raise HTTPException(404, "Generation not found")
         repo.cancel(job_id)
         return repo.job(job_id)
 
@@ -534,16 +665,16 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     def plans(job_id: str):
         job = repo.job(job_id)
         if not job:
-            raise HTTPException(404, 'Generation not found')
-        return repo.plan_records(job['notebook_id'])
+            raise HTTPException(404, "Generation not found")
+        return repo.plan_records(job["notebook_id"])
 
     @app.post("/api/prompts/{revision_id}/edit", status_code=201)
     def edit_plan(revision_id: str, body: PromptEdit):
         revision = repo.prompt_revision(revision_id)
         if not revision:
-            raise HTTPException(404, 'Prompt not found')
+            raise HTTPException(404, "Prompt not found")
         try:
-            return repo.save_prompt(revision['attempt_id'], body.content, revision_id)
+            return repo.save_prompt(revision["attempt_id"], body.content, revision_id)
         except ValueError as error:
             raise HTTPException(422, str(error))
 
@@ -551,32 +682,64 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
     def build_plan(revision_id: str):
         revision = repo.prompt_revision(revision_id)
         if not revision:
-            raise HTTPException(404, 'Prompt not found')
-        attempt = repo.rows('SELECT job_id FROM planning_attempts WHERE id=:id', id=revision['attempt_id'])[0]
-        original = repo.job(attempt['job_id'])
-        request = dict(original['request'], build_prompt=revision['content'], prompt_only=False,
-                       planning_attempt_id=revision['attempt_id'], prompt_revision_id=revision_id)
-        request['inference_auth'] = repo.settings()['inference_auth']
-        request['generation_timeout_minutes'] = repo.settings()['generation_timeout_minutes']
-        for key in ('continue_job', 'revalidate_job', 'retry_of', 'validation_feedback', 'job_id'):
+            raise HTTPException(404, "Prompt not found")
+        attempt = repo.rows(
+            "SELECT job_id FROM planning_attempts WHERE id=:id",
+            id=revision["attempt_id"],
+        )[0]
+        original = repo.job(attempt["job_id"])
+        request = dict(
+            original["request"],
+            build_prompt=revision["content"],
+            prompt_only=False,
+            planning_attempt_id=revision["attempt_id"],
+            prompt_revision_id=revision_id,
+        )
+        request["inference_auth"] = repo.settings()["inference_auth"]
+        request["generation_timeout_minutes"] = repo.settings()[
+            "generation_timeout_minutes"
+        ]
+        for key in (
+            "continue_job",
+            "revalidate_job",
+            "retry_of",
+            "validation_feedback",
+            "job_id",
+        ):
             request.pop(key, None)
-        return repo.enqueue(request, original['notebook_id'])
+        return repo.enqueue(request, original["notebook_id"])
 
     @app.post("/api/jobs/{job_id}/replan", status_code=202)
     def replan(job_id: str):
         original = repo.job(job_id)
         if not original:
-            raise HTTPException(404, 'Generation not found')
-        if original['status'] in ('queued', 'running'):
-            raise HTTPException(409, 'Wait for this attempt to finish')
-        request = dict(original['request'], prompt_only=True, planning_enabled=True, provider='codex')
-        for key in ('build_prompt', 'planning_attempt_id', 'prompt_revision_id', 'continue_job', 'retry_of', 'revalidate_job', 'job_id'):
+            raise HTTPException(404, "Generation not found")
+        if original["status"] in ("queued", "running"):
+            raise HTTPException(409, "Wait for this attempt to finish")
+        request = dict(
+            original["request"],
+            prompt_only=True,
+            planning_enabled=True,
+            provider="codex",
+        )
+        for key in (
+            "build_prompt",
+            "planning_attempt_id",
+            "prompt_revision_id",
+            "continue_job",
+            "retry_of",
+            "revalidate_job",
+            "job_id",
+        ):
             request.pop(key, None)
         settings = repo.settings()
-        request.update(planner_model=settings['planner_model'], planner_instructions=settings['planner_instructions'])
-        request['inference_auth'] = settings['inference_auth']
-        request['generation_timeout_minutes'] = settings['generation_timeout_minutes']
-        return repo.enqueue(request, original['notebook_id'])
+        request.update(
+            planner_model=settings["planner_model"],
+            planner_instructions=settings["planner_instructions"],
+        )
+        request["inference_auth"] = settings["inference_auth"]
+        request["generation_timeout_minutes"] = settings["generation_timeout_minutes"]
+        return repo.enqueue(request, original["notebook_id"])
 
     @app.get("/api/jobs/{job_id}/debug")
     def job_debug(job_id: str):
@@ -585,7 +748,11 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             raise HTTPException(404, "Generation not found")
         debug = DebugStore(repo.data)
         request = job["request"]
-        agent_used = request.get("provider") == "codex" and not request.get("revalidate_job") and not request.get("local_edit")
+        agent_used = (
+            request.get("provider") == "codex"
+            and not request.get("revalidate_job")
+            and not request.get("local_edit")
+        )
         invocations = debug.invocations(job_id)
         prompt = CodexAdapter().prompt(request) if agent_used else None
         metadata = {
@@ -593,36 +760,82 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
             "job": {k: v for k, v in job.items() if k != "request"},
             "invocations": invocations,
             "prompt": prompt,
-            "prompt_source": "captured" if invocations else "reconstructed" if agent_used else "not_applicable",
-            "skills": [{**s, "sandbox_path": "/workspace/skills/" + s["id"].replace(":", "--") + "/SKILL.md"} for s in request.get("skills", [])],
+            "prompt_source": "captured"
+            if invocations
+            else "reconstructed"
+            if agent_used
+            else "not_applicable",
+            "skills": [
+                {
+                    **s,
+                    "sandbox_path": "/workspace/skills/"
+                    + s["id"].replace(":", "--")
+                    + "/SKILL.md",
+                }
+                for s in request.get("skills", [])
+            ],
         }
         try:
             known_key = credentials.openai_key()
         except ValueError:
-            known_key = ''
-        related = repo.rows("SELECT id,status,stage,created_at,version_id FROM jobs WHERE notebook_id=:n ORDER BY created_at", n=job['notebook_id'])
+            known_key = ""
+        related = repo.rows(
+            "SELECT id,status,stage,created_at,version_id FROM jobs WHERE notebook_id=:n ORDER BY created_at",
+            n=job["notebook_id"],
+        )
         planning_job_id = None
-        if request.get('planning_attempt_id'):
-            attempts = repo.rows('SELECT job_id FROM planning_attempts WHERE id=:id', id=request['planning_attempt_id'])
+        if request.get("planning_attempt_id"):
+            attempts = repo.rows(
+                "SELECT job_id FROM planning_attempts WHERE id=:id",
+                id=request["planning_attempt_id"],
+            )
             if attempts:
-                planning_job_id = attempts[0]['job_id']
-        return json.loads(redact(json.dumps({"job": job, **debug.read(job_id), "generation": metadata,
-            "events": repo.rows('SELECT stage,message,created_at FROM job_events WHERE job_id=:id ORDER BY id', id=job_id),
-            "related_jobs": related, "planning_job_id": planning_job_id,
-            "validation": validation_reports(repo.data, job)}), [known_key] + auth_secrets(subscription._read().get("auth") or {})))
+                planning_job_id = attempts[0]["job_id"]
+        return json.loads(
+            redact(
+                json.dumps(
+                    {
+                        "job": job,
+                        **debug.read(job_id),
+                        "generation": metadata,
+                        "events": repo.rows(
+                            "SELECT stage,message,created_at FROM job_events WHERE job_id=:id ORDER BY id",
+                            id=job_id,
+                        ),
+                        "related_jobs": related,
+                        "planning_job_id": planning_job_id,
+                        "validation": validation_reports(repo.data, job),
+                    }
+                ),
+                [known_key] + auth_secrets(subscription._read().get("auth") or {}),
+            )
+        )
 
     @app.get("/api/jobs/{job_id}/trace")
     def download_trace(job_id: str, stage: Optional[str] = None):
         if stage is not None and stage not in STAGES:
             raise HTTPException(422, "Unknown trace stage")
         snapshot = job_debug(job_id)
-        planning = job_debug(snapshot["planning_job_id"]) if snapshot.get("planning_job_id") and snapshot["planning_job_id"] != job_id else None
+        planning = (
+            job_debug(snapshot["planning_job_id"])
+            if snapshot.get("planning_job_id") and snapshot["planning_job_id"] != job_id
+            else None
+        )
         values = [p.get("api_key", "") for p in credentials._read().get("profiles", [])]
         values += auth_secrets(subscription._read().get("auth") or {})
         values.append(os.environ.get("OPENAI_API_KEY", ""))
         content = trace_archive(repo.data, snapshot, planning, stage, values)
-        filename = f"openatlas-{snapshot['job']['id']}-{stage or 'all-stages'}-trace.zip"
-        return Response(content, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "no-store"})
+        filename = (
+            f"openatlas-{snapshot['job']['id']}-{stage or 'all-stages'}-trace.zip"
+        )
+        return Response(
+            content,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Cache-Control": "no-store",
+            },
+        )
 
     @app.get("/api/jobs/{job_id}")
     def job(job_id: str):

@@ -49,7 +49,7 @@ def test_disposable_docker_roundtrip(tmp_path):
             return [
                 "python3",
                 "-c",
-                "import os, pathlib, subprocess; assert os.getuid()!=0; assert pathlib.Path('/workspace/references/goldens/CATALOG.json').is_file(); assert pathlib.Path('/workspace/references/goldens/chernobyl-atlas-1575d13d/contact-sheet.jpg').is_file(); assert 'OPENAI_API_KEY' not in os.environ; assert not pathlib.Path('/var/run/docker.sock').exists(); p=pathlib.Path('/workspace/source/index.html'); p.write_text(p.read_text().replace('Remember the work.','Remember the previous work.')); subprocess.run(['python3','source/build.py'],check=True)",
+                "import os, pathlib, subprocess; assert os.getuid()!=0; assert pathlib.Path('/sys/fs/cgroup/pids.max').read_text().strip() == '512'; pathlib.Path('/workspace/source/deleted.txt').unlink(); pathlib.Path('/workspace/dist/deleted.txt').unlink(); assert pathlib.Path('/workspace/references/goldens/CATALOG.json').is_file(); assert pathlib.Path('/workspace/references/goldens/chernobyl-atlas-1575d13d/contact-sheet.jpg').is_file(); assert 'OPENAI_API_KEY' not in os.environ; assert not pathlib.Path('/var/run/docker.sock').exists(); p=pathlib.Path('/workspace/source/index.html'); p.write_text(p.read_text().replace('Remember the work.','Remember the previous work.')); subprocess.run(['python3','source/build.py'],check=True)",
             ]
 
     request = {
@@ -61,6 +61,8 @@ def test_disposable_docker_roundtrip(tmp_path):
     generate(tmp_path, request, lambda _: None)
     shutil.rmtree(tmp_path / "dist")
     (tmp_path / "dist").mkdir()
+    (tmp_path / "source/deleted.txt").write_text("obsolete source")
+    (tmp_path / "dist/deleted.txt").write_text("obsolete build")
     SkillCatalog().stage(request["skills"], tmp_path / "skills")
     debug = DebugStore(tmp_path / "diagnostics")
     DockerExecutor(FakeCredential(), adapter=FileEditingAgent(), debug=debug).run(
@@ -68,6 +70,8 @@ def test_disposable_docker_roundtrip(tmp_path):
     )
     assert "Remember the previous work." in (tmp_path / "source/index.html").read_text()
     assert "Remember the previous work." in (tmp_path / "dist/index.html").read_text()
+    assert not (tmp_path / "source/deleted.txt").exists()
+    assert not (tmp_path / "dist/deleted.txt").exists()
     assert validate(tmp_path)["title"]
     client = docker.from_env()
     assert (

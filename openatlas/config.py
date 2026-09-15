@@ -13,3 +13,7 @@ ARTIFACT_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-in
 # Serving middleware narrows http(s) sources to the immutable artifact directory.
 def artifact_csp(base):
     return ARTIFACT_CSP.replace("http: https:", base)
+
+# Generation tools share these limits; inference runs remotely.
+GENERATION_MEMORY = os.getenv("OPENATLAS_GENERATION_MEMORY", "4g")
+GENERATION_CPUS = float(os.getenv("OPENATLAS_GENERATION_CPUS", "4"))

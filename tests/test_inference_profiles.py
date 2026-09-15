@@ -267,6 +267,8 @@ def test_running_job_keeps_connection_when_active_profile_changes(
         def run(self, workspace, request, progress, connection=None):
             connections.append(connection)
             assert "api_key" not in request
+            if request.get("execution_stage") == "reviewing":
+                return {"verdict": "pass", "summary": "Fixture experience review"}
             generate(workspace, request, progress)
 
     def fixture_validation(root):
@@ -288,19 +290,19 @@ def test_running_job_keeps_connection_when_active_profile_changes(
         runner.process(repo.claim(2))
         assert repo.job(job["id"])["status"] == "succeeded"
     assert (
-        connections[:2]
+        connections[:3]
         == [
             {
                 "api_key": "third-party-token-A",
                 "base_url": "https://provider.example/gateway/v2",
             },
         ]
-        * 2
+        * 3
     )
     assert (
-        connections[2:]
+        connections[3:]
         == [
             {"api_key": "second-token", "base_url": "https://second.example/v1"},
         ]
-        * 2
+        * 3
     )

@@ -1,0 +1,127 @@
+{
+  "verdict": "revise",
+  "summary": "The detailed 708-mesh atlas works offline and supports real hierarchical exploration. Repairs are needed for stale anatomical labels, hidden optic pathways in the nerve lesson, and obscured controls in sandbox fullscreen.",
+  "criteria": [
+    {
+      "requirement": "Real anatomical geometry, imported counts, source relationships and attribution",
+      "passed": true,
+      "observed": "708 meshes across all seven requested system categories; 605,318 triangles. Processed coordinate frames match the included input. Attribution and licence notices are included.",
+      "evidence": "Independently tallied geometry; reran geometry checks; inspected provenance and licences. Detailed results: source/review/reviewer-findings-20260915.md."
+    },
+    {
+      "requirement": "Clean, readable desktop and phone interface",
+      "passed": true,
+      "observed": "Fresh overview layouts show a large model, restrained controls, readable English prose and white panels. Phone separation presents four groups per page.",
+      "evidence": "source/review/page-2026-09-15T11-03-27-903Z.png; source/review/page-2026-09-15T11-06-18-968Z.png; source/review/page-2026-09-15T11-06-33-647Z.png."
+    },
+    {
+      "requirement": "Continuous scroll-driven transitions using one master model",
+      "passed": true,
+      "observed": "Forward and backward scrolling changed camera and opacity through fractional states. Rendering continued during scrolling; source inspection corroborated interpolation.",
+      "evidence": "Sampled scroll positions 520\u20132920 and back to 2620; source/review/page-2026-09-15T11-04-04-156Z.png."
+    },
+    {
+      "requirement": "Guided visuals accurately teach the named spatial connections",
+      "passed": false,
+      "observed": "The nerve lesson describes the optic chiasm crossing while hiding both chiasm meshes and optic tracts. The deep-brain lesson also lacks visual identification of its named structures.",
+      "evidence": "At timeline 4\u21925, t=0.9995006, all four optic pathway meshes were invisible. app.js alphaFor suppresses non-brainstem brain structures in this scene. Screenshots: source/review/page-2026-09-15T11-09-21-052Z.png and source/review/page-2026-09-15T11-04-19-199Z.png."
+    },
+    {
+      "requirement": "Hierarchical assembly, child-group separation, pagination and normalized scale",
+      "passed": true,
+      "observed": "Explored Head \u2192 Brain \u2192 Cerebrum \u2192 Left hemisphere \u2192 Frontal lobe. Root and nested separation use child groups with shared descendant transforms. Normalized scale is explained.",
+      "evidence": "Viewed root and nested separated layouts; reran membership, assembly, intermediate-transform and spacing checks. source/review/page-2026-09-15T11-04-34-533Z.png; source/review/page-2026-09-15T11-04-49-945Z.png."
+    },
+    {
+      "requirement": "Correct, readable anatomical labels across navigation",
+      "passed": false,
+      "observed": "Frontal-lobe labels remain over an isolated thalamus after search and isolation. They persist into the resumed journey and clip on phones. Clear obsolete labels when changing scope or returning to assembled/story views.",
+      "evidence": "source/review/page-2026-09-15T11-05-49-701Z.png; source/review/page-2026-09-15T11-06-07-936Z.png. Corroborated rebuild()/makeLabels() empty-signature collision."
+    },
+    {
+      "requirement": "Rotation, zoom, presets, search, inspection, focus, isolation and parent navigation",
+      "passed": true,
+      "observed": "Drag rotation, wheel zoom, front preset, thalamus search, focus, isolation and parent navigation worked. Canvas clicking selected the right orbital orbicularis oculi.",
+      "evidence": "Browser interactions documented in source/review/reviewer-findings-20260915.md."
+    },
+    {
+      "requirement": "Persistent hidden state and undo",
+      "passed": true,
+      "observed": "Hidden left thalamus stayed invisible after material and separation changes. Undo restored its visibility.",
+      "evidence": "Runtime inspection returned hidden=[Thalamusl] and zero visible meshes; undo cleared hidden state and restored Thalamusl."
+    },
+    {
+      "requirement": "Material modes and adjustable reversible clipping",
+      "passed": true,
+      "observed": "All four material modes and three clipping sliders were exercised. Reverse controls and reset worked; sagittal clipping visibly removed half the head. Open-cut limitations are explained.",
+      "evidence": "source/review/page-2026-09-15T11-05-21-637Z.png; source/review/page-2026-09-15T11-08-45-905Z.png."
+    },
+    {
+      "requirement": "Automatic exploration, PNG export and fullscreen",
+      "passed": false,
+      "observed": "Auto exploration and PNG preview worked. In the opaque-origin sandbox, fullscreen fallback leaves the prose above the expanded scene, hiding the explorer and part of search.",
+      "evidence": "source/review/page-2026-09-15T11-08-06-477Z.png; sandbox auto advanced scroll and PNG produced a valid image."
+    },
+    {
+      "requirement": "Standalone offline HTML and opaque-origin sandbox operation",
+      "passed": true,
+      "observed": "Direct file loading with networking disabled rendered all 708 meshes and exported PNG without page errors or HTTP requests. The allow-scripts sandbox also rendered with origin null.",
+      "evidence": "Reran inspected offline script; viewed source/review/offline-file.png. Results: source/review/offline-results.json."
+    },
+    {
+      "requirement": "Source delivery, pinned dependencies, lockfile and documentation",
+      "passed": true,
+      "observed": "Editable source, exact dependency versions, lockfile, portable build scripts, English README and licence notices are present. Build was not rerun because source/dist writes were prohibited.",
+      "evidence": "Inspected package.json, package-lock.json, build.mjs, README.md and licences; notes in source/review/reviewer-findings-20260915.md."
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "source/review/page-2026-09-15T11-03-27-903Z.png",
+      "purpose": "overview"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-06-18-968Z.png",
+      "purpose": "phone"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-04-04-156Z.png",
+      "purpose": "intermediate"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-04-34-533Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-04-49-945Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-05-49-701Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-06-07-936Z.png",
+      "purpose": "phone"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-09-21-052Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-08-06-477Z.png",
+      "purpose": "other"
+    },
+    {
+      "path": "source/review/offline-file.png",
+      "purpose": "other"
+    }
+  ],
+  "motion": {
+    "applicable": true,
+    "normal_motion_tested": true,
+    "observations": "Exercised normal scrolling forwards and backwards through surface, deep-brain, nerve and vascular scenes, plus intermediate separation. Camera and opacity interpolate continuously using the same meshes. Reduced-motion behavior was not tested and was not used as evidence of normal-motion quality."
+  },
+  "artifact_sha256": "e487e5f612559e8d2b0d543bcefb4696df63680f54f0522aa50385e6a6f8c668",
+  "browser_screenshot_calls": 15
+}

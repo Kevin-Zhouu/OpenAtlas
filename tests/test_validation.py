@@ -65,6 +65,52 @@ def test_feedback_can_be_revealed_or_created(tmp_path, kind):
     assert validate(path)["title"] == "Expandable lesson"
 
 
+@pytest.mark.parametrize("outcome", ["hide", "remove", "reveal"])
+def test_visibility_outcomes_do_not_require_artificial_text(tmp_path, outcome):
+    visible = outcome == "reveal"
+    script = {
+        "hide": "document.querySelector('#feedback').hidden=true",
+        "remove": "document.querySelector('#feedback').remove()",
+        "reveal": "document.querySelector('#feedback').hidden=false",
+    }[outcome]
+    path = workspace(
+        tmp_path,
+        script,
+        '<p id="feedback"' + (" hidden" if visible else "") + ">Real panel content</p>",
+    )
+    manifest = json.loads((path / "manifest.json").read_text())
+    check = manifest["checks"][0]
+    del check["expect_text"]
+    check["expect_visible"] = visible
+    (path / "manifest.json").write_text(json.dumps(manifest))
+    assert validate(path)["title"] == "Expandable lesson"
+
+
+@pytest.mark.parametrize(
+    "defect", ["already-hidden", "ineffective-close", "invalid-flag", "hidden-text"]
+)
+def test_visibility_checks_reject_false_success(tmp_path, monkeypatch, defect):
+    # Keep intentionally failing browser waits short; production retains its
+    # software-renderer action budget.
+    monkeypatch.setattr("openatlas.artifacts.INTERACTION_TIMEOUT_MS", 1000)
+    path = workspace(
+        tmp_path,
+        "",
+        '<p id="feedback"'
+        + (" hidden" if defect == "already-hidden" else "")
+        + ">Real panel content</p>",
+    )
+    manifest = json.loads((path / "manifest.json").read_text())
+    check = manifest["checks"][0]
+    del check["expect_text"]
+    check["expect_visible"] = "false" if defect == "invalid-flag" else False
+    if defect == "hidden-text":
+        check["expect_text"] = "Real panel content"
+    (path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="Interaction check 1 failed"):
+        validate(path)
+
+
 @pytest.mark.parametrize("kind", ["hidden-feedback", "hidden-control", "unchanged"])
 def test_hidden_or_ineffective_interactions_still_fail(tmp_path, kind):
     feedback = (

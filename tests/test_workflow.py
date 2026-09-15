@@ -239,7 +239,7 @@ def test_nonrenderable_and_broken_interaction_rejected(tmp_path):
         validate(tmp_path)
 
 
-def test_codex_publication_failure_gets_one_repair(system):
+def test_codex_publication_failure_repairs_then_independently_reviews(system):
     repo, _, store, client, runner = system
 
     class RepairableAgent:
@@ -247,6 +247,8 @@ def test_codex_publication_failure_gets_one_repair(system):
 
         def run(self, workspace, request, progress):
             self.calls += 1
+            if request.get("execution_stage") == "reviewing":
+                return {"verdict": "pass", "summary": "Fixture independent review"}
             if self.calls == 1:
                 generate(workspace, request, progress)
                 path = workspace / "manifest.json"
@@ -266,7 +268,7 @@ def test_codex_publication_failure_gets_one_repair(system):
         "/api/jobs", json={"prompt": "Explain binary search", "provider": "codex"}
     ).json()
     runner.process(repo.claim(1))
-    assert agent.calls == 2
+    assert agent.calls == 3
     saved_request = repo.job(job['id'])['request']
     published = repo.notebook(job['notebook_id'])['versions'][0]['manifest']
     assert published['planning_attempt_id'] == saved_request['planning_attempt_id']

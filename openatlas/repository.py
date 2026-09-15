@@ -147,6 +147,26 @@ class Repository:
         j["request"] = json.loads(j["request"])
         return j
 
+    def require_experience_review(self, job_id):
+        """Persist the publication policy so recovery cannot downgrade a new run."""
+        with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "UPDATE jobs SET request=json_set(request, '$.experience_review_required', json('true')) WHERE id=:id"
+                ),
+                {"id": job_id},
+            )
+
+    def save_experience_review(self, job_id, state):
+        """Server-owned findings persist across repair and checkpoint continuation."""
+        with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "UPDATE jobs SET request=json_set(request, '$.experience_review_state', json(:state)) WHERE id=:id"
+                ),
+                {"id": job_id, "state": json.dumps(state)},
+            )
+
     def claim(self, concurrency):
         with self.engine.connect() as c:
             c.exec_driver_sql("BEGIN IMMEDIATE")

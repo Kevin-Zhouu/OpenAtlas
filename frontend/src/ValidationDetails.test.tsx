@@ -17,3 +17,12 @@ it('shows historical evidence without claiming individual checks passed', () => 
  expect(screen.getByText('<img src=x onerror=alert(1)>')).toBeVisible();
  expect(document.querySelector('img')).toBeNull();
 });
+
+it('shows a real close-panel transition without demanding a text change', () => {
+ render(<ValidationDetails rounds={[{round:1,status:'passed',checks:[{id:'close',title:'Close preview',status:'passed',expected:'Panel becomes hidden',definition:{expect_visible:false},before_visible:true,after_visible:false}]}]} />);
+ expect(screen.getByText('Expected visibility')).toBeInTheDocument();
+ expect(screen.getByText('Visibility before action')).toBeInTheDocument();
+ expect(screen.getByText('Visibility after action')).toBeInTheDocument();
+ expect(screen.getByText('Visible')).toBeInTheDocument();
+ expect(screen.getByText('Hidden')).toBeInTheDocument();
+});

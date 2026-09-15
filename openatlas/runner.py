@@ -1,5 +1,6 @@
 """Trusted polling worker. Run one process; concurrency is also enforced transactionally."""
 
+import json
 import logging
 import signal
 import tempfile
@@ -14,11 +15,12 @@ from .debug import DebugStore, observe
 from .demo import generate
 from .execution import DockerExecutor
 from .planning import PlannerAdapter
+from .quality import ReviewRequiresRepair, ReviewUnavailable, artifact_fingerprint
 from .references import stage_references
 from .repository import Repository, uid
 from .skills import SkillCatalog
 from .subscription import SubscriptionStore, SubscriptionWorker
-from .validation_report import recording
+from .validation_report import current_report, recording
 
 log = logging.getLogger("openatlas.runner")
 
@@ -91,6 +93,18 @@ class Runner:
                 (workspace / "dist").mkdir()
                 request = dict(job["request"], job_id=job["id"])
                 recovery = request.get("revalidate_job")
+                if recovery:
+                    original = self.repo.job(recovery)
+                    if request.get("experience_review_required") or (
+                        original
+                        and original["request"].get("experience_review_required")
+                    ):
+                        raise ValueError(
+                            "This Notebook requires independent experience review. Use Continue to complete the full publication checks."
+                        )
+                elif request["provider"] == "codex":
+                    self.repo.require_experience_review(job["id"])
+                    request["experience_review_required"] = True
                 if not recovery:
                     request["golden_references"] = stage_references(workspace)
                     if request.get("skill_snapshots"):
@@ -132,6 +146,15 @@ class Runner:
                 def progress(message):
                     self.repo.progress(job["id"], message)
 
+                def remember_review(result):
+                    if result and result.get("criteria"):
+                        state = {
+                            "criteria": result["criteria"],
+                            "summary": result.get("summary", ""),
+                        }
+                        request["experience_review_state"] = state
+                        self.repo.save_experience_review(job["id"], state)
+
                 if recovery:
                     progress(
                         "Rechecking retained Notebook with the current browser validator"
@@ -141,20 +164,96 @@ class Runner:
                     generate(workspace, request, progress)
                 else:
                     run_agent(self.executor, workspace, request, progress)
-                for attempt in range(2):
+                for attempt in range(3):
                     self.repo.stage(job["id"], "validating")
                     progress("Checking the Notebook in a sandboxed browser")
                     try:
-                        with recording(self.repo.data, job["id"], attempt):
+                        with recording(
+                            self.repo.data, job["id"], attempt
+                        ) as validation:
                             manifest = validate(workspace)
+                            if request["provider"] == "codex" and not recovery:
+                                report = current_report()
+                                report.data.update(
+                                    status="running", passed=False, finished_at=None
+                                )
+                                report.add(
+                                    "experience",
+                                    "Focused experience recheck"
+                                    if request.get("experience_review_state")
+                                    else "Independent experience review",
+                                    "Recheck prior blockers and affected interactions, plus fresh overview, phone and normal-motion evidence."
+                                    if request.get("experience_review_state")
+                                    else "One consolidated audit against the original brief, separating evidenced blockers from optional suggestions.",
+                                )
+                                with report.check("experience"):
+                                    progress(
+                                        "Reviewing the learning experience, visuals and motion against your brief"
+                                    )
+                                    fingerprint = artifact_fingerprint(workspace)
+                                    try:
+                                        verdict = run_agent(
+                                            self.executor,
+                                            workspace,
+                                            dict(request, execution_stage="reviewing"),
+                                            progress,
+                                        )
+                                    except ReviewRequiresRepair as error:
+                                        remember_review(error.result)
+                                        raise
+                                    except Exception as error:
+                                        reason = (
+                                            str(error)
+                                            if isinstance(error, ValueError)
+                                            else type(error).__name__
+                                        )
+                                        raise ReviewUnavailable(
+                                            "Independent review unavailable; saved build retained. "
+                                            + reason
+                                        ) from error
+                                    if (
+                                        not isinstance(verdict, dict)
+                                        or verdict.get("verdict") != "pass"
+                                    ):
+                                        raise ReviewUnavailable(
+                                            "Independent experience review returned no valid pass"
+                                        )
+                                    if artifact_fingerprint(workspace) != fingerprint:
+                                        raise ReviewUnavailable(
+                                            "Artifact changed during review; refusing stale approval"
+                                        )
+                                    remember_review(verdict)
+                                    manifest["experience_review"] = {
+                                        "verdict": "pass",
+                                        "summary": verdict.get("summary", ""),
+                                        "artifact_sha256": fingerprint,
+                                    }
+                                    report.update(
+                                        "experience",
+                                        observed=verdict.get("summary", "Reviewed"),
+                                    )
+                            validation.finish()
+                            (workspace / "validation.json").write_text(
+                                json.dumps(validation.data)
+                            )
                         break
                     except Exception as validation_error:
+                        validation.finish(validation_error)
+                        (workspace / "validation.json").write_text(
+                            json.dumps(validation.data)
+                        )
                         self.store.quarantine(
                             job["id"], attempt, workspace, validation_error
                         )
-                        if recovery or request["provider"] != "codex" or attempt == 1:
+                        if isinstance(validation_error, ReviewUnavailable):
+                            self.store.checkpoint(job["id"], workspace)
                             raise
-                        request["validation_feedback"] = str(validation_error)[:4000]
+                        if recovery or request["provider"] != "codex" or attempt == 2:
+                            raise
+                        request["validation_feedback"] = (
+                            str(validation_error)[:7000]
+                            + "\nPreserve the original brief and primary interaction. Fix all reported blockers together without reducing motion quality, group coverage or visual clarity. Inspect source/EXPERIENCE.md and source/review/experience-review.json if present. Suggestions are optional. Test the reproductions and affected interactions, then a short overall regression sweep; avoid unrelated redesign or repeated dependency installation."
+                        )
                         progress(
                             "Repairing issues found by the Notebook browser checks"
                         )
@@ -184,6 +283,8 @@ class Runner:
             self.repo.fail(job["id"], message)
             log.warning("Job %s failed (%s)", job["id"], type(e).__name__)
         finally:
+            if isinstance(self.executor, DockerExecutor):
+                self.executor.release(job["id"])
             done.set()
             heart.join()
             if subscription_locked:

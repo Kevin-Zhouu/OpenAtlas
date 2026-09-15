@@ -5,12 +5,14 @@ import json
 import secrets
 import socket
 import tarfile
+import tempfile
 import time
 from pathlib import Path
 
 import docker
 
 from . import config
+from .agent_session import session_archive, thread_id
 from .agents import CodexAdapter
 from .credentials import Credentials
 from .debug import capture, redact
@@ -41,37 +43,70 @@ def extract_output(chunks, destination, secrets=()):
         if stream.tell() > 120 * 1024 * 1024:
             raise ValueError("Generation archive exceeds 120 MB")
     stream.seek(0)
-    total = 0
-    with tarfile.open(fileobj=stream) as tar:
-        for member in tar:
-            parts = Path(member.name).parts
-            if parts and parts[0] == "workspace":
-                parts = parts[1:]
-            if not parts or parts[0] not in ("source", "dist", "manifest.json"):
-                continue
-            path = destination.joinpath(*parts).resolve()
-            if not path.is_relative_to(destination.resolve()) or not (
-                member.isfile() or member.isdir()
-            ):
-                raise ValueError("Unsafe generation archive member")
-            if any(p in ("node_modules", ".git", ".env") for p in parts):
-                raise ValueError(
-                    "Source must exclude dependencies, git history and secrets"
-                )
-            total += member.size
-            if total > 100 * 1024 * 1024:
-                raise ValueError("Generation output exceeds 100 MB")
-            if member.isdir():
-                path.mkdir(parents=True, exist_ok=True)
-            else:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                with tar.extractfile(member) as src, path.open("wb") as out:
-                    content = src.read()
+    destination = Path(destination)
+    destination.mkdir(parents=True, exist_ok=True)
+    # A returned workspace is a snapshot, not an overlay: repairs can delete files.
+    # Validate everything in staging before replacing any existing deliverable.
+    with tempfile.TemporaryDirectory(
+        prefix="openatlas-output-", dir=destination.parent
+    ) as temporary:
+        staged = Path(temporary) / "incoming"
+        staged.mkdir()
+        total = 0
+        with tarfile.open(fileobj=stream) as tar:
+            for member in tar:
+                parts = Path(member.name).parts
+                if parts and parts[0] == "workspace":
+                    parts = parts[1:]
+                if not parts or parts[0] not in ("source", "dist", "manifest.json"):
+                    continue
+                path = staged.joinpath(*parts).resolve()
+                if not path.is_relative_to(staged.resolve()) or not (
+                    member.isfile() or member.isdir()
+                ):
+                    raise ValueError("Unsafe generation archive member")
+                if any(p in ("node_modules", ".git", ".env") for p in parts):
+                    raise ValueError(
+                        "Source must exclude dependencies, git history and secrets"
+                    )
+                total += member.size
+                if total > 100 * 1024 * 1024:
+                    raise ValueError("Generation output exceeds 100 MB")
+                if member.isdir():
+                    path.mkdir(parents=True, exist_ok=True)
+                else:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    with tar.extractfile(member) as src:
+                        content = src.read()
                     if any(secret and secret.encode() in content for secret in secrets):
                         raise ValueError(
                             "Generation output contains a private credential and cannot be saved"
                         )
-                    out.write(content)
+                    path.write_bytes(content)
+        if not any(staged.iterdir()):
+            raise ValueError("Generation archive contains no deliverables")
+        backup = Path(temporary) / "previous"
+        backup.mkdir()
+        replaced = []
+        try:
+            for name in ("source", "dist", "manifest.json"):
+                target = destination / name
+                old = backup / name
+                if target.exists() or target.is_symlink():
+                    target.rename(old)
+                replaced.append(name)
+                incoming = staged / name
+                if incoming.exists():
+                    incoming.rename(target)
+        except Exception:
+            for name in reversed(replaced):
+                target = destination / name
+                if target.exists() or target.is_symlink():
+                    target.rename(staged / name)
+                old = backup / name
+                if old.exists() or old.is_symlink():
+                    old.rename(target)
+            raise
 
 
 class DockerExecutor:
@@ -84,6 +119,7 @@ class DockerExecutor:
         checkpoint_store=None,
         cancelled=None,
     ):
+        self._sessions = {}
         self.cancelled = cancelled or (lambda request: False)
         self.credentials = credentials or Credentials()
         self.client = client
@@ -96,7 +132,23 @@ class DockerExecutor:
             else None
         )
 
+    def release(self, job_id):
+        """Discard private in-memory conversation state at job completion/cancellation."""
+        self._sessions.pop(job_id, None)
+
     def run(self, workspace, request, progress, connection=None):
+        request = dict(request)
+        reviewing = request.get("execution_stage") == "reviewing"
+        resumable = (
+            isinstance(self.adapter, CodexAdapter)
+            and not reviewing
+            and request.get("execution_stage") != "planning"
+        )
+        previous_session = (
+            self._sessions.get(request.get("job_id")) if resumable else None
+        )
+        if previous_session:
+            request["resume_session_id"] = previous_session[0]
         if self.cancelled(request):
             raise ValueError("Generation cancelled before dispatch")
         connection = connection or (
@@ -119,6 +171,10 @@ class DockerExecutor:
         timeout_seconds = (
             request.get("generation_timeout_minutes", config.TIMEOUT / 60) * 60
         )
+        if reviewing:
+            from .quality import review_timeout
+
+            timeout_seconds = min(timeout_seconds, review_timeout(request))
         deadline = time.monotonic() + timeout_seconds
         try:
             common = dict(
@@ -127,12 +183,17 @@ class DockerExecutor:
                 cap_drop=["ALL"],
                 security_opt=["no-new-privileges:true"],
                 read_only=True,
-                pids_limit=256,
-                mem_limit="2g",
-                nano_cpus=2_000_000_000,
+                # Codex plus MCP Chromium and a separate browser test need headroom.
+                pids_limit=512,
+                mem_limit=config.GENERATION_MEMORY,
+                nano_cpus=int(config.GENERATION_CPUS * 1_000_000_000),
                 labels={
                     "openatlas.job": request["job_id"],
-                    "openatlas.stage": "planning" if planning else "building",
+                    "openatlas.stage": "planning"
+                    if planning
+                    else "validating"
+                    if reviewing
+                    else "building",
                     "openatlas.expires": str(time.time() + timeout_seconds + 120),
                     "openatlas.authentication": "chatgpt"
                     if subscription
@@ -167,8 +228,8 @@ class DockerExecutor:
                 },
                 network_mode="bridge" if subscription else "container:" + broker.id,
                 tmpfs={
-                    "/workspace": "rw,nosuid,uid=1000,gid=1000,size=768m",
-                    "/tmp": "rw,nosuid,uid=1000,gid=1000,size=256m",
+                    "/workspace": "rw,exec,nosuid,uid=1000,gid=1000,size=2g",
+                    "/tmp": "rw,nosuid,uid=1000,gid=1000,size=512m",
                 },
                 **common,
             )
@@ -193,9 +254,35 @@ class DockerExecutor:
             container.exec_run(["mkdir", "-p", "/tmp/home/.codex"], user="1000:1000")
             if subscription:
                 upload_auth(client, container, connection["auth"])
+            if previous_session:
+                transfer = client.api.exec_create(
+                    container.id,
+                    ["tar", "xf", "-", "-C", "/tmp/home/.codex"],
+                    stdin=True,
+                    user="1000:1000",
+                )
+                channel = client.api.exec_start(transfer["Id"], socket=True)
+                try:
+                    channel._sock.sendall(previous_session[1])
+                    channel._sock.shutdown(socket.SHUT_WR)
+                    while client.api.exec_inspect(transfer["Id"])["Running"]:
+                        time.sleep(0.1)
+                    if client.api.exec_inspect(transfer["Id"])["ExitCode"] != 0:
+                        raise ValueError(
+                            "Could not restore the implementation conversation"
+                        )
+                finally:
+                    channel.close()
+
             progress(
                 "Planner is designing your Notebook"
                 if planning
+                else (
+                    "Codex is rechecking the reported fixes and affected interactions"
+                    if request.get("experience_review_state")
+                    else "Codex is independently reviewing the learning experience"
+                )
+                if reviewing
                 else "Codex is writing, building, and testing your Notebook"
             )
             agent_command = self.adapter.command(request)
@@ -211,6 +298,10 @@ class DockerExecutor:
                         "timeout_seconds": timeout_seconds,
                         "workdir": "/workspace",
                         "user": "1000:1000",
+                        "resume_session_id": request.get("resume_session_id"),
+                        "reviewing": reviewing,
+                        "memory": config.GENERATION_MEMORY,
+                        "cpus": config.GENERATION_CPUS,
                     },
                 )
             command = [
@@ -235,6 +326,12 @@ class DockerExecutor:
                         "Generation cancelled or runner stopping; retry from saved output"
                     )
                 if time.monotonic() > deadline:
+                    if reviewing:
+                        from .quality import ReviewUnavailable
+
+                        raise ReviewUnavailable(
+                            f"Independent review exceeded its {timeout_seconds / 60:g}-minute budget; the built application is retained for Continue."
+                        )
                     raise ValueError(
                         ("Planning" if planning else "Codex generation")
                         + f" exceeded the configured {timeout_seconds / 60:g}-minute time limit. Increase Generation time limit in Settings, then continue or retry."
@@ -282,6 +379,46 @@ class DockerExecutor:
                 return validate_prompt(
                     redact(result.output.decode("utf-8"), private_values)
                 )
+            if resumable:
+                start = container.exec_run(
+                    ["head", "-c", "65536", "/tmp/codex-output.log"]
+                )
+                identifier = thread_id(start.output.decode("utf-8", errors="replace"))
+                history = container.exec_run(
+                    [
+                        "sh",
+                        "-c",
+                        "tar cf - -C /tmp/home/.codex sessions | head -c 33554433",
+                    ]
+                )
+                if history.exit_code != 0:
+                    raise ValueError(
+                        "Could not preserve the implementation session for review and repair"
+                    )
+                self._sessions[request["job_id"]] = (
+                    identifier,
+                    session_archive(history.output, private_values),
+                )
+            review_result = review_probe = None
+            if reviewing:
+                from .quality import artifact_fingerprint
+
+                result = container.exec_run(
+                    ["head", "-c", "100001", "/workspace/quality-result.json"]
+                )
+                if result.exit_code != 0 or len(result.output) > 100000:
+                    raise ValueError(
+                        "Independent experience review did not return a bounded report"
+                    )
+                review_result = json.loads(result.output)
+                probe = container.exec_run(["python3", "/opt/review_probe.py"])
+                if probe.exit_code != 0:
+                    raise ValueError("Could not verify independent review evidence")
+                review_probe = json.loads(probe.output)
+                if review_probe["artifact_sha256"] != artifact_fingerprint(workspace):
+                    raise ValueError(
+                        "Reviewer changed the artifact; it cannot approve publication"
+                    )
             progress("Collecting generated source and static files")
             # Remove generation-only inputs and dependencies before archive collection.
             container.exec_run(
@@ -320,11 +457,27 @@ class DockerExecutor:
                         yield stdout
 
             extract_output(output_chunks(), workspace, private_values)
+            if reviewing:
+                from .quality import save_review, validate_review
+
+                save_review(
+                    workspace,
+                    review_result,
+                    review_probe["artifact_sha256"],
+                    review_probe["screenshot_calls"],
+                )
+                return validate_review(
+                    review_result,
+                    workspace,
+                    review_probe["screenshot_calls"],
+                    request.get("experience_review_state"),
+                )
         except Exception:
             # Collect only deliverable files, never agent home/auth/history or
             # skills. A failed generation can be partial and lack a manifest.
             if (
                 not planning
+                and not reviewing
                 and container is not None
                 and self.checkpoint_store is not None
             ):

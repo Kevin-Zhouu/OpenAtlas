@@ -45,7 +45,9 @@ class DebugStore:
                 {
                     "captured_at": datetime.now(timezone.utc).isoformat(),
                     "execution": execution or {},
-                    "phase": "planning"
+                    "phase": "review"
+                    if request.get("execution_stage") == "reviewing"
+                    else "planning"
                     if request.get("execution_stage") == "planning"
                     else "repair"
                     if request.get("validation_feedback")

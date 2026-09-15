@@ -1,0 +1,131 @@
+{
+  "verdict": "revise",
+  "summary": "Substantial working atlas with 708 meshes, continuous scroll transitions, and genuine hierarchical separation. Fix initially disabled Undo, remove the Chromium crash dump, improve abbreviated labels and obstructed cut views, and complete direct-file offline verification.",
+  "criteria": [
+    {
+      "requirement": "Real anatomical geometry, imported count, and attribution",
+      "passed": true,
+      "observed": "708 unique meshes and 605,318 triangles; all requested systems represented. Attribution and licence notices retained.",
+      "evidence": "Independent buffer inspection found no invalid indices or malformed buffer lengths; source/data/processed.json and licence files inspected."
+    },
+    {
+      "requirement": "Progressive hierarchy and grouped assembly/disassembly",
+      "passed": true,
+      "observed": "Navigated Brain \u2192 Cerebrum \u2192 Left hemisphere \u2192 Frontal lobe. Root and nested separation use actual child groups with shared descendant transforms and pagination.",
+      "evidence": "Runtime membership checks found complete, duplicate-free coverage. Root pages contain 501 and 207 descendants. Screenshots 10-05-00-773Z and 10-05-22-630Z."
+    },
+    {
+      "requirement": "Preserve assembled relationships and explain normalized scale",
+      "passed": true,
+      "observed": "Reassembly restores all 708 meshes near original coordinates; normalized group sizing is explicitly explained.",
+      "evidence": "Maximum settled transform deviation was approximately 0.000239 scene units; disassembly explanation visible beneath slider."
+    },
+    {
+      "requirement": "Continuous scroll-driven learning journey",
+      "passed": true,
+      "observed": "Forward and backward scrolling changed fractional camera and opacity states through head, cortex, deep anatomy, and networks.",
+      "evidence": "Scroll samples at 480\u2192630\u2192780\u2192630\u2192480 produced corresponding reversible camera states. app.js interpolates within requestAnimationFrame without scroll debounce."
+    },
+    {
+      "requirement": "Clean interface and readable, focused anatomy",
+      "passed": false,
+      "observed": "Overview is clean and spacious. Deep labels expose unexplained abbreviations such as \u201cLat Fis-ant-Horizont\u201d; the sections panel obscures separated structures and labels. Stippled transparency makes fine anatomy difficult to trace.",
+      "evidence": "source/review/page-2026-09-15T10-05-40-924Z.png; source/review/page-2026-09-15T10-08-48-323Z.png."
+    },
+    {
+      "requirement": "Rotation, zoom, presets, search, inspection, focus, isolation, and parent navigation",
+      "passed": true,
+      "observed": "Model click selected Frontalis muscle; drag and wheel changed camera. Trigeminal search, focus, isolation, Back preset, and parent navigation worked.",
+      "evidence": "Direct browser interactions and actual camera/selection observations; isolated trigeminal geometry visible in PNG preview."
+    },
+    {
+      "requirement": "Persistent hidden state and working Undo",
+      "passed": false,
+      "observed": "Hidden geometry remained hidden across layout and material changes. However, initial disassembly recorded two history entries while Undo remained disabled.",
+      "evidence": "Fresh sandbox reproduction: history=2, undoDisabled=true, separation\u2248100%. app.js save() does not refresh the Undo button; root separation screenshot shows it disabled."
+    },
+    {
+      "requirement": "Material modes and three reversible clipping planes",
+      "passed": true,
+      "observed": "All four material options operated. Sagittal, axial, and coronal sliders and reverse controls updated actual clipping planes. Open-cut explanation is present.",
+      "evidence": "Observed plane normals reversed on all three axes; porcelain and transparent cut screenshots captured and viewed."
+    },
+    {
+      "requirement": "Labels, automatic exploration, fullscreen, and PNG export",
+      "passed": true,
+      "observed": "Separated groups have labels; automatic journey advanced scrolling; sandbox fullscreen used an expanded-view fallback; PNG preview contained rendered anatomy.",
+      "evidence": "Auto journey advanced 18 pixels during observation; expanded fallback confirmed; source/review/page-2026-09-15T10-06-12-756Z.png."
+    },
+    {
+      "requirement": "Usable phone layout",
+      "passed": true,
+      "observed": "At 390\u00d7844, model and prose remain readable, explorer moves below the model, and horizontal overflow is absent.",
+      "evidence": "Document width measured 390 pixels; phone overview and explorer screenshots viewed."
+    },
+    {
+      "requirement": "Standalone offline HTML and opaque-origin sandbox compatibility",
+      "passed": false,
+      "observed": "Sandbox rendered all 708 meshes with origin null and no resource requests. Direct-file execution remains unverified because browser tools blocked file navigation.",
+      "evidence": "Inspected sandbox=\"allow-scripts\" build; file:///workspace/dist/index.html navigation returned a protocol-blocked error."
+    },
+    {
+      "requirement": "Clean portable source delivery, pinned dependencies, and licences",
+      "passed": false,
+      "observed": "Pinned dependencies, lockfile, relative build script, README, and licences exist. source/core is an unrelated 19 MB Chromium crash dump containing machine executable paths.",
+      "evidence": "file /workspace/source/core identified an ELF aarch64 Chromium core dump; package.json and build.mjs inspected."
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "source/review/page-2026-09-15T10-04-17-942Z.png",
+      "purpose": "overview"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-04-28-751Z.png",
+      "purpose": "intermediate"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-05-00-773Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-05-22-630Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-05-40-924Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-06-12-756Z.png",
+      "purpose": "other"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-06-29-324Z.png",
+      "purpose": "phone"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-06-41-727Z.png",
+      "purpose": "phone"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-07-15-043Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-07-48-640Z.png",
+      "purpose": "intermediate"
+    },
+    {
+      "path": "source/review/page-2026-09-15T10-08-48-323Z.png",
+      "purpose": "focused"
+    }
+  ],
+  "motion": {
+    "applicable": true,
+    "normal_motion_tested": true,
+    "observations": "Normal-motion forward/backward scrolling and intermediate separation were exercised. Fractional camera and opacity interpolation and rendering during scrolling were confirmed. Fades are visibly stippled, and 50% root separation has substantial overlap. Reduced motion was not separately tested. No application console errors were observed; four GPU ReadPixels stall warnings occurred."
+  },
+  "artifact_sha256": "c010a801df61b9092a227cc75bae926e34ece935c0ed0520f984f182200723f8",
+  "browser_screenshot_calls": 14
+}

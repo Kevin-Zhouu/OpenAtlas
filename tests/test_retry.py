@@ -47,6 +47,8 @@ def test_continue_seeds_checkpoint_and_publishes_after_validation(tmp_path):
             assert (root/'source'/'unfinished.txt').read_text() == 'existing work'
             assert request['continue_job'] == original['id']
             assert request['model'] == original['request']['model']
+            if request.get('execution_stage') == 'reviewing':
+                return {'verdict':'pass','summary':'Fixture review of continued work'}
     Runner(repo, store, executor=Agent()).process(repo.claim(2))
     assert repo.job(continued['id'])['status'] == 'succeeded'
     assert Repository(repo.data).job(original['id'])['status'] == 'failed'

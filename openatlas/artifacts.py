@@ -11,6 +11,10 @@ from playwright.sync_api import expect, sync_playwright
 
 from . import config
 
+# Functional checks also run with software-rendered WebGL in Docker. This is an
+# action-completion budget, not a frame-rate or visual-quality acceptance test.
+INTERACTION_TIMEOUT_MS = 15_000
+
 TEXT_ATTACHMENTS = {
     ".cs",
     ".csproj",
@@ -329,7 +333,7 @@ def _validate(workspace, report):
         report.add(
             f"interaction-{index}",
             f"Interaction {index}",
-            "Control is visible; the action makes feedback visible and matches expected text or changes the previous text.",
+            "Control is visible; the action produces the declared text or visibility transition.",
             definition=check,
             before="desktop_capture",
         )
@@ -402,29 +406,49 @@ def _validate(workspace, report):
                     try:
                         target = frame.locator(check["selector"])
                         output = frame.locator(check["expect_selector"])
-                        expect(target).to_be_visible(timeout=5000)
+                        visibility = check.get("expect_visible")
+                        if "expect_visible" in check and type(visibility) is not bool:
+                            raise ValueError("expect_visible must be a boolean")
+                        if visibility is False and "expect_text" in check:
+                            raise ValueError(
+                                "Hidden outcomes cannot require visible text"
+                            )
+                        expect(target).to_be_visible(timeout=INTERACTION_TIMEOUT_MS)
                         before_visible = output.is_visible()
                         before = output.inner_text() if before_visible else None
+                        if (
+                            visibility is not None
+                            and "expect_text" not in check
+                            and before_visible == visibility
+                        ):
+                            raise ValueError(
+                                "Visibility check must observe a transition, not an already satisfied state"
+                            )
                         report.update(
-                            f"interaction-{index}", before_text=(before or "")[:2000]
+                            f"interaction-{index}",
+                            before_text=(before or "")[:2000],
+                            before_visible=before_visible,
                         )
                         action = check.get("action", "click")
                         if action == "click":
-                            target.click(timeout=5000)
+                            target.click(timeout=INTERACTION_TIMEOUT_MS)
                         elif action in ("fill", "select"):
                             tag = target.evaluate("el => el.tagName.toLowerCase()")
                             if tag == "select":
                                 # Older manifests used fill because the original contract
                                 # omitted dropdown selection. Keep those jobs recoverable.
                                 target.select_option(
-                                    value=str(check["value"]), timeout=5000
+                                    value=str(check["value"]),
+                                    timeout=INTERACTION_TIMEOUT_MS,
                                 )
                             elif action == "select":
                                 raise ValueError(
                                     "The select action requires a <select> control; use fill for text fields"
                                 )
                             else:
-                                target.fill(str(check["value"]), timeout=5000)
+                                target.fill(
+                                    str(check["value"]), timeout=INTERACTION_TIMEOUT_MS
+                                )
                         elif action == "range":
                             target.evaluate(
                                 '(el, value) => { el.value=value; el.dispatchEvent(new Event("input",{bubbles:true})); el.dispatchEvent(new Event("change",{bubbles:true})); }',
@@ -432,18 +456,27 @@ def _validate(workspace, report):
                             )
                         else:
                             raise ValueError("Unsupported interaction check action")
-                        # Feedback may be revealed or created by the action. It must be
-                        # visible afterward; matching hidden text never counts as success.
-                        expect(output).to_be_visible(timeout=5000)
-                        if "expect_text" in check:
+                        # Closing an overlay is a real observable outcome; it does not
+                        # need a fabricated status-text change elsewhere on the page.
+                        if visibility is False:
+                            expect(output).to_be_hidden(timeout=INTERACTION_TIMEOUT_MS)
+                        else:
+                            expect(output).to_be_visible(timeout=INTERACTION_TIMEOUT_MS)
+                        if visibility is not False and "expect_text" in check:
                             expect(output).to_contain_text(
-                                str(check["expect_text"]), timeout=5000
+                                str(check["expect_text"]),
+                                timeout=INTERACTION_TIMEOUT_MS,
                             )
-                        elif before_visible:
-                            expect(output).not_to_have_text(before, timeout=5000)
+                        elif visibility is None and before_visible:
+                            expect(output).not_to_have_text(
+                                before, timeout=INTERACTION_TIMEOUT_MS
+                            )
                         report.update(
                             f"interaction-{index}",
-                            after_text=output.inner_text()[:2000],
+                            after_text=output.inner_text()[:2000]
+                            if visibility is not False
+                            else "",
+                            after_visible=visibility is not False,
                         )
                     except Exception as error:
                         try:

@@ -160,7 +160,7 @@ def test_credential_containing_artifacts_are_rejected(tmp_path):
         archive.addfile(entry, io.BytesIO(content))
     with pytest.raises(ValueError, match="private credential"):
         extract_output([data.getvalue()], tmp_path, ["fixture-token"])
-    assert b"fixture-token" not in (tmp_path / "source/leaked.txt").read_bytes()
+    assert not (tmp_path / "source/leaked.txt").exists()
 
 
 def test_subscription_jobs_serialize_and_respect_signout(tmp_path, monkeypatch):

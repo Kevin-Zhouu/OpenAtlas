@@ -1,0 +1,99 @@
+{
+  "job_id": "67ff6dfe-ad41-4734-a5fc-0da744efb209",
+  "notebook_id": "e2394d6d-e0a0-455c-ac95-f3aab0feb90f",
+  "model": "gpt-6-astra",
+  "prompt_sha256": "b03990910661c1da22ddeb53f0be9524e9bba43361cc4f3192bde6b86070e0fe",
+  "fresh_build": true,
+  "planning_enabled": false,
+  "status": "published_after_checkpoint_continuations",
+  "harness_files_sha256": {
+    "openatlas/agents.py": "d85d990432f054980f0e7b99ab6b30889d37ae6240d012d8e05a060c59e1a729",
+    "openatlas/execution.py": "ff53ee7b4e60500b42363340f68d555b245bb48e93472646ac8754c4cb7212e9",
+    "openatlas/runner.py": "5cda59e1ad1ef75178c5a53b48cdc61d6f18e90a712cf4e5681fea0b74f205b8",
+    "openatlas/artifacts.py": "43ab8b837db1e9cdae5e58e4fc62177f36685de611263ab1b32dff8d4f3ac978",
+    "openatlas/quality.py": "81953386c26eb5c75f6cf3d3b0283084e15af97191743ba094ff1481caeed231",
+    "openatlas/resources/experience-quality.md": "e7b1a8dc20eb989a1e30842d751bce118b9eca6f6a6b2b83abcc04a63ce865bd",
+    "generation/browser/package-lock.json": "5975ba72c99802db4861de68b62b036f599c686b16b1f09f8961facfeb9b87e2",
+    "generation/browser/launch.cjs": "3ee8140b3ec8322c215803d8bb997f6bdc4c91b0ac1d88b153c8a9e25b80d6cc",
+    "generation/runtime/scene-state.mjs": "41b90a47fd69b370f6ff956ab0a921ddb7e33b134f89652a81e7c7046ff7e0f9"
+  },
+  "harness_adjustments_during_run": [
+    {
+      "change": "Bound large screenshot previews below the JSON activity-trace limit; preserve original screenshots.",
+      "reason": "The trace truncates oversized image result blocks even though the model receives images; this could produce a false negative in the review-evidence probe. Actual conversation inputs confirmed image delivery.",
+      "scope": "New reviewer/repair containers; initial builder remains unchanged.",
+      "verification": "Two unit tests and real Docker MCP oversized-noise-image smoke test passed; sharp 0.35.4 pinned, npm audit reported zero vulnerabilities."
+    },
+    {
+      "change": "Replace returned deliverable snapshots instead of overlaying; validate before changing saved work. Clarify independent file-protocol verification fallback.",
+      "reason": "A deleted Chromium core dump was resurrected by the output overlay, misleading the next reviewer. Browser MCP file navigation restrictions also left a verification gap.",
+      "verification": "148 backend tests passed, 13 opt-in skipped; four snapshot regressions include deletions, invalid archives, credentials and empty snapshots.",
+      "scope": "Deployed before latest continuation; no generated application edited manually."
+    },
+    {
+      "change": "Increase generation process/thread ceiling from 256 to 512.",
+      "reason": "Builder cgroup reported two denied process/thread creations while Codex, MCP Chromium and a separate browser suite ran together.",
+      "scope": "Applied to active builder and reviewer without restart; default changed in source and rebuilt image, worker deployment deferred until active job ends.",
+      "verification": "Reviewer cgroup reports max 0 denied creations at 512."
+    }
+  ],
+  "updated_browser_files_sha256": {
+    "generation/browser/launch.cjs": "d02fa30190f5baa49d920b84ec612730332d2d5256079752689e0a7765d5ca31",
+    "generation/browser/image-response.cjs": "725fe740f4f2a69eb16af34984b19b293d7e7fc8f93c6467133c5cca14ec0ce2",
+    "generation/browser/package-lock.json": "2c9f05d8d65f9c587c5d7afa11eb3238e4eb198764c92609e5d807487cce2b3e"
+  },
+  "published": true,
+  "result": {
+    "mesh_count": 708,
+    "triangles": 605318,
+    "hierarchy_nodes": 789,
+    "layout_cells": 2992,
+    "publisher_mechanical_checks": "passed",
+    "independent_review": "interrupted by account usage limit before verdict",
+    "manual_artifact_edits": false
+  },
+  "continuation": {
+    "job_id": "e3febb8a-213d-4941-8f8f-0baba190e188",
+    "status": "interrupted_during_second_review_by_usage_limit",
+    "mode": "normal Continue; retained source and original prompt",
+    "first_review_verdict": "revise",
+    "review_evidence": "continuation-review-0.json",
+    "repair_uses_codex_exec_resume": true
+  },
+  "latest_continuation": {
+    "job_id": "630a02bd-1094-4419-b838-4c58ce8b53a0",
+    "continue_job": "e3febb8a-213d-4941-8f8f-0baba190e188",
+    "status": "succeeded",
+    "same_notebook": true,
+    "same_prompt": true,
+    "transferred_core_present": false,
+    "transferred_node_modules_present": false,
+    "retained_html_sha256": "3f9452c81aff2b7244ebf307a1ad167bf2895d55f5ad19d2fc09c3b17e531fe6",
+    "version_id": "86e8317d-4925-4a9b-bb50-32b3069468e0",
+    "published_url": "http://localhost:8000/notebooks/e2394d6d-e0a0-455c-ac95-f3aab0feb90f",
+    "html_sha256": "d3a79b943e6565db12e29f49e3cb64b011c696405b8f4f8380021038cdb1483e",
+    "html_bytes": 8303957,
+    "publication_checks_passed": 42,
+    "publication_checks_total": 42,
+    "independent_review": "pass",
+    "independent_review_seconds": 638.793,
+    "review_image_calls": 15
+  },
+  "updated_harness_files_sha256": {
+    "openatlas/quality.py": "4e25556a57379ec2748044891f1511287fea7e5aadc50a1c17749fe1b002313b",
+    "openatlas/runner.py": "d1db74c9de3eb73847f7a5d95ad2f2fe60653c74b761108afcc2a5d217759fce",
+    "openatlas/execution.py": "a251d14fce1994fb58820d8267ce443afecd70aa75465db15834383637fff884",
+    "openatlas/repository.py": "b9e6eb935f308c4460c76993e7dcd5701c185aab8b19ece27135fedb3255c520",
+    "generation/quality-schema.json": "e5aa71d3716dd2300ab133db4432d8a74975e675c2cf884bcb6dc2fe9a572c13"
+  },
+  "review_policy_after_benchmark": {
+    "deployed": true,
+    "backend_tests_passed": 153,
+    "opt_in_skipped": 13,
+    "real_docker_snapshot_test": "passed",
+    "first_review_ceiling_seconds": 480,
+    "followup_ceiling_seconds": 240,
+    "measured_new_policy_latency": false,
+    "details": "REVIEW-POLICY.md"
+  }
+}

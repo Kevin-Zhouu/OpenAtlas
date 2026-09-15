@@ -1,0 +1,131 @@
+{
+  "verdict": "pass",
+  "summary": "The three previously reported failures are repaired. Fresh browser inspection confirmed readable guided labels, preserved hierarchical exploration, and unobstructed sandbox fullscreen. Offline loading and PNG export also passed.",
+  "criteria": [
+    {
+      "requirement": "Real anatomical meshes, coverage, original relationships and attribution",
+      "passed": true,
+      "observed": "Independently counted 708 meshes across all seven system categories and 605,318 triangles. Processed coordinate frames match the included input; provenance and licences are present.",
+      "evidence": "Reran geometry checks and inspected data and attribution. source/review/independent-review-20260915.md"
+    },
+    {
+      "requirement": "Clean, readable desktop and phone interface",
+      "passed": true,
+      "observed": "Large anatomy, restrained controls and readable prose. Phone overview and four-group separation fit the viewport.",
+      "evidence": "source/review/page-2026-09-15T11-22-19-421Z.png; source/review/page-2026-09-15T11-24-47-412Z.png; source/review/page-2026-09-15T11-28-18-683Z.png"
+    },
+    {
+      "requirement": "Continuous scroll-driven learning using one master model",
+      "passed": true,
+      "observed": "Forward and backward scrolling changed camera and tissue opacity through fractional states. Animation code corroborates interpolation and rendering during scrolling.",
+      "evidence": "Wheel-scrolled 2700 \u2192 3100 \u2192 2850 \u2192 4153 \u2192 5271. source/review/page-2026-09-15T11-22-41-397Z.png"
+    },
+    {
+      "requirement": "Guided visuals teach the named spatial connections",
+      "passed": true,
+      "observed": "Deep-brain structures now have readable identification lines. The nerve lesson displays and labels the optic nerve, chiasm and tract; both chiasm and tract meshes remain visible.",
+      "evidence": "source/review/page-2026-09-15T11-22-50-930Z.png; source/review/page-2026-09-15T11-23-07-482Z.png"
+    },
+    {
+      "requirement": "Hierarchical assembly, group separation, pagination and normalized scale",
+      "passed": true,
+      "observed": "Explored Head \u2192 Brain \u2192 Cerebrum \u2192 Left hemisphere \u2192 Frontal lobe. Root and nested layouts separate immediate child groups. Runtime intermediate transforms are shared within groups; pagination and scale explanations remain available.",
+      "evidence": "Reran exhaustive membership and spacing checks. source/review/page-2026-09-15T11-23-24-806Z.png; source/review/page-2026-09-15T11-23-39-785Z.png; source/review/page-2026-09-15T11-26-12-807Z.png"
+    },
+    {
+      "requirement": "Correct labels across scope changes and resumed journeys",
+      "passed": true,
+      "observed": "Separated frontal-lobe labels cleared after searching for and isolating the left thalamus. Resume displayed only current lesson labels. Deep labels fit on phones.",
+      "evidence": "Isolation returned zero group labels. source/review/page-2026-09-15T11-25-02-078Z.png"
+    },
+    {
+      "requirement": "Camera controls, search, inspection, focus, isolation and parent navigation",
+      "passed": true,
+      "observed": "Drag rotation, wheel zoom, camera preset, search, focus, isolation and parent navigation worked. Clicking anatomy selected the right palpebral orbicularis oculi. Physical pinch hardware was not tested.",
+      "evidence": "Exact interactions and camera observations recorded in source/review/independent-review-20260915.md"
+    },
+    {
+      "requirement": "Persistent hidden state and undo",
+      "passed": true,
+      "observed": "Hidden left thalamus remained invisible through material and separation changes. Undo reversed separation and restored the hidden structure.",
+      "evidence": "Runtime visibility changed from hidden=[Thalamusl], visible=false to hidden=[], visible=true after Undo."
+    },
+    {
+      "requirement": "Material modes and adjustable reversible clipping",
+      "passed": true,
+      "observed": "Exercised all four materials, all three clipping sliders, reverse controls and reset. Separated sagittal cuts remained coherent. Open-cut limitations are clearly explained.",
+      "evidence": "source/review/page-2026-09-15T11-25-44-778Z.png; source/review/page-2026-09-15T11-26-10-288Z.png"
+    },
+    {
+      "requirement": "Automatic exploration, PNG export and fullscreen",
+      "passed": true,
+      "observed": "Automatic exploration advanced scrolling and export produced a valid PNG preview. Fullscreen fallback in the opaque-origin sandbox now covers prose while preserving search and explorer access.",
+      "evidence": "source/review/page-2026-09-15T11-25-23-176Z.png; sandbox PNG measured 1280\u00d7550."
+    },
+    {
+      "requirement": "Standalone offline HTML and sandbox operation",
+      "passed": true,
+      "observed": "Reran direct-file loading with networking disabled: 708 meshes rendered, PNG export succeeded, and no HTTP requests or JavaScript errors occurred. Sandbox origin was null.",
+      "evidence": "source/review/offline-results.json; freshly generated and viewed source/review/offline-file.png"
+    },
+    {
+      "requirement": "Clean source delivery, pinned dependencies, portable build and documentation",
+      "passed": true,
+      "observed": "Editable source, exact dependency pins, lockfile, portable build scripts, English README and licence notices are present. Build was not rerun because source/dist writes were prohibited.",
+      "evidence": "Inspected package.json, package-lock.json, build.mjs, README and licences; source/review/independent-review-20260915.md"
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "source/review/page-2026-09-15T11-22-19-421Z.png",
+      "purpose": "overview"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-24-47-412Z.png",
+      "purpose": "phone"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-22-41-397Z.png",
+      "purpose": "intermediate"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-22-50-930Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-23-07-482Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-23-39-785Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-25-02-078Z.png",
+      "purpose": "phone"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-25-23-176Z.png",
+      "purpose": "other"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-25-44-778Z.png",
+      "purpose": "focused"
+    },
+    {
+      "path": "source/review/page-2026-09-15T11-28-18-683Z.png",
+      "purpose": "phone"
+    },
+    {
+      "path": "source/review/offline-file.png",
+      "purpose": "other"
+    }
+  ],
+  "motion": {
+    "applicable": true,
+    "normal_motion_tested": true,
+    "observations": "Exercised normal scrolling forwards and backwards, intermediate tissue fades, group separation, camera rotation and automatic playback. Camera and opacity interpolate using the same meshes. Reduced motion was not used as evidence. Physical-device performance and touch hardware were not qualified."
+  },
+  "artifact_sha256": "5b0940798dac7302919fe56d4c189246c2cb6c77db19f96982609eca5f9fd414",
+  "browser_screenshot_calls": 15
+}
