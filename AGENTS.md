@@ -27,6 +27,10 @@ for other representations. Creativity must remain compatible with factual accura
   container and returns an editable Markdown build prompt. A separate disposable
   container runs real noninteractive Codex CLI to implement, build, and test it.
   The planner does not invoke Codex or Docker itself.
+- The generation inspector queues learner steering for the next Codex turn before
+  validation. Follow-up instructions persist for review and Continue. Validation can
+  be stopped to retain an unvalidated draft preview; preview snapshots expose only
+  dist assets with an opaque sandbox and never create a published version.
 - Prompt-only runs, immutable prompt revisions, comparisons, builds from saved
   prompts, editable planner instructions/models, and stage inspection exist.
   Continue/Re-run reuse saved prompts when available; replanning is explicit.

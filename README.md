@@ -443,3 +443,31 @@ Generation tool resources default to 4 GiB memory and 4 CPU cores. The disposabl
 Developer checks: `python -m pytest`, `node --test generation/runtime/scene-state.test.mjs`; after `npm ci --prefix generation/browser`, run `node --test generation/browser/image-response.test.cjs`. The browser MCP smoke fixture in `tests/fixtures/browser_mcp_smoke.py` runs against the generation image without model inference. It verifies that a screenshot is returned as image content, not merely saved to a path.
 
 Returned workspaces are collected as validated snapshots, so deleted source/build files stay deleted. Invalid archives leave saved work intact. Generation containers allow 512 processes/threads to accommodate Codex plus visual and scripted Chromium checks within the existing memory/CPU limits.
+
+### Steering and draft previews
+
+In **Inspect generation → Implementing**, send follow-up instructions to Codex.
+Messages are retained with queued/applying/applied status and run as the next turn
+in the same implementation session, before validation. The independent reviewer
+also receives the updated requirements. This uses `codex exec resume`; it does not
+interrupt an in-progress CLI turn ([Codex documentation](https://learn.chatgpt.com/docs/non-interactive-mode)).
+
+In **Validating**, **Preview current build** opens the current immutable draft in
+a sandboxed iframe. **Skip checks & preview** stops the remaining checks (after
+the current browser operation), retains the draft, and does not publish it. Use
+**Continue** from the stopped attempt to complete validation and publication.
+Draft previews remain separate from the published library and expose only web assets.
+Each random preview URL grants read access to that snapshot, allowing assets to
+load inside an opaque frame without cookies; preview discovery requires app access.
+
+If phone settings show no enable button or QR after restarting Compose, restore
+the saved LAN configuration with `python3 scripts/lan_access.py enable`. A plain
+`docker compose up` can replace the LAN configuration with localhost-only ingress.
+When rebuilding an existing LAN installation, preserve its override:
+
+```sh
+docker compose -f compose.yaml -f .lan/compose.json up -d --no-build app
+```
+
+Rebuild the application image after updating this code. Restart the runner only
+after active generations finish; it retains Codex sessions in memory.

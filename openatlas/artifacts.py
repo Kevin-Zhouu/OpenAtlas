@@ -150,6 +150,56 @@ class ArtifactStore:
             shutil.copytree(retained / name, workspace / name, dirs_exist_ok=True)
         shutil.copy(retained / "manifest.json", workspace / "manifest.json")
 
+    def snapshot_preview(self, job_id, workspace):
+        from uuid import UUID, uuid4
+
+        dist = workspace / "dist"
+        safe_tree(dist)
+        if not dist.is_dir():
+            return
+        revision = str(uuid4())
+        target = self.root.parent / "previews" / str(UUID(job_id)) / revision
+        target.mkdir(parents=True)
+        shutil.copytree(dist, target / "dist")
+        entry = "index.html"
+        try:
+            entry = json.loads((workspace / "manifest.json").read_text()).get(
+                "entrypoint", entry
+            )
+        except (OSError, ValueError):
+            pass
+        if not isinstance(entry, str) or not self.preview_file(job_id, revision, entry):
+            entry = "index.html"
+        (target.parent / "current.json.tmp").write_text(
+            json.dumps({"revision": revision, "entrypoint": entry})
+        )
+        (target.parent / "current.json.tmp").replace(target.parent / "current.json")
+
+    def preview_info(self, job_id):
+        from uuid import UUID
+
+        path = self.root.parent / "previews" / str(UUID(job_id)) / "current.json"
+        return json.loads(path.read_text()) if path.is_file() else None
+
+    def preview_file(self, job_id, revision, name):
+        from uuid import UUID
+
+        root = (
+            self.root.parent
+            / "previews"
+            / str(UUID(job_id))
+            / str(UUID(revision))
+            / "dist"
+        )
+        path = (root / name).resolve()
+        if (
+            path.is_relative_to(root.resolve())
+            and path.is_file()
+            and path.suffix.lower() in ALLOWED
+        ):
+            return path
+        return None
+
     def checkpoint_path(self, job_id):
         from uuid import UUID
 

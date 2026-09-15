@@ -96,7 +96,8 @@ export function PhoneAccess() {
     </> : <>
       <p>Open your library on another device at home. Enable access, then scan the QR with your phone camera.</p>
       {phone.available && phone.desktop ? <button type="button" className="primary" disabled={busy} onClick={() => update(true)}>{busy ? 'Enabling…' : 'Enable phone access'}</button> :
-        <p className="hint">{phone.desktop ? "Waiting for a private Wi-Fi or Ethernet connection. The phone link will appear automatically when the connection is ready." : "Phone sharing is available in the desktop installation. Start OpenAtlas with its desktop launcher to connect your Wi-Fi adapter."}</p>}
+        <p className="hint">{phone.desktop ? "Waiting for a private Wi-Fi or Ethernet connection. The phone link will appear automatically when the connection is ready." : "Wi-Fi sharing is not configured in this running installation. Start OpenAtlas with its desktop launcher, or run the setup command below from the OpenAtlas folder."}</p>}
+      {!phone.desktop && !phone.available && <pre><code>python3 scripts/lan_access.py enable</code></pre>}
       <p className="hint">No account or extra phone app. This computer stays accessible without a token at localhost.</p>
     </>}
   </details>;

@@ -49,6 +49,7 @@ Learner background: {request.get("learner_background", "")}
 Additional generation instructions: {request.get("instructions", "")}
 This is {"a repair of the existing Notebook" if request.get("validation_feedback") else "a revision: retain and improve the existing source" if request.get("base_version") else "a new Notebook"}.
 Continuation: {"Continue the original implementation session; preserve its design intent and the original brief." if request.get("resume_session_id") else "Resume the saved partial Notebook already in /workspace/source. Inspect existing files first, preserve useful work, complete unfinished implementation, rebuild and test. This is a fresh agent session after an interrupted attempt, not a request to start over. Previous failure: " + request.get("previous_error", "unknown") if request.get("continue_job") else "none"}
+Learner follow-up instructions (apply to the existing Notebook, rebuild and test): {request.get("steering_message", "none")}
 Publisher repair feedback (if present, fix the existing source and rebuild; do not discard the lesson): {request.get("validation_feedback", "none")}
 Generation skills: {"enabled" if request["skills"] else "disabled for this generation; no skill folders are supplied"}.
 The following are the only selected Agent Skills:

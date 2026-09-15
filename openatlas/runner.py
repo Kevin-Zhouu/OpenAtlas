@@ -165,12 +165,46 @@ class Runner:
                 else:
                     run_agent(self.executor, workspace, request, progress)
                 for attempt in range(3):
+                    while True:
+                        self.store.checkpoint(job["id"], workspace)
+                        self.store.snapshot_preview(job["id"], workspace)
+                        messages = self.repo.take_steering_or_validate(job["id"])
+                        if not messages:
+                            break
+                        request["steering_message"] = "\n\n".join(
+                            filter(
+                                None,
+                                [request.get("steering_message", "")]
+                                + [m["message"] for m in messages],
+                            )
+                        )
+                        self.repo.save_steering_instructions(
+                            job["id"], request["steering_message"]
+                        )
+                        progress("Applying your follow-up instructions")
+                        try:
+                            run_agent(self.executor, workspace, request, progress)
+                        except Exception:
+                            self.repo.finish_steering(job["id"], "failed")
+                            raise
+                        self.repo.finish_steering(job["id"], "applied")
                     self.repo.stage(job["id"], "validating")
                     progress("Checking the Notebook in a sandboxed browser")
                     try:
                         with recording(
                             self.repo.data, job["id"], attempt
                         ) as validation:
+
+                            def ensure_running():
+                                if (
+                                    self.stop.is_set()
+                                    or self.repo.job(job["id"])["status"] != "running"
+                                ):
+                                    raise ValueError(
+                                        "Validation stopped; draft retained for preview"
+                                    )
+
+                            validation.ensure_running = ensure_running
                             manifest = validate(workspace)
                             if request["provider"] == "codex" and not recovery:
                                 report = current_report()
@@ -245,6 +279,11 @@ class Runner:
                         self.store.quarantine(
                             job["id"], attempt, workspace, validation_error
                         )
+                        if (
+                            self.repo.job(job["id"])["status"] != "running"
+                            or self.stop.is_set()
+                        ):
+                            raise
                         if isinstance(validation_error, ReviewUnavailable):
                             self.store.checkpoint(job["id"], workspace)
                             raise
@@ -259,6 +298,7 @@ class Runner:
                         )
                         self.repo.stage(job["id"], "building")
                         run_agent(self.executor, workspace, request, progress)
+                ensure_running()
                 manifest["demo"] = request["provider"] == "demo"
                 manifest["target_reading_minutes"] = request.get("reading_minutes", 20)
                 manifest["planning_attempt_id"] = request.get("planning_attempt_id")

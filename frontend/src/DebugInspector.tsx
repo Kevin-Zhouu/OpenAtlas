@@ -4,6 +4,7 @@ import {
   GenerationDetails,
   type GenerationMetadata,
 } from "./GenerationDetails";
+import { JobControls } from "./JobControls";
 import { AgentActivity } from "./AgentActivity";
 import { ValidationDetails, type ValidationRound } from "./ValidationDetails";
 
@@ -362,6 +363,11 @@ export function DebugInspector({
                   </button>
                 )}
               </div>
+              {(stage === "building" || stage === "validating") && <JobControls
+                key={activeJob} jobId={activeJob} stage={stage}
+                running={data.job.status === "running" && stage === current}
+                codex={data.job.request.provider === "codex"}
+              />}
               <div className="trace-downloads" aria-label="Download generation traces">
                 <a className="quiet" href={`/api/jobs/${encodeURIComponent(activeJob)}/trace?stage=${stage}`} download>Download {definition.title.toLowerCase()} trace</a>
                 <a className="quiet" href={`/api/jobs/${encodeURIComponent(activeJob)}/trace`} download>Download all stage traces</a>

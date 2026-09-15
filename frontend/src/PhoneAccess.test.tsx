@@ -71,3 +71,10 @@ it('does not restore an old token when a refresh finishes after resetting the li
   await act(async () => { resolveRefresh({ ok: true, json: async () => state('old') }); });
   expect(screen.getByLabelText('Phone sign-in link')).toHaveValue(state('new').pairing_url);
 });
+
+it('explains how to restore an installation missing its LAN configuration', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,json:async()=>({enabled:false,available:false,desktop:false,url:'',pairing_url:''})}));
+  render(<PhoneAccess />);
+  expect(await screen.findByText('python3 scripts/lan_access.py enable')).toBeInTheDocument();
+  expect(screen.getByText(/Wi-Fi sharing is not configured/)).toBeInTheDocument();
+});

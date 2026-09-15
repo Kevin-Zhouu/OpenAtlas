@@ -19,6 +19,7 @@ def stamp():
 
 class ValidationReport:
     def __init__(self, path=None, round_number=1):
+        self.ensure_running = lambda: None
         self.path = path
         self.data = {
             "round": round_number,
@@ -81,6 +82,7 @@ class ValidationReport:
 
     @contextmanager
     def check(self, key):
+        self.ensure_running()
         start = time.monotonic()
         self.update(key, status="running", started_at=stamp())
         try:

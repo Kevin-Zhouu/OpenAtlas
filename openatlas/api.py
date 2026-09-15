@@ -28,6 +28,10 @@ from .trace_export import STAGES, trace_archive
 from .validation_report import reports as validation_reports
 
 
+class SteeringMessage(BaseModel):
+    message: str = Field(min_length=1, max_length=8000)
+
+
 class Generation(BaseModel):
     prompt_only: bool = False
     learner_background: str = Field(default="", max_length=8000)
@@ -276,13 +280,13 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
-        if path.startswith("/artifacts/"):
+        if path.startswith(("/artifacts/", "/previews/")):
             base = browser_origin(request) + "/".join(path.split("/")[:4]) + "/"
             response.headers["Content-Security-Policy"] = config.artifact_csp(base)
             response.headers["Access-Control-Allow-Origin"] = "*"
             response.headers["Cache-Control"] = (
                 "no-store"
-                if "reader" in request.query_params
+                if path.startswith("/previews/") or "reader" in request.query_params
                 else "public,max-age=31536000,immutable"
             )
         else:
@@ -653,6 +657,49 @@ def create_app(repo=None, catalog=None, store=None, credentials=None):
         return repo.enqueue(
             dict(original["request"], revalidate_job=job_id), original["notebook_id"]
         )
+
+    @app.get("/api/jobs/{job_id}/controls")
+    def job_controls(job_id: str):
+        if not repo.job(job_id):
+            raise HTTPException(404, "Generation not found")
+        return {
+            "messages": repo.steering(job_id),
+            "preview": store.preview_info(job_id),
+        }
+
+    @app.post("/api/jobs/{job_id}/steer", status_code=202)
+    def steer_job(job_id: str, body: SteeringMessage):
+        try:
+            return repo.queue_steering(job_id, body.message)
+        except ValueError as error:
+            raise HTTPException(409, str(error))
+
+    @app.post("/api/jobs/{job_id}/skip-validation")
+    def skip_validation(job_id: str):
+        if not repo.job(job_id):
+            raise HTTPException(404, "Generation not found")
+        if not store.preview_info(job_id):
+            raise HTTPException(409, "The draft preview is still being prepared")
+        try:
+            repo.skip_validation(job_id)
+        except ValueError as error:
+            raise HTTPException(409, str(error))
+        return job_controls(job_id)
+
+    # Each random revision is a read capability for that snapshot only. Like
+    # published assets, these files must load without cookies in opaque frames.
+    # Discovery is authenticated through /api/jobs/{job_id}/controls.
+    @app.get("/previews/{job_id}/{revision}/{path:path}")
+    def draft_preview(job_id: str, revision: str, path: str):
+        if not repo.job(job_id):
+            raise HTTPException(404, "Generation not found")
+        try:
+            result = store.preview_file(job_id, revision, path)
+        except ValueError:
+            result = None
+        if not result:
+            raise HTTPException(404, "Preview file not found")
+        return FileResponse(result, media_type=artifact_media_type(result))
 
     @app.post("/api/jobs/{job_id}/cancel")
     def cancel_job(job_id: str):

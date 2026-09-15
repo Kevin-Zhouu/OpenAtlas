@@ -1899,3 +1899,14 @@ a {
 .trace-downloads a { display: inline-block; border: 1px solid #dce3df; border-radius: 6px; padding: 8px 12px; color: #235d46; text-decoration: none; font-size: 12px; }
 .trace-downloads a:hover { background: #edf5ef; }
 .trace-downloads a:focus-visible { outline: 2px solid #34745b; outline-offset: 2px; }
+
+.job-controls { margin: 16px 0; padding: 16px; background: #f4f7f5; border: 1px solid #d9e3dc; border-radius: 12px; }
+.job-controls h4 { margin: 0 0 8px; }
+.job-controls textarea { width: 100%; box-sizing: border-box; resize: vertical; margin: 8px 0; padding: 12px; border: 1px solid #bdcec2; border-radius: 8px; font: inherit; line-height: 1.5; background: white; color: #193c32; }
+.steering-messages { max-height: 230px; overflow: auto; padding-left: 22px; }
+.steering-messages p { white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 4px; }
+.steering-messages small { color: #526a5b; }
+.draft-preview { margin-top: 16px; }
+.draft-preview iframe { width: 100%; height: 65vh; background: white; border: 1px solid #d9e3dc; }
+.phone-access > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.phone-access > summary span { float: none; flex-shrink: 0; }

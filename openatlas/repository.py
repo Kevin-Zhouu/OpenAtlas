@@ -147,6 +147,112 @@ class Repository:
         j["request"] = json.loads(j["request"])
         return j
 
+    def steering(self, job_id):
+        return self.rows(
+            "SELECT * FROM steering_messages WHERE job_id=:id ORDER BY rowid", id=job_id
+        )
+
+    def queue_steering(self, job_id, message):
+        message = message.strip()
+        if not message or len(message) > 8000:
+            raise ValueError("Enter a message of 1–8000 characters")
+        with self.engine.connect() as c:
+            c.exec_driver_sql("BEGIN IMMEDIATE")
+            job = (
+                c.execute(
+                    text("SELECT status,stage,request FROM jobs WHERE id=:id"),
+                    {"id": job_id},
+                )
+                .mappings()
+                .first()
+            )
+            if (
+                not job
+                or job["status"] != "running"
+                or job["stage"] != "building"
+                or json.loads(job["request"])["provider"] != "codex"
+            ):
+                raise ValueError(
+                    "Messages can only be sent while Codex is implementing"
+                )
+            if (
+                c.execute(
+                    text("SELECT count(*) FROM steering_messages WHERE job_id=:id"),
+                    {"id": job_id},
+                ).scalar()
+                >= 100
+            ):
+                raise ValueError("This attempt has reached its 100-message limit")
+            c.execute(
+                text(
+                    "INSERT INTO steering_messages VALUES (:id,:job,:message,'queued',:t)"
+                ),
+                {"id": uid(), "job": job_id, "message": message, "t": now()},
+            )
+            c.commit()
+        return self.steering(job_id)
+
+    def take_steering_or_validate(self, job_id):
+        # Serialize accepting messages against closing the implementation stage.
+        with self.engine.connect() as c:
+            c.exec_driver_sql("BEGIN IMMEDIATE")
+            job = c.execute(
+                text("SELECT status FROM jobs WHERE id=:id"), {"id": job_id}
+            ).scalar()
+            if job != "running":
+                raise ValueError("Generation stopped; saved draft retained")
+            rows = list(
+                c.execute(
+                    text(
+                        "SELECT * FROM steering_messages WHERE job_id=:id AND status='queued' ORDER BY rowid"
+                    ),
+                    {"id": job_id},
+                ).mappings()
+            )
+            if rows:
+                c.execute(
+                    text(
+                        "UPDATE steering_messages SET status='applying' WHERE job_id=:id AND status='queued'"
+                    ),
+                    {"id": job_id},
+                )
+            else:
+                c.execute(
+                    text("UPDATE jobs SET stage='validating' WHERE id=:id"),
+                    {"id": job_id},
+                )
+            c.commit()
+        return [dict(row) for row in rows]
+
+    def save_steering_instructions(self, job_id, message):
+        with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "UPDATE jobs SET request=json_set(request, '$.steering_message', :message) WHERE id=:id"
+                ),
+                {"id": job_id, "message": message},
+            )
+
+    def finish_steering(self, job_id, status):
+        with self.engine.begin() as c:
+            c.execute(
+                text(
+                    "UPDATE steering_messages SET status=:s WHERE job_id=:id AND status='applying'"
+                ),
+                {"id": job_id, "s": status},
+            )
+
+    def skip_validation(self, job_id):
+        with self.engine.begin() as c:
+            result = c.execute(
+                text(
+                    "UPDATE jobs SET status='failed',progress='Draft preview ready',error='Validation skipped by user; draft retained for preview and Continue.',updated_at=:t WHERE id=:id AND status='running' AND stage='validating'"
+                ),
+                {"id": job_id, "t": now()},
+            )
+            if not result.rowcount:
+                raise ValueError("Validation is no longer running")
+
     def require_experience_review(self, job_id):
         """Persist the publication policy so recovery cannot downgrade a new run."""
         with self.engine.begin() as c:
