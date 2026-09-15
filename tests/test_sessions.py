@@ -2,7 +2,12 @@ from fastapi.testclient import TestClient
 
 from openatlas.api import create_app
 from openatlas.repository import Repository
-from openatlas.sessions import LoginLimiter, SESSION_SECONDS, issue_session, valid_session
+from openatlas.sessions import (
+    SESSION_SECONDS,
+    LoginLimiter,
+    issue_session,
+    valid_session,
+)
 
 
 def test_expiry_tampering_and_rotation():

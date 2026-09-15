@@ -2,7 +2,6 @@
 import argparse
 import json
 import os
-from pathlib import Path
 import secrets
 import subprocess
 import sys
@@ -10,6 +9,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 ROOT = Path('/opt/openatlas/app')
 STATE = Path('/etc/openatlas')
@@ -47,10 +47,10 @@ def configuration(root, host, token, boot):
                                 'OPENATLAS_PUBLIC_ORIGIN': 'https://' + host},
                 'volumes': ['library:/data', 'skills:/skills']},
         'runner': {**common, 'command': ['python', '-m', 'openatlas.runner'],
-                   'environment': {'OPENATLAS_GENERATION_IMAGE': 'openatlas-generation:local'},
+                   'environment': {'OPENATLAS_GENERATION_IMAGE': 'openatlas-vps-generation:local'},
                    'volumes': ['library:/data', 'skills:/skills:ro',
                                '/var/run/docker.sock:/var/run/docker.sock']},
-        'generation-image': {'profiles': ['build'], 'image': 'openatlas-generation:local',
+        'generation-image': {'profiles': ['build'], 'image': 'openatlas-vps-generation:local',
                              'build': {'context': str(root), 'dockerfile': 'generation/Dockerfile'},
                              'entrypoint': ['true']},
     }, 'volumes': {'library': {}, 'skills': {}}}

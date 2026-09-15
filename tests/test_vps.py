@@ -1,8 +1,7 @@
 import json
 import os
-from pathlib import Path
 import subprocess
-import urllib.error
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +12,7 @@ def test_private_config_and_compose_parser(tmp_path):
     config = vps.configuration(Path(__file__).resolve().parents[1], 'atlas.example.ts.net', 'test-secret', False)
     assert config['services']['app']['ports'] == ['127.0.0.1:8000:8000']
     assert config['services']['runner']['restart'] == 'no'
+    assert config['services']['generation-image']['image'] == config['services']['runner']['environment']['OPENATLAS_GENERATION_IMAGE'] == 'openatlas-vps-generation:local'
     assert '/var/run/docker.sock:/var/run/docker.sock' not in config['services']['app']['volumes']
     assert 'OPENAI_API_KEY' not in json.dumps(config)
     path = tmp_path / 'compose.json'

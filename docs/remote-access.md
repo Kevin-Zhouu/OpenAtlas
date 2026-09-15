@@ -25,7 +25,7 @@ must stay awake, online, and running Docker. This does not upload your library.
 4. If Tailscale asks you to enable HTTPS, follow its account setup instructions
    and rerun the command. HTTPS certificates expose the machine's certificate
    name in public certificate transparency logs; access to the service itself
-   remains private to permitted tailnet members.
+  remains private to permitted tailnet members.
 5. Open the printed `https://<machine>.<tailnet>.ts.net` URL on your phone with
    Tailscale connected. Get the **OpenAtlas host access token** by running this
    command in an interactive terminal on the host:
@@ -84,6 +84,12 @@ host manually using the official documentation; do not reset other services.
   URLs themselves are unguessable identifiers rather than per-reader permissions;
   the API is token-protected. This setup is intended for your private tailnet,
   not a public multi-user hosting service.
+
+For a dedicated Linux VPS, the [preview guided installer](vps-installation.md)
+adds lifecycle commands and boot configuration. Read the [security review](security-review.md)
+for current limitations. Browser login now uses a signed session with server-side
+expiry; upgrading requires signing in again, and rotating the owner token revokes
+all existing sessions.
 
 References: [Serve](https://tailscale.com/docs/features/tailscale-serve),
 [Serve CLI](https://tailscale.com/docs/reference/tailscale-cli/serve),

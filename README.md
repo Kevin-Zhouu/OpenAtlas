@@ -14,13 +14,15 @@ Open **http://localhost:8000**. The default is **Demo**: an explicitly labelled,
 
 On Homebrew installations where the plugin isn't linked, use `docker-compose` in place of `docker compose`. For Colima, start `colima start --cpu 4 --memory 6`. Compose mounts the daemon-side `/var/run/docker.sock`; keep that default. The native runner uses the host-forwarded socket path as documented below.
 
-## Real Codex generation
+## Private VPS installation (preview)
 
 For a dedicated Linux VPS, see the [guided private VPS installer](docs/vps-installation.md)
 and [security review](docs/security-review.md). It adds `openatlas start`,
 `shutdown`, `doctor`, token rotation, and optional boot startup using private
 Tailscale HTTPS. This is a preview deployment flow, not approval for direct public
 Internet exposure with only a secret URL.
+
+## Real Codex generation
 
 ```sh
 docker compose --profile build build generation-image

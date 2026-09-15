@@ -76,6 +76,12 @@ Clean Ubuntu/Debian install, real Tailscale account setup, provider firewall che
 reboot persistence and external penetration testing require a disposable Linux VPS
 and account access. Local unit tests do not establish those outcomes.
 
+Executed locally for this change: full backend suite **188 passed, 13 skipped**;
+opt-in `tests/test_docker.py` with the installed generation image **5 passed**;
+frontend pairing tests **3 passed**; targeted Ruff, shell syntax, diff whitespace,
+and Docker Compose configuration checks passed. Python 3.9 emitted the existing
+urllib3/LibreSSL compatibility warning; the deployment image uses Python 3.12.
+
 References: [OWASP session management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html),
 [OWASP authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html),
 [Docker firewall behavior](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
